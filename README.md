@@ -62,16 +62,6 @@ Szczegoly: [instrukcja panelu](docs/PANEL.md),
 Nie wystawiaj panelu bezposrednio do Internetu. HTTP nie zapewnia szyfrowania;
 zdalny dostep powinien byc realizowany przez VPN na routerze/bramce.
 
-## Dobrowolne Wsparcie
-
-Projekt i wszystkie udostepnione funkcje sa bezplatne. Jesli okaze sie
-przydatny, bedzie mozna dobrowolnie wesprzec autora przez PayPal.
-Link nie jest jeszcze skonfigurowany; nie ma aktywnego przycisku platnosci.
-Instrukcja dodania go pozniej: [WSPARCIE.md](docs/WSPARCIE.md).
-
-Wplata nie jest wymagana do uruchomienia urzadzenia i nie stanowi gwarancji
-zgodnosci z dowolnym kotlem ani terminu pomocy technicznej.
-
 ## Stan Wydania
 
 Wydanie opiera sie na funkcjach poprzedniej wersji prywatnej. Publiczne
