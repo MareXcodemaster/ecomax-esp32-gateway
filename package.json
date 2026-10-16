@@ -1,0 +1,15 @@
+{
+  "name": "ecomax-esp32-gateway-installer",
+  "version": "0.7.0-beta.1",
+  "private": true,
+  "type": "commonjs",
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "vite --config installer/vite.config.js --host 127.0.0.1",
+    "build": "vite build --config installer/vite.config.js && node tools/prepare_site.mjs",
+    "test": "node --test tests/*.cjs tests/test_installer.mjs",
+    "test:browser": "node tests/installer_browser.mjs"
+  },
+  "dependencies": { "esp-web-tools": "10.4.0", "lucide": "0.468.0" },
+  "devDependencies": { "vite": "8.3.4", "playwright": "1.64.1" }
+}

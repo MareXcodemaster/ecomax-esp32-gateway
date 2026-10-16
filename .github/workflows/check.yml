@@ -1,0 +1,68 @@
+name: Check Public Release
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+      - name: Install locked installer dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install official build tools
+        run: python -m pip install -r requirements-build.txt -r requirements.txt
+      - name: JavaScript tests
+        run: pnpm test
+      - name: Provisioning and packaging tests
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Source privacy gate
+        run: python tools/audit_release.py
+      - name: Compile pinned ESP32-S3 firmware
+        run: pio run -e waveshare_s3
+      - name: Native protocol and identity tests
+        run: python tools/host_tests.py
+      - name: Package blank first-install and OTA images
+        run: python tools/package_release.py
+      - name: Build self-hosted USB installer
+        run: pnpm build
+      - name: Installer browser tests (simulated USB only)
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm test:browser
+      - name: Check final website and images
+        run: python tools/audit_release.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ecomax-esp32-gateway-public-beta
+          path: artifacts/*.zip
+          if-no-files-found: error
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

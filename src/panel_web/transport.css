@@ -1,0 +1,16 @@
+.transport-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0 16px;border-bottom:1px solid #ddd;margin-bottom:20px}
+.transport-toolbar label{font-size:13px;font-weight:600}
+.transport-toolbar select{width:210px;max-width:100%;min-height:38px}
+.transport-toolbar .status{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+#transport-dialog .check{align-items:flex-start}
+.esp-brand{display:flex;align-items:center;gap:9px;color:#34676a;height:50px}
+.esp-brand svg{width:35px;height:35px}
+.esp-brand strong{font-size:22px}
+#econet-health{overflow-wrap:anywhere}
+.boiler-controls{display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px;padding:0 0 18px;margin-bottom:20px;border-bottom:1px solid #ddd}
+.boiler-controls>div:first-child{margin-right:auto}
+#control-access{width:100%;overflow-wrap:anywhere}
+#control-access:empty{display:none}
+.boiler-controls button{min-height:40px;white-space:normal}
+@media(max-width:480px){.boiler-controls>.actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.boiler-controls button{justify-content:center}}
+@media(max-width:480px){.transport-toolbar{gap:8px}.transport-toolbar label{width:100%}.transport-toolbar select{flex:1;min-width:160px}}
