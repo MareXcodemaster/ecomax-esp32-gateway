@@ -1,0 +1,6 @@
+.update-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding:12px 0;border-bottom:1px solid #91b6a2;color:#235d46}
+.update-panel{margin-top:24px;max-width:680px}
+.update-panel .details{margin:18px 0}
+.update-panel .actions{flex-wrap:wrap;margin:16px 0}
+.update-panel p{overflow-wrap:anywhere}
+.update-panel progress{max-width:100%;width:280px}

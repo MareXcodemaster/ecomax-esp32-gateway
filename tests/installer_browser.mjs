@@ -96,7 +96,7 @@ try {
     assert.match(await page.title(),/ecoMAX/);
     assert.equal(await page.locator('h1').count(),1);
     await page.waitForFunction(()=>[...document.images].filter(img=>img.src.startsWith(location.origin)).every(img=>img.complete&&img.naturalWidth>0));
-    assert.equal(await page.locator('img').count(),5);
+    assert.equal(await page.locator('img').count(),6);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'guide fits screen');
     await page.screenshot({path:`test-results/guide-${width}.png`,fullPage:true});
     await page.close();
@@ -133,6 +133,41 @@ try {
     await page.screenshot({path:`test-results/network-${width}.png`,fullPage:true});
     assert.deepEqual(errors,[]);await page.close();
     console.log(`PASS hostname ${width}px: validation, preserved draft, one save, new local address`);
+  }
+  const updateSection=html.match(/<section data-section="settings"[^>]*>[\s\S]*?<\/section>/)[0].replace(' hidden','');
+  for(const width of [1280,390]){
+    const page=await browser.newPage({viewport:{width,height:850}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.setContent('<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body><main>'+updateSection+'</main><div id="update-notice"><strong id="update-notice-version"></strong><button id="update-open">Aktualizacja</button></div></body></html>');
+    for(const file of ['style.css','updates.css'])await page.addStyleTag({content:await readFile('src/panel_web/'+file,'utf8')});
+    await page.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});
+    await page.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});
+    await page.evaluate(()=>{
+      window.csrf='example';window.serverReachable=true;window.updateRequests=[];
+      window.updateState={current:'0.7.0-beta.3',version:'0.7.0',available:true,install_supported:true,automatic:true,phase:'available',busy:false};
+      window.request=async(url,payload)=>{
+        window.updateRequests.push({url,payload});
+        if(url==='/api/updates/config')window.updateState.automatic=payload.automatic;
+        if(url==='/api/updates/install')window.updateState={...window.updateState,busy:true,phase:'downloading',received:1024,size:200000};
+        return window.updateState;
+      };
+      EcoUpdates.init();lucide.createIcons();return EcoUpdates.load();
+    });
+    assert.equal(await page.evaluate(()=>window.updateRequests.filter(r=>r.payload).length),0);
+    assert.equal(await page.locator('#update-install').isEnabled(),true);
+    await page.locator('#update-auto').uncheck();
+    await page.waitForFunction(()=>window.updateState.automatic===false);
+    await page.screenshot({path:`test-results/updates-${width}.png`,fullPage:true});
+    page.once('dialog',dialog=>dialog.accept());
+    await page.locator('#update-install').click();
+    await page.waitForFunction(()=>window.updateState.phase==='downloading');
+    await page.evaluate(async()=>{await EcoUpdates.load();await EcoUpdates.load();});
+    assert.equal(await page.evaluate(()=>window.updateRequests.filter(r=>r.url==='/api/updates/install').length),1);
+    assert.equal(await page.locator('#update-install').isEnabled(),false);
+    assert.equal(await page.locator('#update-progress').isVisible(),true);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    assert.deepEqual(errors,[]);await page.close();
+    console.log(`PASS stable updater ${width}px: no unattended install, opt-out, explicit confirmation, one POST, progress and layout`);
   }
 } finally {
   await browser.close();

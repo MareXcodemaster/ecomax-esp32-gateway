@@ -7,6 +7,7 @@
 #include "panel.hpp"
 #include "panel_history.hpp"
 #include "pellet.hpp"
+#include "updates.hpp"
 #include "esp_http_server.h"
 #include "esp_ota_ops.h"
 #include "esp_timer.h"
@@ -224,6 +225,7 @@ static esp_err_t panel_job(httpd_req_t *req) {
 }
 static esp_err_t panel_command(httpd_req_t *req) {
     if(!authorize(req,true)) return ESP_OK;
+    if(updates::installing())return message(req,"409 Conflict","Trwa aktualizacja ESP. Zaczekaj na zakonczenie.");
     char csrf[64];
     if(httpd_req_get_hdr_value_str(req,"X-Tester-Token",csrf,sizeof(csrf))!=ESP_OK || !equal(csrf,panel_csrf)) return message(req,"403 Forbidden","Missing panel token");
     auto *payload=request_json(req); if(!payload) return ESP_OK;
@@ -374,12 +376,35 @@ static esp_err_t unavailable(httpd_req_t *req) {
     if (!authorize(req)) return ESP_OK;
     return message(req, "501 Not Implemented", "Pelny katalog parametrow/harmonogramow nie jest zaimplementowany. Nadawanie do kotla jest wylaczone.");
 }
+static esp_err_t update_status(httpd_req_t *req) {
+    if(!authorize(req))return ESP_OK;
+    return json(req,updates::snapshot());
+}
+static esp_err_t update_command(httpd_req_t *req) {
+    if(!authorize(req,true))return ESP_OK;
+    if(!strcmp(req->uri,"/api/updates/check")){
+        auto result=updates::check();return message(req,result==ESP_OK?"202 Accepted":"409 Conflict",result==ESP_OK?"Sprawdzanie stabilnych wydan GitHub.":"Trwa inna operacja aktualizatora.");
+    }
+    auto *body=request_json(req);if(!body)return ESP_OK;
+    esp_err_t result=ESP_ERR_INVALID_ARG;
+    if(!strcmp(req->uri,"/api/updates/config")){
+        auto *automatic=cJSON_GetObjectItemCaseSensitive(body,"automatic");
+        if(cJSON_IsBool(automatic))result=updates::automatic(cJSON_IsTrue(automatic));
+    }else{
+        auto *version=cJSON_GetObjectItemCaseSensitive(body,"version"),*confirm=cJSON_GetObjectItemCaseSensitive(body,"confirm");
+        if(cJSON_IsString(version)&&cJSON_IsTrue(confirm))result=updates::install(version->valuestring);
+    }
+    cJSON_Delete(body);return message(req,result==ESP_OK?"202 Accepted":result==ESP_ERR_INVALID_ARG?"400 Bad Request":"409 Conflict",
+        result==ESP_OK?"Przyjeto. Nie ponawiaj polecenia automatycznie.":result==ESP_ERR_INVALID_ARG?"Nieprawidlowe dane lub brak potwierdzenia.":"Aktualizacja niedostepna: sprawdz wersje, zgodnosc instalacji i stan operacji.");
+}
 static esp_err_t ota(httpd_req_t *req) {
     if (!authorize(req, true)) return ESP_OK;
     if(panel::is_busy()) return message(req,"409 Conflict","Wait for the panel operation before OTA");
     const auto *partition = esp_ota_get_next_update_partition(nullptr);
     if (!partition || req->content_len < 1024 || req->content_len > partition->size)
         return message(req, "400 Bad Request", "Use application OTA .bin, not merged flash image");
+    updates::FlashGuard flash_guard;
+    if(!flash_guard.acquired)return message(req,"409 Conflict","Another firmware update is running");
     esp_ota_handle_t handle;
     auto result = esp_ota_begin(partition, req->content_len, &handle);
     if (result != ESP_OK) return message(req, "409 Conflict", esp_err_to_name(result));
@@ -403,6 +428,7 @@ static esp_err_t ota(httpd_req_t *req) {
     if (result != ESP_OK) return message(req, "500 Internal Server Error", esp_err_to_name(result));
     pellet::checkpoint(true);
     state::log("OTA image validated; restarting in 2 seconds");
+    flash_guard.keep=true;
     message(req, "200 OK", "Obraz sprawdzony. Restart za 2 sekundy.");
     ESP_ERROR_CHECK(esp_timer_start_once(reboot_timer, 2000000)); return ESP_OK;
 }
@@ -452,7 +478,7 @@ void start() {
     esp_timer_create_args_t timer{}; timer.callback = [](void *) { esp_restart(); }; timer.name = "ota_reboot";
     ESP_ERROR_CHECK(esp_timer_create(&timer, &reboot_timer));
     httpd_config_t config = HTTPD_DEFAULT_CONFIG(); config.stack_size = 16384;
-    config.max_uri_handlers = 45; config.max_open_sockets = 8; config.lru_purge_enable = true;
+    config.max_uri_handlers = 52; config.max_open_sockets = 8; config.lru_purge_enable = true;
     config.uri_match_fn=httpd_uri_match_wildcard;
     config.recv_wait_timeout = 5; config.send_wait_timeout = 12;
     ESP_ERROR_CHECK(httpd_start(&server, &config));
@@ -465,6 +491,8 @@ void start() {
     add("/api/capture", HTTP_GET, capture); add("/api/logs", HTTP_GET, logs);
     add("/api/wifi", HTTP_POST, configure_wifi); add("/api/hostname", HTTP_POST, configure_hostname); add("/api/sniffer", HTTP_POST, configure_sniffer);
     add("/api/ota", HTTP_POST, ota); add("/api/ecomax", HTTP_GET, ecomax);
+    add("/api/updates",HTTP_GET,update_status);add("/api/updates/check",HTTP_POST,update_command);
+    add("/api/updates/config",HTTP_POST,update_command);add("/api/updates/install",HTTP_POST,update_command);
     add("/api/mixers", HTTP_GET, subset); add("/api/thermostats", HTTP_GET, subset);
     add("/api/alarms", HTTP_GET, alarms); add("/api/frames", HTTP_GET, frame_stats);
     add("/api/latest_frames", HTTP_GET, latest_frames);

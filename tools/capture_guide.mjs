@@ -1,6 +1,6 @@
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
+import { mkdir,readFile } from 'node:fs/promises';
 
 const server = await createServer({ configFile: 'installer/vite.config.js', server: { host: '127.0.0.1', port: 0 } });
 await server.listen();
@@ -37,5 +37,17 @@ try {
   await page.locator('#save-wifi').click();
   await page.locator('#open-panel').waitFor({ state: 'visible' });
   await page.locator('section[aria-labelledby="step3"]').screenshot({ path: 'docs/images/03-polaczono.png' });
-  console.log('Created three documentation screenshots with simulated USB, synthetic SSID and documentation-only IP. No physical device accessed.');
+  const panel=await browser.newPage({viewport:{width:850,height:650}});
+  const html=await readFile('src/panel_web/index.html','utf8');
+  const section=html.match(/<section data-section="settings"[^>]*>[\s\S]*?<\/section>/)[0].replace(' hidden','');
+  await panel.setContent('<!doctype html><html lang="pl"><meta charset="utf-8"><body><main>'+section+'</main><div id="update-notice" hidden><strong id="update-notice-version"></strong><button id="update-open"></button></div></body></html>');
+  for(const name of ['style.css','updates.css'])await panel.addStyleTag({content:await readFile('src/panel_web/'+name,'utf8')});
+  await panel.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});
+  await panel.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});
+  await panel.evaluate(()=>{
+    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.3',version:'',phase:'no_stable_release',automatic:true,available:false,install_supported:true});
+    EcoUpdates.init();lucide.createIcons();return EcoUpdates.load();
+  });
+  await panel.locator('.update-panel').screenshot({path:'docs/images/04-aktualizacje.png'});
+  console.log('Created four documentation screenshots with simulated data, no physical device or private network accessed.');
 } finally { await browser.close(); await server.close(); }

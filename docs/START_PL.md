@@ -2,7 +2,7 @@
 
 ## Instrukcja krok po kroku
 
-**Oprogramowanie: 0.7.0-beta.2. Instrukcja: wydanie 2, 16.10.2026.**
+**Oprogramowanie: 0.7.0-beta.3. Instrukcja: wydanie 3, 17.10.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -209,8 +209,8 @@ ESP w trybie aktywnym RS485 używa adresu **0x56 (86)**, takiego jak ecoNET.
 pod tym samym adresem mogą zakłócać komunikację. Nie obchodź blokady
 nadawania przez ustawienie losowego adresu.
 
-Tryb ustawiasz w panelu w konfiguracji połączenia, przez ikonę koła
-zębatego przy stanie połączenia. Przy wyborze ecoNET podaj jego **lokalny
+Tryb wybierasz listą **Odczyt i zapis**. Ikona koła zębatego przy stanie
+połączenia otwiera dane modułu ecoNET. Dla ecoNET podaj jego **lokalny
 adres, lokalny login i lokalne hasło**. To nie są dane konta ecoNET24.
 Program nie ma wpisanego adresu ani hasła modułu należącego do autora.
 
@@ -240,7 +240,7 @@ tożsamości lub niezgodny model blokują zapis. Przeczytaj
 | Harmonogram | Tydzień od poniedziałku do niedzieli; jedna kratka to 30 minut. Obok jest opis działania wybranego harmonogramu. |
 | Historia danych | Pomiary z maksymalnie ostatnich 3 dni. Historia zbiera się dopiero podczas pracy tej instalacji. |
 | Alarmy | Powiadomienia i odczytywana historia zgłoszona przez regulator. |
-| Pellet | Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. W wersji 0.7.0-beta.2 usunięto dwa puste kafelki strumienia i zużycia ESP. |
+| Pellet | Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. W wersji 0.7.0-beta.3 usunięto dwa puste kafelki strumienia i zużycia ESP. |
 | ESP Wi-Fi | Łączność samego ESP. Dane sieci modułu ecoNET są osobnym zestawem. |
 
 Temperatura **zmierzona** to odczyt czujnika. Temperatura **zadana** to cel.
@@ -248,6 +248,32 @@ Harmonogram może zmieniać cel; nie zmienia w ten sposób odczytu czujnika.
 Histereza to jeszcze inny parametr. Więcej: [instrukcja panelu](PANEL.md).
 
 ## 11. Aktualizacja bez komputera
+
+### Z GitHuba, tylko stabilne wydania
+
+Otwórz **Ustawienia urządzenia → Aktualizacje ESP z GitHuba**.
+ESP może sprawdzać stabilne wydania raz na dobę; możesz wyłączyć tę opcję
+albo nacisnąć **Sprawdź teraz**. Sprawdzanie nie instaluje programu.
+
+![Ekran aktualizatora: kanał stabilny i informacja o braku wydania](images/04-aktualizacje.png)
+
+*Zrzut demonstracyjny własnego panelu, bez danych instalacji. Wydania beta
+nie są propozycjami aktualizacji. Nie pokazano fikcyjnej wersji stabilnej.*
+
+Gdy będzie dostępna nowsza zgodna stabilna wersja, pojawi się numer i przycisk
+**Zaktualizuj**. Dopiero Twoje naciśnięcie i potwierdzenie restartu rozpoczynają
+instalację. Możesz ją pominąć. Nie ma obowiązku aktualizacji.
+
+Pobierany jest tylko obraz OTA z oficjalnego repozytorium. Program weryfikuje
+HTTPS, SHA-256, wersję, projekt i rozmiar przed wybraniem nowego programu.
+Nie ponawia automatycznie instalacji po błędzie. SHA-256 nie jest niezależnym
+podpisem kryptograficznym. Szczegóły: [aktualizacje](AKTUALIZACJE.md).
+
+**Stara instalacja prywatna nie jest automatycznie migrowana do publicznej.**
+Taka droga wgrania jest zablokowana, aby nie utracić dostępu po zmianie
+inicjalizacji haseł. Wymaga osobnej, potwierdzonej procedury.
+
+### Ręcznie, ze zgodnego pliku OTA
 
 1. Pobierz **firmware-ota.bin** ze zgodnego wydania w
    [Releases](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases).

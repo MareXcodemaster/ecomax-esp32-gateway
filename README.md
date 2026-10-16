@@ -4,7 +4,7 @@ Lokalny panel kotla ecoMAX na ESP32: **RS485 lub lokalny ecoNET**, telefon/table
 nastawy, ecoSTER, harmonogramy, alarmy i historia pomiarow z ostatnich 3 dni.
 Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 
-**Wersja 0.7.0-beta.2. Projekt niezalezny, nieoficjalny. Nie jest produktem
+**Wersja 0.7.0-beta.3. Projekt niezalezny, nieoficjalny. Nie jest produktem
 PLUM, HKS Lazar ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
 
@@ -49,7 +49,7 @@ Instrukcje mozna tez otworzyc [bezposrednio przy instalatorze](https://marexcode
 | Historia | 3 dni w flash, probki minutowe; dokladniejszy krotki bufor RAM |
 | Pellet | Dane sterownika, jesli wystepuja, i oddzielne obliczenia ESP |
 | Polaczenia | RS485, HTTP do lokalnego ecoNET, tryb hybrydowy |
-| OTA | Aktualizacja obrazu aplikacji przez panel diagnostyczny |
+| OTA | Opcjonalne stabilne aktualizacje z GitHuba i reczne OTA |
 
 Szczegoly: [instrukcja panelu](docs/PANEL.md),
 [bezpieczenstwo](SECURITY.md), [budowanie](docs/BUDOWANIE.md).
@@ -65,6 +65,12 @@ Szczegoly: [instrukcja panelu](docs/PANEL.md),
   nastaw/pomiarow sa puste. Testy uzywaja sztucznych danych.
 - Nie dodano telemetrii, analityki ani automatycznej transmisji do autora.
   Wybrany tryb ecoNET odpytuje wskazany przez Ciebie adres w sieci lokalnej.
+- Opcjonalny aktualizator sprawdza GitHuba; przy braku czasu moze uzyc
+  pool.ntp.org. Nie wysyla danych kotla ani hasel. Sprawdzanie mozna wylaczyc.
+
+Aktualizacje **nie sa wymagane** i nie instaluja sie samoczynnie. Kanal jest
+ograniczony do stabilnych wydan; bety sa pomijane. Szczegoly i ograniczenia
+migracji: [AKTUALIZACJE.md](docs/AKTUALIZACJE.md).
 
 Nie wystawiaj panelu bezposrednio do Internetu. HTTP nie zapewnia szyfrowania;
 zdalny dostep powinien byc realizowany przez VPN na routerze/bramce.

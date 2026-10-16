@@ -7,7 +7,7 @@
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
 </style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>ecoMAX Wi-Fi - sterowanie kotłem z telefonu</h1>
 <h2>Instrukcja krok po kroku</h2>
-<p><strong>Oprogramowanie: 0.7.0-beta.2. Instrukcja: wydanie 2, 16.10.2026.</strong></p>
+<p><strong>Oprogramowanie: 0.7.0-beta.3. Instrukcja: wydanie 3, 17.10.2026.</strong></p>
 <p>Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
 Komputer i kabel USB są potrzebne do pierwszego wgrania. Później panel
@@ -222,8 +222,8 @@ a nie do każdego urządzenia.</li>
 <strong>To adres magistrali, a nie adres IP Wi-Fi.</strong> Dwa aktywne urządzenia
 pod tym samym adresem mogą zakłócać komunikację. Nie obchodź blokady
 nadawania przez ustawienie losowego adresu.</p>
-<p>Tryb ustawiasz w panelu w konfiguracji połączenia, przez ikonę koła
-zębatego przy stanie połączenia. Przy wyborze ecoNET podaj jego <strong>lokalny
+<p>Tryb wybierasz listą <strong>Odczyt i zapis</strong>. Ikona koła zębatego przy stanie
+połączenia otwiera dane modułu ecoNET. Dla ecoNET podaj jego <strong>lokalny
 adres, lokalny login i lokalne hasło</strong>. To nie są dane konta ecoNET24.
 Program nie ma wpisanego adresu ani hasła modułu należącego do autora.</p>
 <h2>9. Sprawdź, czy instalacja działa</h2>
@@ -275,7 +275,7 @@ tożsamości lub niezgodny model blokują zapis. Przeczytaj
 </tr>
 <tr>
 <td>Pellet</td>
-<td>Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. W wersji 0.7.0-beta.2 usunięto dwa puste kafelki strumienia i zużycia ESP.</td>
+<td>Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. W wersji 0.7.0-beta.3 usunięto dwa puste kafelki strumienia i zużycia ESP.</td>
 </tr>
 <tr>
 <td>ESP Wi-Fi</td>
@@ -286,6 +286,24 @@ tożsamości lub niezgodny model blokują zapis. Przeczytaj
 Harmonogram może zmieniać cel; nie zmienia w ten sposób odczytu czujnika.
 Histereza to jeszcze inny parametr. Więcej: <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PANEL.md">instrukcja panelu</a>.</p>
 <h2>11. Aktualizacja bez komputera</h2>
+<h3>Z GitHuba, tylko stabilne wydania</h3>
+<p>Otwórz <strong>Ustawienia urządzenia → Aktualizacje ESP z GitHuba</strong>.
+ESP może sprawdzać stabilne wydania raz na dobę; możesz wyłączyć tę opcję
+albo nacisnąć <strong>Sprawdź teraz</strong>. Sprawdzanie nie instaluje programu.</p>
+<p><img src="images/04-aktualizacje.png" alt="Ekran aktualizatora: kanał stabilny i informacja o braku wydania"></p>
+<p><em>Zrzut demonstracyjny własnego panelu, bez danych instalacji. Wydania beta
+nie są propozycjami aktualizacji. Nie pokazano fikcyjnej wersji stabilnej.</em></p>
+<p>Gdy będzie dostępna nowsza zgodna stabilna wersja, pojawi się numer i przycisk
+<strong>Zaktualizuj</strong>. Dopiero Twoje naciśnięcie i potwierdzenie restartu rozpoczynają
+instalację. Możesz ją pominąć. Nie ma obowiązku aktualizacji.</p>
+<p>Pobierany jest tylko obraz OTA z oficjalnego repozytorium. Program weryfikuje
+HTTPS, SHA-256, wersję, projekt i rozmiar przed wybraniem nowego programu.
+Nie ponawia automatycznie instalacji po błędzie. SHA-256 nie jest niezależnym
+podpisem kryptograficznym. Szczegóły: <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/AKTUALIZACJE.md">aktualizacje</a>.</p>
+<p><strong>Stara instalacja prywatna nie jest automatycznie migrowana do publicznej.</strong>
+Taka droga wgrania jest zablokowana, aby nie utracić dostępu po zmianie
+inicjalizacji haseł. Wymaga osobnej, potwierdzonej procedury.</p>
+<h3>Ręcznie, ze zgodnego pliku OTA</h3>
 <ol>
 <li>Pobierz <strong>firmware-ota.bin</strong> ze zgodnego wydania w
 <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Releases</a>.</li>

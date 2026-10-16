@@ -5,12 +5,43 @@
 #include "identity_guard.hpp"
 #include "thermostat_decoder.hpp"
 #include "network_name.hpp"
+#include "update_manifest.hpp"
 #include <string>
 #include <cassert>
 #include <cstdio>
 void access_tests();
 
 int main() {
+    assert(update_manifest::newer("0.7.0","0.7.0-beta.3"));
+    assert(update_manifest::newer("0.10.0","0.9.9"));
+    assert(!update_manifest::newer("0.7.0-beta.4","0.7.0-beta.3"));
+    assert(!update_manifest::newer("0.7.0","0.7.0"));
+    assert(!update_manifest::newer("0.6.99","0.7.0"));
+    update_manifest::Version version;
+    for(const auto *bad: {"", "0", "0.7", "0.7.0.1", "01.7.0", "65536.0.0", "0.7.0-beta", "0.7.0+test"})
+        assert(!update_manifest::version(bad,version,true));
+    assert(update_manifest::download_url("https://release-assets.githubusercontent.com/example"));
+    for(const auto *bad: {"http://github.com/file", "https://github.com.evil.invalid/file", "https://release-assets.githubusercontent.com.evil.invalid/file", "file:///tmp/firmware", "https://github.com/other/repo/releases/download/v1/file"})
+        assert(!update_manifest::download_url(bad));
+    auto *release=cJSON_Parse(R"JSON({"prerelease":false,"draft":false,"tag_name":"v0.7.0","assets":[{"name":"firmware-ota.bin","size":200000,"digest":"sha256:0000000000000000000000000000000000000000000000000000000000000000","browser_download_url":"https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases/download/v0.7.0/firmware-ota.bin"}]})JSON");
+    update_manifest::Candidate candidate;
+    assert(update_manifest::parse(release,candidate)&&candidate.size==200000&&!strcmp(candidate.version,"0.7.0"));
+    cJSON_ReplaceItemInObjectCaseSensitive(release,"prerelease",cJSON_CreateTrue());
+    assert(!update_manifest::parse(release,candidate));
+    cJSON_ReplaceItemInObjectCaseSensitive(release,"prerelease",cJSON_CreateFalse());
+    auto *assets=cJSON_GetObjectItemCaseSensitive(release,"assets"),*asset=cJSON_GetArrayItem(assets,0);
+    cJSON_ReplaceItemInObjectCaseSensitive(asset,"size",cJSON_CreateNumber(200000.5));
+    assert(!update_manifest::parse(release,candidate));
+    cJSON_ReplaceItemInObjectCaseSensitive(asset,"size",cJSON_CreateNumber(0x300000));
+    assert(!update_manifest::parse(release,candidate));
+    cJSON_ReplaceItemInObjectCaseSensitive(asset,"size",cJSON_CreateNumber(200000));
+    cJSON_ReplaceItemInObjectCaseSensitive(asset,"digest",cJSON_CreateString("sha256:bad"));
+    assert(!update_manifest::parse(release,candidate));
+    cJSON_ReplaceItemInObjectCaseSensitive(asset,"digest",cJSON_CreateString("sha256:0000000000000000000000000000000000000000000000000000000000000000"));
+    cJSON_AddItemToArray(assets,cJSON_Duplicate(asset,true));
+    assert(!update_manifest::parse(release,candidate));
+    cJSON_Delete(release);
+    assert(!update_manifest::parse(nullptr,candidate));
     assert(network_name::valid("piec") && network_name::valid("kotlownia-2"));
     assert(network_name::valid(std::string(63, 'a').c_str()));
     for (const auto *bad : {"", "-piec", "piec-", "dwa piece", "PIEC", "piec.local", "localhost", "x/y"})

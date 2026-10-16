@@ -129,6 +129,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
 window.addEventListener('focus',poll);
 if(window.EcoMirror)EcoMirror.init();
 if(window.EcoNetwork)EcoNetwork.init();
+if(window.EcoUpdates)EcoUpdates.init();
 let espPollTimer=null;
 async function bootPanel(){if(!espPollTimer)espPollTimer=setInterval(poll,2000);csrf=(await request('/api/session')).csrf;await request('/api/panel/clock',{epoch:Date.now()/1000});$('esp-login').close();await poll();if(state?.requires_configuration&&state.write_transport!=='rs485')$('connect-dialog').showModal();}
 $('esp-login-form').onsubmit=async event=>{event.preventDefault();event.submitter.disabled=true;try{const response=await fetch('/api/login',{method:'POST',headers:{'Authorization':'Basic '+btoa($('esp-user').value+':'+$('esp-password').value),'X-Lazar-Request':'1','X-Lazar-Remember':$('esp-remember').checked?'1':'0'}});if(!response.ok){const error=await response.json();throw new Error(error.message||'Nieprawidlowe haslo ESP');}$('esp-password').value='';await bootPanel();notice('');}catch(error){text('esp-login-error',error.message);}finally{event.submitter.disabled=false;}};

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0-beta.3 - 2026-10-17
+
+- Optional stable-only GitHub checks, daily or manually, with a saved opt-out.
+- Explicit owner confirmation before OTA; no mandatory or unattended installation.
+- TLS, GitHub SHA-256, bounded transfers and image/project/version validation.
+- Shared OTA flash lock and rejected new panel commands during installation.
+- Private-to-public automatic migration remains blocked.
+- Polish guide revision 3, update instructions and corrected transport selector.
+- Stable-image GitHub installation remains unverified: no stable release exists yet.
+
 ## 0.7.0-beta.2 - 2026-10-16
 
 - Clear Polish project title; repository address unchanged.

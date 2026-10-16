@@ -9,6 +9,7 @@
 #include "protocol.hpp"
 #include "panel.hpp"
 #include "pellet.hpp"
+#include "updates.hpp"
 #include "nvs_flash.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
@@ -44,7 +45,7 @@ extern "C" void app_main() {
     ESP_ERROR_CHECK(device_access::init());
     configASSERT(pellet::self_test()); pellet::init();
     state::log("Pellet meter self-test: PASS; ESP calculations only, no boiler calibration command");
-    transport::start(); network::start(); panel::start(); api::start();
+    transport::start(); network::start(); panel::start(); updates::init(); api::start();
     configASSERT(self_test_api());
     state::log("BOOT REQUIRED SELF-TESTS: PASS; parser/sensors/protocol/pellet/panel guard/HTTP assertions completed");
     usb_console::start();
@@ -52,6 +53,7 @@ extern "C" void app_main() {
     if (esp_ota_get_state_partition(partition, &image_state) == ESP_OK && image_state == ESP_OTA_IMG_PENDING_VERIFY) {
         ESP_ERROR_CHECK(esp_ota_mark_app_valid_cancel_rollback()); state::log("OTA boot self-test passed; image confirmed");
     }
+    updates::start();
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(10000));
         pellet::checkpoint();
