@@ -1,5 +1,12 @@
 # Polaczenie RS485 Z Kotlem
 
+Instrukcja obrazkowa: [pierwsze uruchomienie krok po kroku](START_PL.md).
+
+![Polaczenie sygnalow A+ do D+ i B- do D-](images/polaczenie-rs485.svg)
+
+To schemat sygnalow, nie kolejnosc pinow wtyczki RJ. Zdjecie zlacz plytki
+od producenta znajduje sie w instrukcji obrazkowej.
+
 ## Bezpieczenstwo
 
 W obudowie regulatora sa odsloniete obwody **230 V**. Prace wewnatrz kotla

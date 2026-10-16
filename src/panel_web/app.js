@@ -44,6 +44,7 @@ function render(){if(!state)return;const f=fresh(),curr=f?state.curr:{},direct=s
  if(view==='api')renderCapabilities();
  renderControl();
  if(window.EcoMirror)EcoMirror.render(view,state,f);
+ if(window.EcoNetwork)EcoNetwork.render(state.esp_network);
  for(const button of document.querySelectorAll('button[data-write-id],[data-write-id] button')){const id=button.closest('[data-write-id]').dataset.writeId,target=state.targets?.[id];if(target?.write_ready===false){button.disabled=true;button.title=target.write_error||'Zapis zablokowany';button.dataset.writeBlocked='true';}else if(button.dataset.writeBlocked){button.removeAttribute('title');delete button.dataset.writeBlocked;}}
  if(view==='menu'&&!state.targets_fresh)for(const row of $('menu-rows').rows)if(row.cells.length===6)row.cells[2].textContent='---';
  if(view==='menu'&&menuSelection!==null){const selected=state.menu.find(item=>item.index===menuSelection);if(selected){text('menu-name',selected.index+' / '+selected.name);text('menu-description',selected.description||'');text('menu-json',JSON.stringify(selected,null,2));}}
@@ -127,6 +128,7 @@ window.addEventListener('resize',()=>{if(view==='history')drawChart();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
 window.addEventListener('focus',poll);
 if(window.EcoMirror)EcoMirror.init();
+if(window.EcoNetwork)EcoNetwork.init();
 let espPollTimer=null;
 async function bootPanel(){if(!espPollTimer)espPollTimer=setInterval(poll,2000);csrf=(await request('/api/session')).csrf;await request('/api/panel/clock',{epoch:Date.now()/1000});$('esp-login').close();await poll();if(state?.requires_configuration&&state.write_transport!=='rs485')$('connect-dialog').showModal();}
 $('esp-login-form').onsubmit=async event=>{event.preventDefault();event.submitter.disabled=true;try{const response=await fetch('/api/login',{method:'POST',headers:{'Authorization':'Basic '+btoa($('esp-user').value+':'+$('esp-password').value),'X-Lazar-Request':'1','X-Lazar-Remember':$('esp-remember').checked?'1':'0'}});if(!response.ok){const error=await response.json();throw new Error(error.message||'Nieprawidlowe haslo ESP');}$('esp-password').value='';await bootPanel();notice('');}catch(error){text('esp-login-error',error.message);}finally{event.submitter.disabled=false;}};

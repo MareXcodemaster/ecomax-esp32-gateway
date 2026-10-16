@@ -1,5 +1,10 @@
 # Instalacja USB I Aktualizacja OTA
 
+**[Pelna instrukcja po polsku ze zdjeciami i schematem](START_PL.md)**.
+W pobranej paczce mozesz tez otworzyc `docs/START_PL.html` bez instalowania
+dodatkowych programow. Zrzuty ekranu i schemat sa lokalne; zdjecie producenta
+wymaga polaczenia z Internetem.
+
 ## Przed Instalacja
 
 - Wymagana plytka: Waveshare ESP32-S3-RS485-CAN, 16 MB flash, 8 MB PSRAM.
@@ -14,7 +19,7 @@
 ## Najprosciej: Instalator W Przegladarce
 
 1. Otworz https://marexcodemaster.github.io/ecomax-esp32-gateway/ na komputerze
-   w Chrome lub Edge. Strona bedzie dostepna po pierwszym wdrozeniu Pages.
+   w Chrome lub Edge.
 2. Potwierdz model i rozmiar pamieci z opisu swojej plytki. Samo wykrycie
    rodziny ESP32-S3 nie potwierdza obecnosci 16 MB flash ani 8 MB PSRAM.
 3. Nacisnij Wgraj na ESP, wybierz port USB i potwierdz wgranie. Nie odlaczaj

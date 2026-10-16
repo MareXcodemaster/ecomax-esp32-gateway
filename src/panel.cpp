@@ -1456,7 +1456,8 @@ cJSON *snapshot() {
     if(!network_fresh)put(network,"values",cJSON_CreateObject());
     for(auto key:network_keys)copy(get(out,"values"),key,network_fresh?get(get(network,"values"),key):nullptr);
     auto net=state::network(); auto *esp=cJSON_CreateObject(); text(esp,"source","ESP32 Wi-Fi"); flag(esp,"connected",net.connected); text(esp,"ssid",net.ssid); text(esp,"ip",net.connected?net.ip:"");
-    number(esp,"rssi_dbm",net.connected?net.rssi:NAN); number(esp,"channel",net.connected?net.channel:NAN); flag(esp,"mdns",net.mdns); flag(esp,"fixed",net.fixed); number(esp,"retries",net.retries); text(esp,"setup_ssid",net.ap); put(out,"esp_network",esp);
+    number(esp,"rssi_dbm",net.connected?net.rssi:NAN); number(esp,"channel",net.connected?net.channel:NAN); flag(esp,"mdns",net.mdns); flag(esp,"fixed",net.fixed); number(esp,"retries",net.retries); text(esp,"setup_ssid",net.ap);
+    text(esp,"hostname",net.hostname); flag(esp,"hostname_pending",net.hostname_pending); number(esp,"hostname_error",net.hostname_error); put(out,"esp_network",esp);
     auto *schedule_status=get(out,"schedule_status"); bool direct_schedule=!strcmp(str(get(out,"write_transport")),"rs485");
     if(direct_schedule) { flag(schedule_status,"fresh",native_schedule_ms&&now()-native_schedule_ms<65000); number(schedule_status,"age_seconds",native_schedule_ms?(now()-native_schedule_ms)/1000.0:NAN); }
     auto *room_schedule_status=get(out,"thermostat_schedule_status");

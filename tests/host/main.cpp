@@ -4,11 +4,18 @@
 #include "sensor_fixtures.hpp"
 #include "identity_guard.hpp"
 #include "thermostat_decoder.hpp"
+#include "network_name.hpp"
+#include <string>
 #include <cassert>
 #include <cstdio>
 void access_tests();
 
 int main() {
+    assert(network_name::valid("piec") && network_name::valid("kotlownia-2"));
+    assert(network_name::valid(std::string(63, 'a').c_str()));
+    for (const auto *bad : {"", "-piec", "piec-", "dwa piece", "PIEC", "piec.local", "localhost", "x/y"})
+        assert(!network_name::valid(bad));
+    assert(!network_name::valid(nullptr) && !network_name::valid(std::string(64, 'a').c_str()));
     access_tests();
     using identity_guard::Action;
     assert(identity_guard::decide("", "EXAMPLE123", true) == Action::enroll);

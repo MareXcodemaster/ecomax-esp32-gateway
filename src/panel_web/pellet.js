@@ -21,16 +21,13 @@
  }
  function render(data,valid){
   snapshot=data;fresh=valid;const r=readings(data,valid);
-  get('pellet-level').textContent=quantity(r.level,'%',0);get('pellet-flow').textContent=quantity(r.flow,'kg/h');
-  get('pellet-consumed').textContent=quantity(r.consumed,'kg',3);
-  get('pellet-flow-source').textContent=({boiler:'Strumie\u0144 zg\u0142aszany przez kocio\u0142',feeder_estimate:'Szacunek ESP / stan podajnika + pomiar wa\u017cony',unavailable:'Brak odczytu strumienia i aktywnego szacowania'})[r.source]||'Brak odczytu';
+  get('pellet-level').textContent=quantity(r.level,'%',0);
   get('pellet-reported-total').textContent=valid?quantity(data?.reported_consumed_kg,'kg',3):'Brak odczytu';
   get('pellet-estimated-total').textContent=valid?quantity(data?.estimated_consumed_kg,'kg',3):'Brak odczytu';
   get('pellet-counted').textContent=valid?quantity(data?.counted_seconds/3600,'h'): 'Brak odczytu';
   get('pellet-omitted').textContent=valid?quantity(data?.omitted_seconds/3600,'h'): 'Brak odczytu';
   get('pellet-feeder').textContent=valid&&data?.fresh&&typeof data.feeder_on==='boolean'?(data.feeder_on?'Pracuje':'Nie pracuje'):'Brak odczytu';
   get('pellet-calibration-status').textContent=data?.boiler_calibration_status||'Brak potwierdzonej komendy kalibracji zasobnika RS485';
-  get('pellet-storage').textContent=!valid?'Brak po\u0142\u0105czenia z ESP':data?.storage_ok===false?'B\u0142\u0105d pami\u0119ci ESP':data?.restored_after_restart?'Licznik z pami\u0119ci ESP / przerwa restartu nie jest zliczona':'Licznik od uruchomienia tej wersji';
   const c=data?.calibration;if(c&&!dirty&&!saving){revision=c.revision;get('pellet-mass').value=c.sample_kg??'';get('pellet-seconds').value=c.sample_seconds??'';}
   get('pellet-draft-warning').textContent=dirty&&c&&revision!==c.revision?'Pomiar zmieniono poza formularzem. Odczytaj aktualny pomiar.':'';
   get('pellet-feeder-rate').textContent=valid?quantity(c?.feeder_kg_h,'kg/h'):'Brak odczytu';preview();

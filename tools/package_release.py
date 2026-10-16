@@ -97,6 +97,19 @@ def main():
             if not info.filename.startswith(prefix) or ".." in Path(info.filename).parts:
                 raise ValueError("Unsafe archive path")
     print("PUBLIC RELEASE: " + output.name + "; files=" + str(len(paths)))
+    guide = artifacts / ("instrukcja-PL-" + version + ".zip")
+    guide_paths = [ROOT / "docs/START_PL.html", ROOT / "docs/START_PL.md",
+                   *(ROOT / "docs/images").glob("*")]
+    with zipfile.ZipFile(guide, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+        for path in sorted(guide_paths):
+            if path.is_file():
+                info = zipfile.ZipInfo(path.relative_to(ROOT / "docs").as_posix(), date_time=(2026, 1, 1, 0, 0, 0))
+                info.compress_type = zipfile.ZIP_DEFLATED
+                archive.writestr(info, path.read_bytes())
+    with zipfile.ZipFile(guide) as archive:
+        if archive.testzip() is not None:
+            raise ValueError("Guide ZIP verification failed")
+    print("POLISH GUIDE: " + guide.name)
     print("Merged SHA256: " + files["firmware-merged.bin"]["sha256"])
     print("OTA SHA256: " + files["firmware-ota.bin"]["sha256"])
     return 0

@@ -132,8 +132,11 @@ cJSON *status() {
     cJSON_AddStringToObject(wifi, "ap_ip", "192.168.4.1");
     cJSON_AddStringToObject(wifi, "ssid", local.ssid);
     cJSON_AddStringToObject(wifi, "ip", local.ip);
-    cJSON_AddStringToObject(wifi, "hostname", board::hostname);
-    cJSON_AddStringToObject(wifi, "local_url", "http://piec.local/");
+    cJSON_AddStringToObject(wifi, "hostname", local.hostname);
+    char local_url[80]; snprintf(local_url, sizeof(local_url), "http://%s.local/", local.hostname);
+    cJSON_AddStringToObject(wifi, "local_url", local_url);
+    cJSON_AddBoolToObject(wifi, "hostname_pending", local.hostname_pending);
+    cJSON_AddNumberToObject(wifi, "hostname_error", local.hostname_error);
     cJSON_AddBoolToObject(wifi, "fixed", local.fixed);
     cJSON_AddBoolToObject(wifi, "mdns_ready", local.mdns);
     cJSON_AddBoolToObject(wifi, "connected", local.connected);

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0-beta.2 - 2026-10-16
+
+- Clear Polish project title; repository address unchanged.
+- Illustrated Polish installation and Wi-Fi guide, wiring diagram and offline guide bundle.
+- Removed the two requested empty pellet tiles: flow and ESP-counted consumption.
+- Default piec.local address with a persistent, editable hostname in ESP Wi-Fi.
+- No changes to bus protocol, boiler settings or write validation.
+- Removed public financial-support placeholders from the README and release description.
+
 ## 0.7.0-beta.1 - 2026-10-16
 
 First public beta, based on the private 0.6.31 feature set.

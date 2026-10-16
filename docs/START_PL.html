@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com; base-uri 'none'; form-action 'none'">
+<title>ecoMAX Wi-Fi - instrukcja po polsku ze zdjęciami</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
+</style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>ecoMAX Wi-Fi - sterowanie kotłem z telefonu</h1>
+<h2>Instrukcja krok po kroku</h2>
+<p><strong>Oprogramowanie: 0.7.0-beta.2. Instrukcja: wydanie 2, 16.10.2026.</strong></p>
+<p>Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
+komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
+Komputer i kabel USB są potrzebne do pierwszego wgrania. Później panel
+działa przez Wi-Fi, także bez komputera i bez konta w chmurze.</p>
+<p><strong>To wersja beta. Pierwsze uruchomienie na osobnej, wyczyszczonej płytce
+nie zostało jeszcze potwierdzone sprzętowo.</strong> Zgodność jest ograniczona
+do wskazanego profilu, a nie do wszystkich kotłów PLUM.</p>
+<h2>1. Przygotuj właściwy sprzęt</h2>
+<p>Potrzebujesz:</p>
+<ul>
+<li><strong>Waveshare ESP32-S3-RS485-CAN, 16 MB flash i 8 MB PSRAM.</strong> Sam napis
+ESP32-S3 na innej płytce nie wystarcza.</li>
+<li>Kabla USB-C <strong>z transmisją danych</strong>, nie tylko do ładowania.</li>
+<li>Komputera z aktualnym Chrome albo Edge i dostępem do Internetu.</li>
+<li>Domowej sieci Wi-Fi <strong>2,4 GHz</strong>, jej nazwy oraz hasła.</li>
+<li>Do późniejszego podłączenia kotła: jednej skręconej pary przewodów
+sygnałowych i osobnego, prawidłowego zasilania ESP.</li>
+</ul>
+<p><img src="https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-17.jpg" alt="Zdjęcie producenta: USB-C, zasilanie oraz zaciski RS485 i CAN w Waveshare"></p>
+<p><em>Zdjęcie: Waveshare, <a href="https://www.waveshare.com/esp32-s3-rs485-can.htm">strona producenta</a>.
+Zdjęcie jest ładowane z witryny producenta i wymaga Internetu; nie jest
+objęte licencją MIT projektu. Pokazuje też opcjonalne złącze anteny.
+Porównuj oznaczenia na swojej wersji urządzenia, nie sam wygląd obudowy.</em></p>
+<p>Na zdjęciu <strong>Type-C</strong> to USB-C. Na drugim końcu obudowy są osobne zaciski
+<strong>RS485: A+, B-</strong> oraz <strong>CAN: H, L</strong>. Projekt nie używa zacisków CAN.
+<strong>Zaciski zasilania DC 7-36 V nie są zaciskami RS485.</strong> Do pierwszej
+konfiguracji wystarczy zasilanie z USB-C 5 V.</p>
+<h2>2. Najpierw skonfiguruj samo ESP, bez kotła</h2>
+<p><strong>Na czas wgrywania i pierwszej konfiguracji odłącz przewody RS485 od ESP.</strong>
+Nie rozkręcaj pracującego kotła. Jeżeli przewody są już podłączone wewnątrz
+kotła, odłączenie powinien wykonać instalator po bezpiecznym odizolowaniu
+zasilania urządzenia. W obudowie regulatora występuje 230 V.</p>
+<ol>
+<li>Podłącz samo ESP do komputera kablem USB-C z transmisją danych.</li>
+<li>Otwórz <a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">instalator ecoMAX Wi-Fi</a>
+w <strong>Chrome albo Edge na komputerze</strong>. Przy pierwszym wgraniu nie używaj telefonu.</li>
+<li>Przeczytaj ostrzeżenie i zaznacz potwierdzenie właściwej płytki.</li>
+<li>Kliknij <strong>Wgraj na ESP</strong>.</li>
+</ol>
+<p><img src="images/01-instalator.png" alt="Pierwszy krok instalatora: sprawdzenie płytki i przycisk Wgraj na ESP"></p>
+<p><em>Zrzut własnego instalatora. Zaznaczenie zgody odblokowuje przycisk wgrywania.
+Samo otwarcie strony nie wgrywa programu i nie zmienia ustawień.</em></p>
+<h2>3. Wybierz port USB i wgraj program</h2>
+<ol>
+<li>W systemowym oknie wyboru zaznacz port odpowiadający podłączonej płytce.
+W Windows może to być np. <strong>USB Serial Device (COM7)</strong> albo urządzenie
+<strong>USB JTAG/serial debug unit</strong>. Nazwa i numer portu zależą od komputera.</li>
+<li>Kliknij <strong>Połącz / Connect</strong> w oknie przeglądarki.</li>
+<li>W oknie narzędzia wgrywającego wybierz instalację programu
+(<strong>Install</strong>) i potwierdź zastąpienie obecnej zawartości.</li>
+<li>Poczekaj na komunikat zakończenia. <strong>Nie odłączaj kabla podczas zapisu.</strong></li>
+<li>Zamknij okno wgrywania, aby zwolniło port USB.</li>
+</ol>
+<p>Pierwsza instalacja obrazu scalonego zastępuje program i obszar NVS z
+ustawieniami ESP. Dotyczy to również sytuacji, gdy nie wybierzesz dodatkowego
+kasowania całej pamięci. Nie wgrywaj tego obrazu na działającą instalację
+tylko po to, aby zmienić nazwę domowej sieci.</p>
+<p><strong>Nie widzisz portu?</strong> Sprawdź inny kabel z transmisją danych i inny port USB.
+Zamknij monitor portu, PlatformIO i inne aplikacje korzystające z ESP.
+Jeżeli płytka nadal nie wchodzi w tryb wgrywania: przytrzymaj <strong>BOOT</strong>,
+naciśnij i zwolnij <strong>RESET</strong>, a potem zwolnij BOOT. Ponownie wybierz port.
+Po ukończeniu wgrywania naciśnij RESET bez trzymania BOOT, aby uruchomić program.</p>
+<h2>4. Zapisz swoją sieć Wi-Fi</h2>
+<ol>
+<li>Na tej samej stronie wybierz <strong>Połącz ESP przez USB</strong> i ponownie wskaż port.</li>
+<li>Instalator odczyta indywidualne hasło dostępu do Twojego ESP.</li>
+<li>Wpisz dokładną nazwę swojej sieci <strong>2,4 GHz</strong>. Duże i małe litery mają znaczenie.</li>
+<li>Wpisz hasło <strong>domowego Wi-Fi</strong> i kliknij <strong>Zapisz i połącz</strong>.</li>
+<li>Zaczekaj na połączenie i przydzielenie adresu przez router.</li>
+</ol>
+<p><img src="images/02-siec-wifi.png" alt="Przykładowy formularz: nazwa domowej sieci 2,4 GHz i jej hasło"></p>
+<p><em>Zrzut demonstracyjny z symulowanego USB, nie z instalacji autora.
+Nazwa „Moja_siec_24GHz” jest przykładem. Wpisz własną nazwę i hasło.</em></p>
+<p>Hasło Wi-Fi jest przekazywane <strong>lokalnie przez USB do ESP</strong>. Instalator
+nie wysyła go do GitHuba ani autora i nie zapisuje w przeglądarce.
+Nie trzeba wpisywać poleceń, edytować kodu ani instalować Pythona.</p>
+<p>Jeżeli po około minucie połączenia nadal nie ma, sprawdź nazwę, hasło,
+zasięg i pasmo 2,4 GHz. Sieć gościnna z izolacją klientów może uniemożliwić
+późniejsze otwarcie panelu. Poprawienie sieci nie wymaga ponownego wgrywania.</p>
+<h2>5. Zachowaj hasło ESP i otwórz panel</h2>
+<p><strong>Są dwa różne hasła:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Hasło</th>
+<th>Do czego służy</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Hasło domowego Wi-Fi</td>
+<td>Pozwala ESP połączyć się z Twoim routerem. Wpisujesz je w kroku 4.</td>
+</tr>
+<tr>
+<td>Indywidualne hasło ESP</td>
+<td>Służy do logowania do panelu oraz do sieci konfiguracyjnej ESP. Instalator odczytuje je przez USB.</td>
+</tr>
+</tbody></table>
+<ol>
+<li>W kroku <strong>Otwórz swój panel</strong> zachowaj hasło ESP w swoim menedżerze haseł.
+Przycisk oka pokazuje hasło, a przycisk kopiowania kopiuje je do schowka.</li>
+<li>Kliknij <strong>Otwórz panel ESP</strong>. Login to <strong>admin</strong>, a hasło to hasło ESP,
+<strong>nie</strong> hasło domowego Wi-Fi i <strong>nie</strong> hasło konta ecoNET24.</li>
+<li>Telefon lub tablet podłącz do tej samej domowej sieci.</li>
+<li>Na telefonie otwórz <strong><a href="http://piec.local/">http://piec.local/</a></strong>. Jeżeli adres z końcówką
+<code>.local</code> nie działa, użyj adresu IP pokazanego przez instalator lub router.</li>
+<li>Dodaj stronę do ekranu głównego telefonu/tabletu albo do zakładek.</li>
+</ol>
+<p><img src="images/03-polaczono.png" alt="Przykładowy wynik połączenia: login, hasło ESP i przycisk otwarcia panelu"></p>
+<p><em>Zrzut demonstracyjny. Adres 192.0.2.10 jest wyłącznie przykładem dokumentacyjnym.
+Nie przepisuj go do swojej instalacji. Twój adres zostanie przydzielony przez router.</em></p>
+<p>Po restarcie ESP pamięta dane sieci. Zwykła aktualizacja OTA zachowuje
+indywidualne hasło. Pełne kasowanie pamięci lub pierwsza instalacja USB
+mogą je zmienić. Hasło ESP można ponownie odczytać przez USB.</p>
+<h3>Własna nazwa zamiast piec.local</h3>
+<p>Domyślnie panel ma adres <strong><a href="http://piec.local/">http://piec.local/</a></strong>. W zakładce <strong>ESP Wi-Fi</strong>
+wpisz nową nazwę adresu, np. <strong>kotlownia</strong>, i naciśnij <strong>Zapisz nazwę</strong>.
+Następnie otwórz <strong><a href="http://kotlownia.local/">http://kotlownia.local/</a></strong>. Nie wpisuj całego adresu IP.
+Dozwolone są litery a-z, cyfry i myślniki wewnątrz nazwy, maksymalnie 63 znaki.
+Każde ESP w tej samej sieci powinno mieć inną nazwę.</p>
+<p>Zmiana jest zapamiętywana i nie wymaga restartu ani rozłączenia Wi-Fi.
+Adres IP nie zmienia się od tej operacji. Nazwa widoczna w tabeli DHCP routera
+może odświeżyć się dopiero przy kolejnym połączeniu lub odnowieniu dzierżawy.
+Gdy telefon/router nie obsługuje nazw .local, nadal można użyć adresu IP.</p>
+<h2>6. Alternatywnie ustaw Wi-Fi telefonem</h2>
+<p>Ten wariant jest przydatny, gdy konfigurujesz ESP blisko kotła, a nie przy komputerze.
+Program musi być już wgrany, a indywidualne hasło ESP odczytane w kroku 4.</p>
+<ol>
+<li>W telefonie otwórz ustawienia Wi-Fi i znajdź sieć <strong>Lazar-Setup-XXXX</strong>.
+Końcówka jest zależna od konkretnej płytki.</li>
+<li>Połącz się, używając <strong>hasła ESP</strong>. Pozostań w tej sieci mimo ostrzeżenia
+telefonu o braku Internetu. Na czas konfiguracji możesz wyłączyć transmisję
+komórkową, jeżeli telefon sam ucieka do innego połączenia.</li>
+<li>Otwórz <strong><a href="http://192.168.4.1/diagnostics">http://192.168.4.1/diagnostics</a></strong>.</li>
+<li>Zaloguj się jako <strong>admin</strong>, używając hasła ESP.</li>
+<li>W sekcji <strong>Domowe Wi-Fi</strong> wybierz lub wpisz nazwę własnej sieci 2,4 GHz,
+podaj jej hasło i zapisz.</li>
+<li>Sprawdź uzyskany adres IP, przełącz telefon do swojej domowej sieci
+i otwórz panel ESP.</li>
+</ol>
+<p>Późniejsza zmiana sieci: w panelu wybierz <strong>ESP Wi-Fi → Konfiguruj sieć Wi-Fi</strong>.
+Nie trzeba ponownie wgrywać programu. Dokładniej: <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/WIFI.md">konfiguracja Wi-Fi</a>.</p>
+<h2>7. Podłącz RS485 do zgodnego regulatora</h2>
+<p><strong>Ten etap powinien wykonać instalator.</strong> Wyłącz i odizoluj zasilanie
+kotła. Nie zmieniaj przewodów przy pracującym urządzeniu. Nie dotykaj
+zacisków 230 V, STB, zabezpieczeń, palnika ani obwodów pomp.</p>
+<p>Na sprawdzonej wersji <strong>ecoMAX860P-LZ TOUCH / ecoMAX860P4-LZ</strong> komunikacja
+z panelem jest na magistrali <strong>G4</strong>. <strong>G1 / M-BUS nie jest tym portem.</strong>
+Nie przenoś tego oznaczenia automatycznie na inne wersje regulatorów.</p>
+<p><img src="images/polaczenie-rs485.svg" alt="Schemat sygnałów RS485: Waveshare A+ do D+ regulatora, B- do D-"></p>
+<p><em>To połączenie sygnałów, a nie rysunek kolejności pinów dowolnej wtyczki RJ.</em></p>
+<table>
+<thead>
+<tr>
+<th>Waveshare, zaciski RS485</th>
+<th>Regulator, potwierdzone sygnały magistrali panelu</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A+</td>
+<td>D+</td>
+</tr>
+<tr>
+<td>B-</td>
+<td>D-</td>
+</tr>
+</tbody></table>
+<ul>
+<li>Użyj jednej skręconej pary przewodów, np. pary ze skrętki UTP.
+Kolory są pomocnicze; liczą się oznaczenia sygnałów.</li>
+<li><strong>Nie wkładaj przypadkowego kabla Ethernet i nie zgaduj numerów pinów.</strong>
+Wersje złączy i regulatorów mogą się różnić. Brak opisu D+/D- oznacza,
+że trzeba najpierw sprawdzić schemat konkretnej wersji u producenta.</li>
+<li>Zostaw ekran kotła i obecny termostat w ich prawidłowych połączeniach.</li>
+<li>Zasilaj ESP z USB-C 5 V albo dedykowanego wejścia DC 7-36 V zgodnie
+z dokumentacją Waveshare. Nie pobieraj zasilania z przypadkowych pinów G4.</li>
+<li>Nie łącz GND USB/ESP z PE ani przypadkowym zaciskiem kotła. Ewentualny
+przewód odniesienia musi mieć potwierdzone, właściwe zaciski po obu stronach.</li>
+<li>Przy dołączeniu do istniejącej, zakończonej magistrali pozostaw dodatkowy
+terminator 120 Ω na ESP wyłączony. Zakończenia należą do obu końców linii,
+a nie do każdego urządzenia.</li>
+<li>Zamknij obudowę, zanim przywrócisz zasilanie.</li>
+</ul>
+<p>Więcej: <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PODLACZENIE.md">pełny opis podłączenia i konfliktu adresu</a>,
+<a href="https://www.hkslazar.pl/instrukcje-pozostale">instrukcje HKS Lazar</a>,
+<a href="https://www.waveshare.com/wiki/ESP32-S3-RS485-CAN">dokumentacja Waveshare</a>.</p>
+<h2>8. Wybierz sposób komunikacji</h2>
+<table>
+<thead>
+<tr>
+<th>Tryb</th>
+<th>Jak działa</th>
+<th>Co z fizycznym ecoNET</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RS485</td>
+<td>ESP odczytuje i zapisuje przez magistralę kotła.</td>
+<td>ecoNET nie może być aktywny na tej samej magistrali pod adresem 0x56.</td>
+</tr>
+<tr>
+<td>ecoNET lokalny</td>
+<td>ESP komunikuje się przez domową sieć z Twoim modułem ecoNET.</td>
+<td>Moduł musi być zasilony i dostępny lokalnie. Chmura nie jest potrzebna.</td>
+</tr>
+<tr>
+<td>Hybrydowy</td>
+<td>Odczyt RS485 jest pasywny, zapis idzie przez lokalny ecoNET.</td>
+<td>ecoNET pozostaje włączony.</td>
+</tr>
+</tbody></table>
+<p>ESP w trybie aktywnym RS485 używa adresu <strong>0x56 (86)</strong>, takiego jak ecoNET.
+<strong>To adres magistrali, a nie adres IP Wi-Fi.</strong> Dwa aktywne urządzenia
+pod tym samym adresem mogą zakłócać komunikację. Nie obchodź blokady
+nadawania przez ustawienie losowego adresu.</p>
+<p>Tryb ustawiasz w panelu w konfiguracji połączenia, przez ikonę koła
+zębatego przy stanie połączenia. Przy wyborze ecoNET podaj jego <strong>lokalny
+adres, lokalny login i lokalne hasło</strong>. To nie są dane konta ecoNET24.
+Program nie ma wpisanego adresu ani hasła modułu należącego do autora.</p>
+<h2>9. Sprawdź, czy instalacja działa</h2>
+<ol>
+<li>Sprawdź, czy panel pokazuje połączenie, model regulatora i świeże odczyty.</li>
+<li>Poczekaj na identyfikację i katalog. Przy pierwszym uruchomieniu może
+to potrwać kilkadziesiąt sekund. Samo Wi-Fi nie oznacza jeszcze komunikacji z kotłem.</li>
+<li>Porównaj odczyt temperatury z ekranem regulatora. Nie traktuj pustego
+pola albo napisu „Brak odczytu” jako zera.</li>
+<li>Nie odblokowuj na siłę edycji, jeśli program zgłasza inny model, UID,
+wersję katalogu albo konflikt na magistrali.</li>
+<li>Zapis nastawy wykonuj raz i sprawdź wynik. „Niepotwierdzony” oznacza,
+że programu nie wolno traktować jako potwierdzenia zmiany na kotle.</li>
+</ol>
+<p>ESP zapisuje lokalnie tożsamość pierwszego zgodnego regulatora. Zmiana
+tożsamości lub niezgodny model blokują zapis. Przeczytaj
+<a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/ZGODNOSC.md">zgodność i ograniczenia</a> przed użyciem funkcji sterujących.</p>
+<h2>10. Codzienna obsługa z telefonu</h2>
+<table>
+<thead>
+<tr>
+<th>Zakładka</th>
+<th>Do czego służy</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dane bieżące</td>
+<td>Temperatury zmierzone, nastawy i rzeczywiste stany dostępne w regulatorze.</td>
+</tr>
+<tr>
+<td>Parametry użytkownika</td>
+<td>Odczyt i zmiana udostępnionych nastaw w dozwolonym zakresie.</td>
+</tr>
+<tr>
+<td>Parametry serwisowe</td>
+<td>Ustawienia wymagające znajomości kotła; nie zmieniaj ich eksperymentalnie.</td>
+</tr>
+<tr>
+<td>Harmonogram</td>
+<td>Tydzień od poniedziałku do niedzieli; jedna kratka to 30 minut. Obok jest opis działania wybranego harmonogramu.</td>
+</tr>
+<tr>
+<td>Historia danych</td>
+<td>Pomiary z maksymalnie ostatnich 3 dni. Historia zbiera się dopiero podczas pracy tej instalacji.</td>
+</tr>
+<tr>
+<td>Alarmy</td>
+<td>Powiadomienia i odczytywana historia zgłoszona przez regulator.</td>
+</tr>
+<tr>
+<td>Pellet</td>
+<td>Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. W wersji 0.7.0-beta.2 usunięto dwa puste kafelki strumienia i zużycia ESP.</td>
+</tr>
+<tr>
+<td>ESP Wi-Fi</td>
+<td>Łączność samego ESP. Dane sieci modułu ecoNET są osobnym zestawem.</td>
+</tr>
+</tbody></table>
+<p>Temperatura <strong>zmierzona</strong> to odczyt czujnika. Temperatura <strong>zadana</strong> to cel.
+Harmonogram może zmieniać cel; nie zmienia w ten sposób odczytu czujnika.
+Histereza to jeszcze inny parametr. Więcej: <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PANEL.md">instrukcja panelu</a>.</p>
+<h2>11. Aktualizacja bez komputera</h2>
+<ol>
+<li>Pobierz <strong>firmware-ota.bin</strong> ze zgodnego wydania w
+<a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Releases</a>.</li>
+<li>Otwórz <strong><a href="http://piec.local/diagnostics">http://piec.local/diagnostics</a></strong> lub adres IP własnego ESP
+zakończony <code>/diagnostics</code> i zaloguj się hasłem ESP.</li>
+<li>Wybierz plik w sekcji aktualizacji i wyślij go <strong>jeden raz</strong>.</li>
+<li>Nie odłączaj zasilania. Zaczekaj na restart ESP i sprawdź wersję po powrocie panelu.</li>
+</ol>
+<p><strong>firmware-merged.bin służy do pierwszej instalacji USB pod 0x0.
+Nie używaj go jako obrazu OTA. firmware-ota.bin nie służy do wgrywania pod 0x0.</strong></p>
+<p>Nieznany wynik aktualizacji: najpierw sprawdź dostępność i wersję,
+zamiast wielokrotnie wysyłać ten sam plik. Przejście ze starej prywatnej
+instalacji do publicznego pierwszego startu nie jest potwierdzoną ścieżką migracji.</p>
+<h2>12. Najczęstsze problemy</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Co sprawdzić</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Przycisk wgrywania jest nieaktywny</td>
+<td>Potwierdzenie modelu, Chrome/Edge na komputerze, HTTPS i brak zajętego portu USB.</td>
+</tr>
+<tr>
+<td>Nie ma portu USB</td>
+<td>Kabel z transmisją danych, inny port, BOOT/RESET; zamknij monitory portu.</td>
+</tr>
+<tr>
+<td>Nie można ponownie połączyć USB</td>
+<td>Zamknij okno wgrywania i inne programy korzystające z ESP.</td>
+</tr>
+<tr>
+<td>ESP nie łączy się z Wi-Fi</td>
+<td>Dokładna nazwa i hasło, 2,4 GHz, zasięg; nie wgrywaj programu ponownie.</td>
+</tr>
+<tr>
+<td>piec.local nie działa</td>
+<td>Użyj IP z instalatora/routera; sprawdź tę samą sieć i izolację klientów.</td>
+</tr>
+<tr>
+<td>Panel działa, ale nie ma odczytów kotła</td>
+<td>Osobno sprawdź RS485/ecoNET, właściwe sygnały, tryb, model i konflikt adresu.</td>
+</tr>
+<tr>
+<td>Zapis nie jest potwierdzony</td>
+<td>Odczytaj aktualną nastawę i stan połączenia; nie wysyłaj polecenia w pętli.</td>
+</tr>
+<tr>
+<td>Brak wykresu sprzed instalacji</td>
+<td>ESP nie pobiera starej historii z chmury. Historia zaczyna się lokalnie.</td>
+</tr>
+<tr>
+<td>Brak części nastaw albo kalibracji zasobnika</td>
+<td>Regulator może nie udostępniać tej funkcji lub zapis nie ma potwierdzonego mapowania. Nie wysyłaj losowych komend.</td>
+</tr>
+</tbody></table>
+<p>Nie wystawiaj panelu HTTP bezpośrednio do Internetu. Do zdalnego dostępu
+użyj VPN na routerze lub osobnej bramce. ESP nie wymaga chmury do działania
+w domu. Nie publikuj zrzutów z hasłami, UID, numerami seryjnymi ani danymi własnej sieci.</p>
+</main></body></html>

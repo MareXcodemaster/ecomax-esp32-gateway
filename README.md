@@ -1,14 +1,18 @@
-# ESP32 ecoMAX Gateway
+# ecoMAX Wi-Fi - sterowanie kotłem z telefonu
 
 Lokalny panel kotla ecoMAX na ESP32: **RS485 lub lokalny ecoNET**, telefon/tablet,
 nastawy, ecoSTER, harmonogramy, alarmy i historia pomiarow z ostatnich 3 dni.
 Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 
-**Wersja 0.7.0-beta.1. Projekt niezalezny, nieoficjalny. Nie jest produktem
+**Wersja 0.7.0-beta.2. Projekt niezalezny, nieoficjalny. Nie jest produktem
 PLUM, HKS Lazar ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
 
 ## Zacznij Tutaj
+
+**[Polska instrukcja ze zdjeciami: od USB do sterowania kotlem](docs/START_PL.md)**
+
+![Instalator ecoMAX Wi-Fi - pierwszy krok](docs/images/01-instalator.png)
 
 1. Przeczytaj [zgodnosc i ograniczenia](docs/ZGODNOSC.md).
 2. Na komputerze otworz [instalator USB](https://marexcodemaster.github.io/ecomax-esp32-gateway/)
@@ -21,6 +25,9 @@ kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
    wykonaj [polaczenie RS485](docs/PODLACZENIE.md).
 6. Otworz `http://piec.local/` lub adres IP nadany ESP przez Twoj router.
 
+Domyslna nazwe `piec.local` mozesz zmienic w zakladce **ESP Wi-Fi**,
+np. na `kotlownia.local`. Zostaje zapamietana po restarcie.
+
 Pierwsza instalacja wymaga komputera i kabla USB z transmisja danych.
 Potem ESP dziala samodzielnie, a panel i OTA obsluzysz telefonem/tabletem.
 
@@ -28,7 +35,7 @@ Instalator nie wymaga Pythona ani edycji kodu. Wi-Fi mozna tez skonfigurowac
 [telefonem przez siec ESP](docs/WIFI.md). Opcja zapasowa:
 [paczka ZIP/BIN](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases)
 i [instrukcja recznej instalacji](docs/INSTALACJA.md).
-Adres instalatora zacznie dzialac po publikacji repozytorium i wdrozeniu Pages.
+Instrukcje mozna tez otworzyc [bezposrednio przy instalatorze](https://marexcodemaster.github.io/ecomax-esp32-gateway/instrukcja.html).
 
 ## Co Zawiera
 

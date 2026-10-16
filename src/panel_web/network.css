@@ -1,0 +1,5 @@
+.network-name{max-width:560px;margin-top:24px;padding-top:20px;border-top:1px solid #d7e1da}
+.network-name label{display:block;margin-bottom:8px}
+.network-name-input{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.network-name-input input{width:100%;min-width:0}
+.network-name p{overflow-wrap:anywhere}

@@ -77,6 +77,10 @@ bool self_test_api() {
     check("wifi-missing-guard", request("/api/wifi", auth, nullptr, "{}"), 403);
     check("foreign-origin", request("/api/wifi", auth, nullptr, "{}", true, "http://other.invalid"), 403);
     check("invalid-wifi", request("/api/wifi", auth, nullptr, "{}", true), 400);
+    check("hostname-no-auth", request("/api/hostname", nullptr, nullptr, "{}", true), 401);
+    check("hostname-missing-guard", request("/api/hostname", auth, nullptr, "{}"), 403);
+    check("hostname-foreign-origin", request("/api/hostname", auth, nullptr, "{}", true, "http://other.invalid"), 403);
+    check("hostname-invalid", request("/api/hostname", auth, nullptr, "{\"hostname\":\"bad name\"}", true), 400);
     check("invalid-baud", request("/api/sniffer", auth, nullptr, "{\"baud\":123}", true), 400);
     check("boiler-readonly", request("/api/ecomax", auth), 200);
     check("boiler-no-auth", request("/api/ecomax", nullptr), 401);

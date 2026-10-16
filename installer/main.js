@@ -23,7 +23,8 @@ function showAddress(wifi) {
   if (!url) { clearAddress(); return false; }
   $('open-panel').href = url;
   $('open-panel').hidden = false;
-  $('device-address').textContent = `Adres: ${url} (komputer lub telefon musi byc w tej samej sieci). Pozniej mozesz uzywac http://piec.local/`;
+  const hostname = typeof wifi.hostname === 'string' && wifi.hostname.length <= 63 && /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(wifi.hostname) ? wifi.hostname : 'piec';
+  $('device-address').textContent = `Adres: ${url} (komputer lub telefon musi byc w tej samej sieci). Adres lokalny: http://${hostname}.local/`;
   return true;
 }
 function updateButtons() {

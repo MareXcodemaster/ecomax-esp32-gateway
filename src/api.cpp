@@ -306,6 +306,21 @@ static esp_err_t configure_wifi(httpd_req_t *req) {
     cJSON_Delete(body);
     return message(req, result == ESP_OK ? "202 Accepted" : "400 Bad Request", result == ESP_OK ? "Zapisano WiFi. AP pozostaje wlaczony." : esp_err_to_name(result));
 }
+static esp_err_t configure_hostname(httpd_req_t *req) {
+    if (!authorize(req, true)) return ESP_OK;
+    auto *body = request_json(req); if (!body) return ESP_OK;
+    auto *name = cJSON_GetObjectItemCaseSensitive(body, "hostname");
+    auto result = cJSON_IsString(name) ? network::configure_hostname(name->valuestring) : ESP_ERR_INVALID_ARG;
+    auto *reply = cJSON_CreateObject();
+    cJSON_AddStringToObject(reply, "message", result == ESP_OK ? "Zapisano nazwe. Otworz nowy adres .local; IP pozostaje bez zmian." : esp_err_to_name(result));
+    if (result == ESP_OK) {
+        char url[80]; snprintf(url, sizeof(url), "http://%s.local/", name->valuestring);
+        cJSON_AddStringToObject(reply, "local_url", url);
+    }
+    cJSON_Delete(body);
+    httpd_resp_set_status(req, result == ESP_OK ? "202 Accepted" : "400 Bad Request");
+    return json(req, reply);
+}
 static esp_err_t configure_sniffer(httpd_req_t *req) {
     if (!authorize(req, true)) return ESP_OK;
     auto *body = request_json(req); if (!body) return ESP_OK;
@@ -448,7 +463,7 @@ void start() {
     add("/", HTTP_GET, panel_asset); add("/diagnostics", HTTP_GET, root); add("/api/login", HTTP_POST, login); add("/api/logout", HTTP_POST, logout);
     add("/api/status", HTTP_GET, status); add("/api/ping", HTTP_GET, ping);
     add("/api/capture", HTTP_GET, capture); add("/api/logs", HTTP_GET, logs);
-    add("/api/wifi", HTTP_POST, configure_wifi); add("/api/sniffer", HTTP_POST, configure_sniffer);
+    add("/api/wifi", HTTP_POST, configure_wifi); add("/api/hostname", HTTP_POST, configure_hostname); add("/api/sniffer", HTTP_POST, configure_sniffer);
     add("/api/ota", HTTP_POST, ota); add("/api/ecomax", HTTP_GET, ecomax);
     add("/api/mixers", HTTP_GET, subset); add("/api/thermostats", HTTP_GET, subset);
     add("/api/alarms", HTTP_GET, alarms); add("/api/frames", HTTP_GET, frame_stats);

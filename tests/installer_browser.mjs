@@ -11,7 +11,7 @@ const server = createServer(async (req, res) => {
   try {
     const file = path === root ? resolve(root, 'index.html') : path;
     const data = await readFile(file);
-    const types = { '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.html': 'text/html' };
+    const types = { '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.html': 'text/html', '.png': 'image/png', '.svg': 'image/svg+xml' };
     res.writeHead(200, { 'Content-Type': types[extname(file)] || 'application/octet-stream' }).end(data);
   } catch { res.writeHead(404).end(); }
 });
@@ -89,6 +89,51 @@ try {
   assert.equal(await unsupported.locator('#connect').isEnabled(), false);
   console.log('PASS unsupported browser: clear fallback, USB actions disabled');
   await unsupported.close();
+  for (const width of [1280,390]) {
+    const page=await browser.newPage({viewport:{width,height:900}});
+    await page.route('https://www.waveshare.com/**',route=>route.abort());
+    await page.goto(origin+'/instrukcja.html');
+    assert.match(await page.title(),/ecoMAX/);
+    assert.equal(await page.locator('h1').count(),1);
+    await page.waitForFunction(()=>[...document.images].filter(img=>img.src.startsWith(location.origin)).every(img=>img.complete&&img.naturalWidth>0));
+    assert.equal(await page.locator('img').count(),5);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'guide fits screen');
+    await page.screenshot({path:`test-results/guide-${width}.png`,fullPage:true});
+    await page.close();
+    console.log(`PASS Polish guide ${width}px: local screenshots and wiring image loaded, layout`);
+  }
+  const html=await readFile('src/panel_web/index.html','utf8');
+  const section=html.match(/<section data-section="espwifi"[^>]*>[\s\S]*?<\/section>/)[0].replace(' hidden','');
+  for (const width of [1280,390]) {
+    const page=await browser.newPage({viewport:{width,height:850}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.setContent('<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body><main>'+section+'<div id="address"></div></main></body></html>');
+    for(const file of ['style.css','network.css'])await page.addStyleTag({content:await readFile('src/panel_web/'+file,'utf8')});
+    await page.addScriptTag({content:await readFile('src/panel_web/network.js','utf8')});
+    await page.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});
+    await page.evaluate(()=>{
+      window.state={write_transport:'rs485'};window.hostnameWrites=[];
+      window.request=async(path,payload)=>{window.hostnameWrites.push({path,payload});return {local_url:'http://'+payload.hostname+'.local/'};};
+      EcoNetwork.init();EcoNetwork.render({hostname:'piec'});lucide.createIcons();
+    });
+    assert.equal(await page.locator('#esp-hostname').inputValue(),'piec');
+    await page.locator('#esp-hostname').fill('bad name');
+    await page.locator('#esp-hostname-save').click();
+    assert.equal(await page.evaluate(()=>window.hostnameWrites.length),0);
+    await page.locator('#esp-hostname').fill('Kotlownia.local');
+    await page.evaluate(()=>EcoNetwork.render({hostname:'piec'}));
+    assert.equal(await page.locator('#esp-hostname').inputValue(),'Kotlownia.local','poll preserves draft');
+    await page.locator('#esp-hostname-save').click();
+    await page.locator('#esp-hostname-link').waitFor({state:'visible'});
+    assert.equal(await page.locator('#esp-hostname-link').getAttribute('href'),'http://kotlownia.local/');
+    assert.deepEqual(await page.evaluate(()=>window.hostnameWrites),[{path:'/api/hostname',payload:{hostname:'kotlownia'}}]);
+    await page.evaluate(()=>EcoNetwork.render({hostname:'kotlownia'}));
+    assert.equal(await page.locator('#address').innerText(),'kotlownia.local / RS485');
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    await page.screenshot({path:`test-results/network-${width}.png`,fullPage:true});
+    assert.deepEqual(errors,[]);await page.close();
+    console.log(`PASS hostname ${width}px: validation, preserved draft, one save, new local address`);
+  }
 } finally {
   await browser.close();
   await new Promise(resolve => server.close(resolve));

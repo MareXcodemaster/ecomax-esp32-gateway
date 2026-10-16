@@ -9,6 +9,7 @@
 #include "nvs.h"
 #include "mdns.h"
 #include "network_defaults.hpp"
+#include "network_name.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -25,8 +26,24 @@ static SemaphoreHandle_t config_mutex;
 static std::atomic<bool> pending{true}, connected{false}, reconnect{false};
 static std::atomic<int> reason{0};
 static esp_netif_t *sta;
-static bool mdns_ready = false;
+static bool mdns_ready = false, mdns_started = false;
 static char ap_name[33];
+static char saved_hostname[64];
+static std::atomic<bool> hostname_pending{false};
+esp_err_t configure_hostname(const char *hostname) {
+    if (!network_name::valid(hostname)) return ESP_ERR_INVALID_ARG;
+    nvs_handle_t handle;
+    auto result = nvs_open("lazar_s0", NVS_READWRITE, &handle);
+    if (result != ESP_OK) return result;
+    result = nvs_set_str(handle, "hostname", hostname);
+    if (result == ESP_OK) result = nvs_commit(handle);
+    nvs_close(handle);
+    if (result != ESP_OK) return result;
+    xSemaphoreTake(config_mutex, portMAX_DELAY);
+    snprintf(saved_hostname, sizeof(saved_hostname), "%s", hostname);
+    xSemaphoreGive(config_mutex);
+    hostname_pending.store(true); return ESP_OK;
+}
 static std::atomic<bool> scan_pending{false}, scanning{false};
 static wifi_ap_record_t scan_records[16]{};
 static uint16_t scan_count = 0, scan_total = 0;
@@ -83,9 +100,23 @@ esp_err_t configure(const char *ssid, const char *password) {
 }
 static void wifi_task(void *) {
     Credentials current; bool trying = false; unsigned attempts = 0;
+    char hostname[64]; snprintf(hostname, sizeof(hostname), "%s", saved_hostname);
+    esp_err_t hostname_error = ESP_OK;
     uint64_t next = 0;
     for (;;) {
         auto now = static_cast<uint64_t>(esp_timer_get_time() / 1000);
+        if (hostname_pending.exchange(false)) {
+            xSemaphoreTake(config_mutex, portMAX_DELAY);
+            snprintf(hostname, sizeof(hostname), "%s", saved_hostname);
+            xSemaphoreGive(config_mutex);
+            hostname_error = esp_netif_set_hostname(sta, hostname);
+            if (mdns_started) {
+                auto error = mdns_hostname_set(hostname);
+                mdns_ready = error == ESP_OK;
+                if (error != ESP_OK) hostname_error = error;
+            } else if (hostname_error == ESP_OK) hostname_error = ESP_ERR_INVALID_STATE;
+            state::log("Local hostname applied: %s.local (%s); WiFi remains connected", hostname, esp_err_to_name(hostname_error));
+        }
         if (pending.exchange(false)) {
             xSemaphoreTake(config_mutex, portMAX_DELAY); current = saved; xSemaphoreGive(config_mutex);
             esp_wifi_disconnect(); connected.store(false); reconnect.store(false); trying = false; attempts = 0;
@@ -138,6 +169,8 @@ static void wifi_task(void *) {
         state::Network value;
         snprintf(value.ap, sizeof(value.ap), "%s", ap_name);
         snprintf(value.ssid, sizeof(value.ssid), "%s", current.ssid);
+        snprintf(value.hostname, sizeof(value.hostname), "%s", hostname);
+        value.hostname_pending = hostname_pending.load(); value.hostname_error = hostname_error;
         value.connected = connected.load(); value.reason = reason.load(); value.retries = attempts;
         value.fixed = provision::fixed; value.mdns = mdns_ready && value.connected;
         wifi_ap_record_t info;
@@ -151,7 +184,7 @@ static void wifi_task(void *) {
         }
         auto previous = state::network(); state::network(value);
         if (value.connected && !previous.connected)
-            state::log("STA online: http://%s / http://piec.local/ RSSI=%d dBm", value.ip, value.rssi);
+            state::log("STA online: http://%s / http://%s.local/ RSSI=%d dBm", value.ip, value.hostname, value.rssi);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
@@ -186,11 +219,16 @@ static void dns_task(void *) {
 }
 void start() {
     config_mutex = xSemaphoreCreateMutex(); configASSERT(config_mutex);
+    snprintf(saved_hostname, sizeof(saved_hostname), "%s", board::hostname);
     nvs_handle_t handle;
     if (nvs_open("lazar_s0", NVS_READONLY, &handle) == ESP_OK) {
         size_t size = sizeof(saved);
         if (nvs_get_blob(handle, "wifi", &saved, &size) != ESP_OK || size != sizeof(saved)) saved = {};
-        saved.ssid[32] = saved.password[64] = 0; nvs_close(handle);
+        saved.ssid[32] = saved.password[64] = 0;
+        char hostname[64]{}; size_t hostname_size = sizeof(hostname);
+        if (nvs_get_str(handle, "hostname", hostname, &hostname_size) == ESP_OK && network_name::valid(hostname))
+            snprintf(saved_hostname, sizeof(saved_hostname), "%s", hostname);
+        nvs_close(handle);
     }
     if (provision::fixed) {
         snprintf(saved.ssid, sizeof(saved.ssid), "%s", provision::ssid);
@@ -199,7 +237,7 @@ void start() {
     }
     ESP_ERROR_CHECK(esp_netif_init()); ESP_ERROR_CHECK(esp_event_loop_create_default());
     auto *ap_netif = esp_netif_create_default_wifi_ap(); sta = esp_netif_create_default_wifi_sta();
-    ESP_ERROR_CHECK(esp_netif_set_hostname(sta, board::hostname));
+    ESP_ERROR_CHECK(esp_netif_set_hostname(sta, saved_hostname));
     wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT(); ESP_ERROR_CHECK(esp_wifi_init(&config));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, event, nullptr));
@@ -218,13 +256,13 @@ void start() {
         // Advertise only on the home LAN, not the fallback setup interface.
         mdns_error = mdns_netif_action(ap_netif,
             static_cast<mdns_event_actions_t>(MDNS_EVENT_DISABLE_IP4 | MDNS_EVENT_DISABLE_IP6));
-        if (mdns_error == ESP_OK) mdns_error = mdns_hostname_set(board::hostname);
+        if (mdns_error == ESP_OK) mdns_error = mdns_hostname_set(saved_hostname);
         if (mdns_error == ESP_OK) mdns_error = mdns_instance_name_set("Lazar Gateway");
         if (mdns_error == ESP_OK) mdns_error = mdns_service_add(nullptr, "_http", "_tcp", 80, nullptr, 0);
-        mdns_ready = mdns_error == ESP_OK;
+        mdns_ready = mdns_started = mdns_error == ESP_OK;
         if (!mdns_ready) mdns_free();
     }
-    state::log("mDNS piec.local on STA: %s; address requires router connection", esp_err_to_name(mdns_error));
+    state::log("mDNS %s.local on STA: %s; address requires router connection", saved_hostname, esp_err_to_name(mdns_error));
     state::log("Setup AP=%s; http://192.168.4.1; WWW user=%s; unique password available over USB only", ap_name, board::user);
     configASSERT(xTaskCreate(wifi_task, "wifi_manager", 4096, nullptr, 4, nullptr) == pdPASS);
     configASSERT(xTaskCreate(dns_task, "setup_dns", 3072, nullptr, 3, nullptr) == pdPASS);

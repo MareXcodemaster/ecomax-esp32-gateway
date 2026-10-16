@@ -4,7 +4,9 @@
 #include "cJSON.h"
 namespace state {
 struct Network {
-    char ap[33]{}, ssid[33]{}, ip[16]{};
+    char ap[33]{}, ssid[33]{}, ip[16]{}, hostname[64]{"piec"};
+    bool hostname_pending = false;
+    int hostname_error = 0;
     bool connected = false;
     bool fixed = false, mdns = false;
     int rssi = 0, channel = 0, reason = 0;
