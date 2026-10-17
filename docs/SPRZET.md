@@ -19,6 +19,32 @@ wymaga sprzetowej zmiany polozenia rezystora zgodnie z instrukcja
 producenta; samo wpiecie przewodu nie wystarcza. W programie nie ma
 przelacznika anteny. Prace lutownicze zlec serwisowi.
 
+## Montaz Na Szynie I Antena Poza Obudowa
+
+Obudowa tego Waveshare ma mocowanie na **szyne DIN 35 mm**. Instalator moze
+umiescic modul w szafce automatyki kotla albo w osobnej skrzynce obok.
+Wewnatrz kotla tylko wtedy, gdy sa odpowiednie miejsce, temperatura,
+odstepy od 230 V i bezpieczne zasilanie zgodne z dokumentacja plytki.
+Nie montuj ESP w komorze spalania, przy goracym czopuchu ani w wilgoci.
+Nie pobieraj zasilania z przypadkowych pinow sterownika.
+
+Metalowa oslona kotla tlumi Wi-Fi. Mozna dokupic antene **Wi-Fi 2,4 GHz,
+50 omow** i pasujacy przedluzacz antenowy, aby antena byla **na zewnatrz
+metalowej obudowy**, a modul zostal na szynie wewnatrz. To moze poprawic
+zasieg; efekt zalezy od miejsca montazu. Krotki przewod antenowy ogranicza
+straty. Przejscie przez obudowe powinno miec ochrone przed przetarciem,
+a przewod nie moze dotykac goracych elementow ani przewodow sieciowych.
+Montaz wykonuje instalator przy bezpiecznie odlaczonym zasilaniu.
+
+**Uwaga na zlacze: producent opisuje wariant -U jako SMA, nie RP-SMA.**
+SMA i RP-SMA nie sa zamienne; sprawdz zarowno gwint, jak i srodkowy styk.
+Dobierz antene i przewod do rzeczywistego zlacza swojej rewizji. Antena
+RP-SMA wymaga odpowiednio dobranego adaptera. W wariancie bez -U nadal
+konieczne jest sprzetowe przelaczenie toru antenowego, opisane wyzej.
+Przed zakupem sprawdz, czy antena nie jest juz w zestawie sprzedawcy.
+
+Zrodlo: [Waveshare: SMA, warianty anteny i obudowa DIN 35 mm](https://www.waveshare.com/ESP32-S3-RS485-CAN.htm).
+
 ![Waveshare ESP32-S3-RS485-CAN, model z antena wbudowana](https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-2-1.jpg)
 
 Zrodlo zdjec i porownania: [Waveshare - oba warianty produktu](https://www.waveshare.com/product/iot-communication/short-range-wireless/esp32-s3-rs485-can.htm).

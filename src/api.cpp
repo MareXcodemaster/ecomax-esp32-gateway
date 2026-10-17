@@ -301,6 +301,7 @@ static esp_err_t logs(httpd_req_t *req) {
 }
 static esp_err_t configure_wifi(httpd_req_t *req) {
     if (!authorize(req, true)) return ESP_OK;
+    if (updates::installing() || panel::is_busy()) return message(req, "409 Conflict", "Zaczekaj na zakonczenie operacji panelu lub aktualizacji ESP.");
     auto *body = request_json(req); if (!body) return ESP_OK;
     auto *ssid = cJSON_GetObjectItemCaseSensitive(body, "ssid");
     auto *password = cJSON_GetObjectItemCaseSensitive(body, "password");
@@ -313,6 +314,7 @@ static esp_err_t wifi_scan(httpd_req_t *req) {
     if(!authorize(req, req->method == HTTP_POST))return ESP_OK;
     if(req->method == HTTP_POST) {
         if(updates::installing())return message(req,"409 Conflict","Trwa aktualizacja ESP.");
+        if(panel::is_busy())return message(req,"409 Conflict","Zaczekaj na zakonczenie operacji panelu.");
         network::request_scan();
         return message(req,"202 Accepted","Wyszukiwanie sieci Wi-Fi 2,4 GHz.");
     }

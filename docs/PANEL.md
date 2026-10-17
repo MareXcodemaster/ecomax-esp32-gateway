@@ -4,7 +4,8 @@
 
 Gorny pasek: **Kafelki** wlacza edycje ukladu (przycisk zmienia sie na
 **Gotowe**), **Odswiez** pobiera aktualne dane. **Narzedzia** rozwija liste:
-Polaczenie ecoNET, sprawdzenie API i katalogu, raport JSON, diagnostyka/OTA i przywrocenie
+Zmiana sieci Wi-Fi, ustawienia ESP Wi-Fi, polaczenie ecoNET,
+sprawdzenie API i katalogu, raport JSON, diagnostyka/OTA i przywrocenie
 ukladu podczas jego edycji. **Wyloguj** jest na koncu listy.
 Menu mozna zamknac kliknieciem poza nim lub Escape; obsluguje tez Tab
 i strzalki klawiatury. Samo otwarcie menu niczego nie wysyla do kotla.
@@ -34,6 +35,25 @@ Samo ACK nie dowodzi, ze zadana wartosc zostala zastosowana. Niepotwierdzone
 polecenie nie jest automatycznie powtarzane ani automatycznie cofane.
 Zmiany wykonane na kotle/termostacie lub przez ecoNET moga zmieniac nastawy
 niezaleznie od otwartej strony.
+
+## Wi-Fi Bez Diagnostyki
+
+**Narzedzia > Zmien siec Wi-Fi** otwiera formularz bez opuszczania panelu.
+Wyszukaj sieci, wybierz swoje Wi-Fi 2,4 GHz i wpisz haslo. Dla sieci
+ukrytej mozesz wpisac nazwe recznie. Zapis zmienia siec ESP, nie nastawy kotla.
+Po zmianie przelacz telefon na nowa siec i otworz ponownie adres ESP.
+Siec awaryjna Piec-Setup pozostaje dostepna, takze przy blednym hasle routera.
+Otwarcie okna nie zapisuje niczego; skan wymaga nacisniecia Wyszukaj sieci.
+
+**Narzedzia > Ustawienia ESP Wi-Fi** pokazuje SSID, IP, sygnal i formularz
+zmiany nazwy `piec.local`. Nie jest to strona sieci modulu ecoNET.
+
+## Schemat
+
+Graficzny podglad kotla, mieszacza 1, pokoju i CWU pokazuje temperatury
+zmierzone oraz aktualne cele sterownika. Zielona pompa oznacza prace,
+szara postoj, kreski brak aktualnego odczytu. Widok jest pogladowy;
+nie zastapi dokumentacji rzeczywistej instalacji ani schematu podlaczenia.
 
 ## Hasla Dostepu
 

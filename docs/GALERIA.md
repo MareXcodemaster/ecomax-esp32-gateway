@@ -1,6 +1,6 @@
 # Jak Wyglada Panel ecoMAX Wi-Fi
 
-Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.9**, uruchomionego
+Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.10**, uruchomionego
 lokalnie z **danymi przykladowymi (DEMO)**. Nie jest to potwierdzenie
 obslugi kazdej nastawy w dowolnym kotle.
 Kliknij zdjecie, aby je powiekszyc w GitHubie.
@@ -11,6 +11,21 @@ Stan kotla, temperatury zmierzone i zadane, pokoj, mieszacz oraz poziom
 paliwa, jezeli regulator udostepnia te dane.
 
 ![Panel glowny ecoMAX Wi-Fi, dane przykladowe](images/panel/01-odczyty.png)
+
+## Schemat Instalacji
+
+Kociol, mieszacz 1, grzejniki, pokoj i zbiornik CWU. Biezace temperatury
+oraz stan pomp; brak odczytu pokazuje kreski. Jest to grafika pogladowa,
+nie dokumentacja polaczen hydraulicznych konkretnego domu.
+
+![Schemat instalacji z temperaturami, przykladowe dane DEMO](images/panel/10-schemat.png)
+
+## Zmiana Sieci Wi-Fi
+
+**Narzedzia > Zmien siec Wi-Fi**: wyszukiwanie sieci, wybor i haslo.
+**Narzedzia > Ustawienia ESP Wi-Fi**: status polaczenia, IP i nazwa .local.
+
+![Bezposrednia zmiana sieci Wi-Fi z panelu](images/panel/11-zmiana-wifi.png)
 
 ## Harmonogram Tygodniowy
 

@@ -1,6 +1,6 @@
 # ecoMAX Wi-Fi: Prosta Instrukcja Instalacji
 
-**Wersja programu 0.7.0-beta.9. Instrukcja 5, 17.10.2026.**
+**Wersja programu 0.7.0-beta.10. Instrukcja 6, 17.10.2026.**
 Nie musisz programowac ani wpisywac komend. Komputer jest potrzebny
 tylko przy pierwszym wgraniu; pozniej korzystasz z telefonu.
 
@@ -91,7 +91,16 @@ Na telefonie polacz sie z **tym samym domowym Wi-Fi**, a potem otworz:
 
 Gdy ta nazwa nie dziala, uzyj adresu IP pokazanego przez instalator.
 Adres mozesz dodac do zakladek lub ekranu glownego telefonu.
-W **ESP Wi-Fi** mozesz pozniej zmienic nazwe `piec.local` na wlasna.
+W **Narzedzia > Ustawienia ESP Wi-Fi** mozesz zmienic nazwe `piec.local` na wlasna.
+Zeby zmienic router lub siec, wybierz **Narzedzia > Zmien siec Wi-Fi**,
+kliknij **Wyszukaj sieci**, wybierz swoja siec 2,4 GHz i podaj haslo.
+Nie trzeba wchodzic do diagnostyki ani ponownie wgrywac programu.
+Po zapisie polacz telefon z nowa siecia i ponownie otworz adres ESP.
+
+Modul mozna zamontowac na szynie DIN 35 mm w odpowiedniej szafce automatyki.
+Antene Wi-Fi mozna wyprowadzic poza metalowa obudowe dla lepszego zasiegu.
+Wariant **-U ma SMA, nie RP-SMA**. Montaz i dobor zlacza:
+[sprzet, antena i bezpieczne podlaczenie](SPRZET.md#montaz-na-szynie-i-antena-poza-obudowa).
 
 ## 6. Instalator Podlacza Kociol
 

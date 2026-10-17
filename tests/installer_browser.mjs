@@ -116,7 +116,7 @@ try {
     assert.match(await page.title(),/ecoMAX/);
     assert.equal(await page.locator('h1').count(),1);
     await page.waitForFunction(()=>[...document.images].filter(img=>img.src.startsWith(location.origin)).every(img=>img.complete&&img.naturalWidth>0));
-    assert.equal(await page.locator('img').count(),9);
+    assert.equal(await page.locator('img').count(),10);
     assert.equal(await page.locator('img[src="images/boot-usb.svg"]').count(),1);
     assert.equal(await page.locator('#boot-usb').count(),1);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'guide fits screen');

@@ -8,7 +8,7 @@
 </style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>ecoMAX Wi-Fi - sterowanie kotłem z telefonu</h1>
 <h2>Instrukcja krok po kroku</h2>
 <p><strong>Pierwszy raz z ESP? Zacznij od <a href="SZYBKI_START.html">prostej instrukcji w 7 krokach</a>.</strong></p>
-<p><strong>Oprogramowanie: 0.7.0-beta.9. Instrukcja: wydanie 9, 17.10.2026.</strong></p>
+<p><strong>Oprogramowanie: 0.7.0-beta.10. Instrukcja: wydanie 10, 17.10.2026.</strong></p>
 <p>Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
 Komputer i kabel USB są potrzebne do pierwszego wgrania. Później panel
@@ -190,7 +190,7 @@ pokazanego przez instalator lub router.</li>
 <p>Adres 192.0.2.10 na zrzucie jest przykladem. Twoje IP przydziela router.
 Domyslne hasla sa publicznie znane. Nie przekierowuj portow ESP do Internetu.</p>
 <h3>Własna nazwa zamiast piec.local</h3>
-<p>Domyślnie panel ma adres <strong><a href="http://piec.local/">http://piec.local/</a></strong>. W zakładce <strong>ESP Wi-Fi</strong>
+<p>Domyślnie panel ma adres <strong><a href="http://piec.local/">http://piec.local/</a></strong>. W <strong>Narzędzia &gt; Ustawienia ESP Wi-Fi</strong>
 wpisz nową nazwę adresu, np. <strong>kotlownia</strong>, i naciśnij <strong>Zapisz nazwę</strong>.
 Następnie otwórz <strong><a href="http://kotlownia.local/">http://kotlownia.local/</a></strong>. Nie wpisuj całego adresu IP.
 Dozwolone są litery a-z, cyfry i myślniki wewnątrz nazwy, maksymalnie 63 znaki.
@@ -208,14 +208,23 @@ Końcówka jest zależna od konkretnej płytki.</li>
 <li>Polacz sie, uzywajac domyslnego hasla <strong>piecwifi</strong> (lub wlasnego hasla tej sieci). Pozostań w tej sieci mimo ostrzeżenia
 telefonu o braku Internetu. Na czas konfiguracji możesz wyłączyć transmisję
 komórkową, jeżeli telefon sam ucieka do innego połączenia.</li>
-<li>Otwórz <strong><a href="http://192.168.4.1/diagnostics">http://192.168.4.1/diagnostics</a></strong>.</li>
+<li>Otwórz <strong><a href="http://192.168.4.1/">http://192.168.4.1/</a></strong>.</li>
 <li>Zaloguj sie jako <strong>admin / admin</strong> (lub wlasnym haslem panelu).</li>
-<li>W sekcji <strong>Domowe Wi-Fi</strong> kliknij <strong>Wyszukaj sieci</strong>, wybierz własną sieć 2,4 GHz,
+<li>Wybierz <strong>Narzędzia &gt; Zmień sieć Wi-Fi</strong>, kliknij <strong>Wyszukaj sieci</strong>, wybierz własną sieć 2,4 GHz,
 podaj jej hasło i zapisz.</li>
 <li>Sprawdź uzyskany adres IP, przełącz telefon do swojej domowej sieci
 i otwórz panel ESP.</li>
 </ol>
-<p>Późniejsza zmiana sieci: w panelu wybierz <strong>ESP Wi-Fi → Konfiguruj sieć Wi-Fi</strong>.
+<p>Późniejsza zmiana sieci: w panelu wybierz <strong>Narzędzia &gt; Zmień sieć Wi-Fi</strong>.
+Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz ponownie
+<code>piec.local</code> lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
+Zmiana nie wymaga diagnostyki ani kasowania pamięci.</p>
+<p><img src="images/panel/11-zmiana-wifi.png" alt="Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi"></p>
+<p><strong>Montaż i zasięg:</strong> moduł można umieścić na szynie DIN 35 mm w odpowiedniej
+szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
+ma według producenta <strong>SMA, nie RP-SMA</strong>. Montaż w kotle tylko w bezpiecznej
+strefie zgodnej z warunkami pracy urządzenia, przez instalatora.
+Szczegóły: <a href="SPRZET.html#montaz-na-szynie-i-antena-poza-obudowa">szyna DIN, antena i dobór złącza</a>.
 Nie trzeba ponownie wgrywać programu. Dokładniej: <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/WIFI.md">konfiguracja Wi-Fi</a>.</p>
 <h2>7. Podłącz RS485 do zgodnego regulatora</h2>
 <p><strong>Ten etap powinien wykonać instalator.</strong> Wyłącz i odizoluj zasilanie
@@ -344,8 +353,8 @@ tożsamości lub niezgodny model blokują zapis. Przeczytaj
 <td>Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. Dwa puste kafelki strumienia i zużycia ESP pozostają usunięte.</td>
 </tr>
 <tr>
-<td>ESP Wi-Fi</td>
-<td>Łączność samego ESP. Dane sieci modułu ecoNET są osobnym zestawem.</td>
+<td>Narzędzia &gt; Ustawienia ESP Wi-Fi</td>
+<td>Łączność samego ESP, własna nazwa .local. Dane ecoNET są osobne.</td>
 </tr>
 </tbody></table>
 <p>Temperatura <strong>zmierzona</strong> to odczyt czujnika. Temperatura <strong>zadana</strong> to cel.

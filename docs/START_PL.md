@@ -4,7 +4,7 @@
 
 **Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
 
-**Oprogramowanie: 0.7.0-beta.9. Instrukcja: wydanie 9, 17.10.2026.**
+**Oprogramowanie: 0.7.0-beta.10. Instrukcja: wydanie 10, 17.10.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -195,7 +195,7 @@ Domyslne hasla sa publicznie znane. Nie przekierowuj portow ESP do Internetu.
 
 ### Własna nazwa zamiast piec.local
 
-Domyślnie panel ma adres **http://piec.local/**. W zakładce **ESP Wi-Fi**
+Domyślnie panel ma adres **http://piec.local/**. W **Narzędzia > Ustawienia ESP Wi-Fi**
 wpisz nową nazwę adresu, np. **kotlownia**, i naciśnij **Zapisz nazwę**.
 Następnie otwórz **http://kotlownia.local/**. Nie wpisuj całego adresu IP.
 Dozwolone są litery a-z, cyfry i myślniki wewnątrz nazwy, maksymalnie 63 znaki.
@@ -216,14 +216,25 @@ Program musi byc juz wgrany. Domyslne haslo sieci Piec-Setup to piecwifi.
 2. Polacz sie, uzywajac domyslnego hasla **piecwifi** (lub wlasnego hasla tej sieci). Pozostań w tej sieci mimo ostrzeżenia
    telefonu o braku Internetu. Na czas konfiguracji możesz wyłączyć transmisję
    komórkową, jeżeli telefon sam ucieka do innego połączenia.
-3. Otwórz **http://192.168.4.1/diagnostics**.
+3. Otwórz **http://192.168.4.1/**.
 4. Zaloguj sie jako **admin / admin** (lub wlasnym haslem panelu).
-5. W sekcji **Domowe Wi-Fi** kliknij **Wyszukaj sieci**, wybierz własną sieć 2,4 GHz,
+5. Wybierz **Narzędzia > Zmień sieć Wi-Fi**, kliknij **Wyszukaj sieci**, wybierz własną sieć 2,4 GHz,
    podaj jej hasło i zapisz.
 6. Sprawdź uzyskany adres IP, przełącz telefon do swojej domowej sieci
    i otwórz panel ESP.
 
-Późniejsza zmiana sieci: w panelu wybierz **ESP Wi-Fi → Konfiguruj sieć Wi-Fi**.
+Późniejsza zmiana sieci: w panelu wybierz **Narzędzia > Zmień sieć Wi-Fi**.
+Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz ponownie
+`piec.local` lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
+Zmiana nie wymaga diagnostyki ani kasowania pamięci.
+
+![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/11-zmiana-wifi.png)
+
+**Montaż i zasięg:** moduł można umieścić na szynie DIN 35 mm w odpowiedniej
+szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
+ma według producenta **SMA, nie RP-SMA**. Montaż w kotle tylko w bezpiecznej
+strefie zgodnej z warunkami pracy urządzenia, przez instalatora.
+Szczegóły: [szyna DIN, antena i dobór złącza](SPRZET.md#montaz-na-szynie-i-antena-poza-obudowa).
 Nie trzeba ponownie wgrywać programu. Dokładniej: [konfiguracja Wi-Fi](WIFI.md).
 
 ## 7. Podłącz RS485 do zgodnego regulatora
@@ -307,7 +318,7 @@ tożsamości lub niezgodny model blokują zapis. Przeczytaj
 | Historia danych | Pomiary z maksymalnie ostatnich 3 dni. Historia zbiera się dopiero podczas pracy tej instalacji. |
 | Alarmy | Powiadomienia i odczytywana historia zgłoszona przez regulator. |
 | Pellet | Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. Dwa puste kafelki strumienia i zużycia ESP pozostają usunięte. |
-| ESP Wi-Fi | Łączność samego ESP. Dane sieci modułu ecoNET są osobnym zestawem. |
+| Narzędzia > Ustawienia ESP Wi-Fi | Łączność samego ESP, własna nazwa .local. Dane ecoNET są osobne. |
 
 Temperatura **zmierzona** to odczyt czujnika. Temperatura **zadana** to cel.
 Harmonogram może zmieniać cel; nie zmienia w ten sposób odczytu czujnika.

@@ -19,12 +19,12 @@ Hasla nie sa zapisywane w stronie, historii adresow ani wysylane przez Internet.
 2. Polacz telefon z siecia `Piec-Setup-XXXX` utworzona przez Twoja plytke.
    `XXXX` wynika z adresu sprzetowego. Domyslne haslo tej sieci: `piecwifi`.
 3. Telefon moze ostrzegac o braku Internetu. Pozostan w tej sieci.
-4. Otworz w przegladarce **http://192.168.4.1/diagnostics**. Nie wpisuj HTTPS.
+4. Otworz w przegladarce **http://192.168.4.1/**. Nie wpisuj HTTPS.
 5. Login: `admin`. Haslo domyslne panelu: `admin`.
-6. W sekcji Domowe Wi-Fi nacisnij Wyszukaj sieci, wybierz wlasna siec
-   z listy, wpisz haslo i nacisnij Zapisz Wi-Fi.
+6. Wybierz **Narzedzia > Zmien siec Wi-Fi**, nacisnij **Wyszukaj sieci**,
+   wybierz wlasna siec z listy, wpisz haslo i nacisnij **Zapisz i polacz**.
    Wymagane jest Wi-Fi 2,4 GHz; 5 GHz nie jest obslugiwane.
-7. Sprawdz status polaczenia i adres IP w diagnostyce. ESP zapisuje pare
+7. Sprawdz status i IP w **Narzedzia > Ustawienia ESP Wi-Fi**. ESP zapisuje pare
    SSID/haslo w NVS i laczy sie ponownie po restarcie.
 8. Przelacz telefon na swoja domowa siec i wejdz na `http://piec.local/`
    albo IP odczytane z diagnostyki/routera. Ten adres IP nie jest na sztywno.
@@ -47,8 +47,14 @@ domowego hasla w argumentach polecenia, zeby nie trafilo do historii terminala.
 
 ## Zmiana Sieci Pozniej
 
-W glownym panelu wybierz ESP Wi-Fi > Konfiguruj siec Wi-Fi. Otworzy sie
-lokalna diagnostyka z formularzem. Haslo domowego Wi-Fi nie jest zwracane
+W glownym panelu wybierz **Narzedzia > Zmien siec Wi-Fi**. Formularz otwiera
+sie od razu w panelu, bez diagnostyki. Kliknij Wyszukaj sieci, wybierz siec,
+wpisz haslo i zapisz. Siec ukryta ma opcje recznego wpisania nazwy.
+Po zmianie polacz telefon z nowa siecia i ponownie otworz adres ESP.
+Nie trzeba wgrywac firmware ani kasowac pamieci. W razie blednego hasla
+polacz sie ponownie z Piec-Setup i popraw dane.
+
+Haslo domowego Wi-Fi nie jest zwracane
 przez API statusu. Polecenie USB `setup` ujawnia tylko haslo dostepu do ESP,
 nie zapisane haslo domowej sieci.
 

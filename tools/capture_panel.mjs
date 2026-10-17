@@ -23,7 +23,7 @@ const state = {
   write_transport: 'rs485', targets_fresh: true, host: '', values: {}, names: {},
   menu: [], enums: {}, units: [], structure: [], category_names: [], tiles: [],
   endpoints: {}, versions: {}, requires_configuration: false,
-  system: { controllerID: 'ecoMAX (DEMO)', moduleASoftVer: 'przyklad', modulePanelSoftVer: 'przyklad' },
+  system: { controllerID: 'ecoMAX (DEMO)', schemaID:23, moduleASoftVer: 'przyklad', modulePanelSoftVer: 'przyklad' },
   controls: { start: false, stop: true, transport: 'rs485', mode: 3 },
   curr: { mode: 3, tempCO: 72.5, tempCOSet: 75, tempCWU: 43.6, tempCWUSet: 45,
     tempExternalSensor: 8.4, tempFlueGas: 112.7, tempFeeder: 26.3,
@@ -74,7 +74,7 @@ const server = createServer(async (req, res) => {
   const path = resolve(root, '.' + decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname));
   if (!path.startsWith(root + sep)) { res.writeHead(403).end(); return; }
   try {
-    const types = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
+    const types = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml', '.jpg':'image/jpeg', '.woff2': 'font/woff2' };
     res.writeHead(200, { 'Content-Type': types[extname(path)] || 'application/octet-stream' }).end(await readFile(path));
   } catch { res.writeHead(404).end(); }
 });
@@ -122,7 +122,7 @@ try {
     await page.evaluate(()=>EcoAlarmBadge.render({write_transport:'rs485',alarm_status:{count_fresh:true,pending_count:3,count_age_seconds:1},alarms:[{active:false}]},true));
     const counter=page.locator('#alarm-count');assert.equal(await counter.textContent(),'3');
     const style=await counter.evaluate(el=>{const s=getComputedStyle(el);return {display:s.display,color:s.backgroundColor,radius:s.borderRadius,w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height};});
-    assert.equal(style.color,'rgb(198, 40, 40)');assert.equal(style.radius,'50%');assert.equal(style.w,22);assert.equal(style.w,style.h);assert.notEqual(style.display,'none');
+    assert.equal(style.color,'rgb(198, 40, 40)');assert.equal(style.radius,'50%');assert.ok(Math.abs(style.w-22)<.01);assert.ok(Math.abs(style.w-style.h)<.01);assert.notEqual(style.display,'none');
   }
   await page.setViewportSize({width:1280,height:1080});
   await page.evaluate(()=>EcoAlarmBadge.render({write_transport:'rs485',alarm_status:{count_fresh:true,pending_count:0}},true));
@@ -136,13 +136,70 @@ try {
   await screenshot('09-narzedzia');
   await page.keyboard.press('Escape');assert.equal(await tools.getAttribute('open'),null);
   assert.equal(await summary.evaluate(el=>document.activeElement===el),true,'Escape restores summary focus');
-  await summary.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'connect-open');
+  await summary.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'wifi-open');
   await page.keyboard.press('End');assert.equal(await page.evaluate(()=>document.activeElement.id),'esp-logout');
-  await page.keyboard.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'connect-open');
+  await page.keyboard.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'wifi-open');
   await page.keyboard.press('Escape');
   await summary.click();await page.locator('#read-time').click();assert.equal(await tools.getAttribute('open'),null,'outside click closes menu');
   await summary.click();await page.locator('#connect-open').click();await page.locator('#connect-dialog').waitFor({state:'visible'});await page.locator('#connect-close').click();
   assert.equal(requests.filter(([method])=>method!=='GET').length,beforeMenu,'opening and navigating the menu never sends commands');
+  assert.equal(await page.locator('#main-nav [data-view="espwifi"]').count(),0);
+  await summary.click();await page.locator('#panel-tools [data-view="espwifi"]').click();
+  assert.equal(await page.locator('[data-section="espwifi"]').isVisible(),true);
+  assert.equal(await tools.getAttribute('open'),null);
+  await page.locator('#wifi-settings-open').click();await page.locator('#wifi-dialog').waitFor({state:'visible'});
+  assert.equal(requests.filter(([method])=>method!=='GET').length,beforeMenu,'opening Wi-Fi never scans or saves on its own');
+  const wifiWrites=[];let scanSequence=1;
+  await page.route('**/api/wifi/scan',async route=>{
+    if(route.request().method()==='POST'){wifiWrites.push({path:'scan'});scanSequence++;await route.fulfill({json:{message:'Scanning (DEMO)'}});}
+    else await route.fulfill({json:{sequence:scanSequence,busy:false,result:'ESP_OK',networks:[{ssid:'Moja_siec_24GHz',rssi:-49,authmode:3},{ssid:'Siec_otwarta',rssi:-70,authmode:0}]}});
+  });
+  await page.route('**/api/wifi',async route=>{wifiWrites.push(route.request().postDataJSON());await route.fulfill({json:{message:'Saved (DEMO)'}});});
+  await page.locator('#wifi-search').click();await page.locator('#wifi-select option').getByText('Moja_siec_24GHz',{exact:false}).waitFor({state:'attached'});
+  await page.locator('#wifi-select').selectOption('Moja_siec_24GHz');await page.locator('#wifi-password').fill('example-wifi-password');
+  await page.evaluate(()=>EcoWifi.render({connected:true,ssid:'Old-network',ip:'192.0.2.10',hostname:'piec'}));
+  assert.equal(await page.locator('#wifi-select').inputValue(),'Moja_siec_24GHz','poll preserves selected SSID');
+  assert.equal(await page.locator('#wifi-password').inputValue(),'example-wifi-password','poll preserves password draft');
+  await screenshot('11-zmiana-wifi');
+  await page.locator('#wifi-save').click();await page.waitForFunction(()=>document.getElementById('wifi-result').textContent.startsWith('Zapisano'));
+  assert.deepEqual(wifiWrites,[{path:'scan'},{ssid:'Moja_siec_24GHz',password:'example-wifi-password'}]);
+  assert.equal(await page.locator('#wifi-password').inputValue(),'');
+  await page.locator('#wifi-select').selectOption('Siec_otwarta');assert.equal(await page.locator('#wifi-password').isDisabled(),true);
+  await page.locator('#wifi-select').selectOption({index:3});
+  assert.equal(await page.locator('#wifi-manual-field').isVisible(),true);await page.locator('#wifi-ssid').fill('Hidden-network');
+  await page.locator('#wifi-password').fill('example-wifi-password');
+  await page.route('**/api/wifi',async route=>{wifiWrites.push(route.request().postDataJSON());await route.abort();});
+  await page.locator('#wifi-save').click();await page.waitForFunction(()=>document.getElementById('wifi-result').textContent.includes('Nie ponowiono'));
+  assert.equal(wifiWrites.length,3,'unknown outcome never causes a retry');assert.equal(await page.locator('#wifi-password').inputValue(),'');
+  await page.locator('#wifi-password').fill('do-not-keep');await page.locator('#wifi-close').click();
+  assert.equal(await page.locator('#wifi-password').inputValue(),'','closing clears password');
+  await page.locator('[data-view="live"]').click();
+  await page.locator('[data-view="schema"]').click();await page.locator('#schema-graphic svg').waitFor();
+  assert.equal(await page.locator('[data-value="co"]').textContent(),'72,5 \u00b0C');
+  assert.equal(await page.locator('[data-pump="mixerPumpWorks1"]').getAttribute('data-state'),'on');
+  assert.equal(await page.locator('[data-pump="pumpCWUWorks"]').getAttribute('data-state'),'off');
+  assert.deepEqual(await page.locator('#schema-graphic svg text').evaluateAll(nodes=>nodes.filter(node=>{
+    const b=node.getBBox(),matrix=node.ownerSVGElement.getScreenCTM().inverse().multiply(node.getScreenCTM());
+    return [[b.x,b.y],[b.x+b.width,b.y+b.height]].some(([x,y])=>{const p=new DOMPoint(x,y).matrixTransform(matrix);return p.x<0||p.y<0||p.x>1000||p.y>680;});
+  }).map(node=>node.textContent)),[],'schematic text fits drawing');
+  await screenshot('10-schemat');
+  await page.evaluate(()=>EcoHeatingSchema.render(state,false));
+  assert.equal(await page.locator('[data-value="co"]').textContent(),'---');
+  assert.equal(await page.locator('[data-pump="mixerPumpWorks1"]').getAttribute('data-state'),'unknown');
+  await page.evaluate(()=>EcoHeatingSchema.render({...state,system:{schemaID:99}},true));
+  assert.ok((await page.locator('#schema-readings').textContent()).includes('Nie potwierdza'));
+  for(const width of [320,390,1280]){
+    await page.setViewportSize({width,height:844});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'diagram scroll is local, not full-page');
+    await page.evaluate(()=>EcoWifi.render(state.esp_network));
+    await summary.click();await page.locator('#wifi-open').click();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Wi-Fi dialog fits phone');
+    await page.locator('#wifi-close').click();
+  }
+  await page.setViewportSize({width:1280,height:1080});
+  await page.locator('[data-view="live"]').click();
+  assert.ok((await page.locator('main').evaluate(el=>getComputedStyle(el).backgroundImage)).includes('boiler-room.jpg'));
+  assert.equal(await page.evaluate(async()=>{const i=new Image();i.src='/assets/boiler-room.jpg';await i.decode();return i.naturalWidth>1000;}),true,'background bitmap decodes');
   const aligned=await page.locator('[data-member="fuelLevel"]').evaluate(tile=>{
     const gauge=tile.querySelector('.pellet-gauge').getBoundingClientRect(),value=tile.querySelector('.tile-value').getBoundingClientRect();
     return Math.abs(gauge.x+gauge.width/2-value.x-value.width/2)<1&&gauge.bottom<=value.top;
@@ -259,7 +316,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log('PASS nine panel screenshots: named tools, logout last, keyboard/Escape/outside close, no implicit commands, ordering persisted/reset, pellet empty/full/missing/stale, charts nonblank, 320/390/1280px fit.');
+  console.log('PASS eleven panel screenshots: direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.');
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

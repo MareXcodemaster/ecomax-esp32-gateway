@@ -7,7 +7,7 @@ Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 **[Prosta instalacja w 7 krokach](docs/SZYBKI_START.md)** ·
 **[Pobierz firmware i instrukcje](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases)**
 
-**Wersja 0.7.0-beta.9. Projekt niezalezny, nieoficjalny. Nie jest produktem
+**Wersja 0.7.0-beta.10. Projekt niezalezny, nieoficjalny. Nie jest produktem
 PLUM ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
 
@@ -22,6 +22,12 @@ kolejne OTA zachowuja hasla wybrane przez uzytkownika.
 ## Jak Wyglada Panel
 
 ![Panel ecoMAX Wi-Fi - odczyty i nastawy, przykladowe dane DEMO](docs/images/panel/01-odczyty.png)
+
+![Schemat kotla, mieszacza i CWU z przykladowymi temperaturami](docs/images/panel/10-schemat.png)
+
+Siec zmienisz od razu przez **Narzedzia > Zmien siec Wi-Fi** (wyszukiwanie,
+wybor i haslo), bez diagnostyki. Status i nazwa `piec.local` sa w
+**Narzedzia > Ustawienia ESP Wi-Fi**.
 
 ### Harmonogram Tygodniowy
 
@@ -38,6 +44,11 @@ Zrzuty przedstawiaja rzeczywisty interfejs z danymi przykladowymi (DEMO).
 ## Co Kupic I Jak Podlaczyc
 
 **Waveshare ESP32-S3-RS485-CAN-U** to wariant z antena zewnetrzna SMA.
+
+Obudowa ma mocowanie na szyne DIN 35 mm. Instalator moze umiescic ESP w
+odpowiedniej szafce kotla, a antene wyprowadzic poza metalowa oslone,
+aby poprawic zasieg. Zlacze wariantu -U to **SMA, nie RP-SMA**;
+[dobor anteny i warunki bezpiecznego montazu](docs/SPRZET.md#montaz-na-szynie-i-antena-poza-obudowa).
 Wersja **ESP32-S3-RS485-CAN** ma domyslnie antene wbudowana.
 Wymagane 16 MB flash / 8 MB PSRAM; ten sam obraz dla obu wariantow.
 
@@ -79,7 +90,7 @@ Po 2-3 sekundach pusc BOOT i ponownie wybierz port.
 [Rysunek krok po kroku](docs/SZYBKI_START.md#boot-usb) oraz
 [zdjecie plytki z BOOT nr 13 i RESET nr 14](docs/SPRZET.md#boot-usb).
 
-Domyslna nazwe `piec.local` mozesz zmienic w zakladce **ESP Wi-Fi**,
+Domyslna nazwe `piec.local` mozesz zmienic przez **Narzedzia > Ustawienia ESP Wi-Fi**,
 np. na `kotlownia.local`. Zostaje zapamietana po restarcie.
 
 Pierwsza instalacja wymaga komputera i kabla USB z transmisja danych.

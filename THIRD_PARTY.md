@@ -81,3 +81,12 @@ https://pypi.org/project/platformio/ and https://pypi.org/project/esptool/.
 Manufacturer logos, photo/bitmap sprites, font and hydraulic SVG obtained
 from a private ecoNET installation are not distributed. Brand names are
 used only to describe compatibility, not affiliation or endorsement.
+
+The hydraulic drawing src/panel_web/assets/heating-schema.svg is original
+project artwork, not a manufacturer's installation plan. The photographic
+background boiler-room.jpg is AI-generated original artwork, not a photo
+of a supported product or a user's installation. It was generated in
+text-to-image mode: bright neutral utility room, generic unbranded pellet
+boiler and hot water cylinder on the right, red/blue pipes, no logos or
+text, landscape composition. The optimized JPEG is bundled locally; no
+external image service is contacted by the panel.

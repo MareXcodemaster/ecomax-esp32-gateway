@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0-beta.10 - 2026-10-17
+
+- Graficzny schemat kotla, mieszacza i CWU z aktualnymi temperaturami i stanem pomp.
+- Wlasne fotograficzne tlo panelu, bez logo producenta kotla.
+- Narzedzia: bezposrednia zmiana Wi-Fi z wyszukiwaniem sieci oraz ustawienia ESP Wi-Fi.
+- Zmiana sieci i skanowanie zablokowane podczas operacji panelu lub aktualizacji.
+- Instrukcja BOOT przy pustej pamieci, montazu DIN i doboru zewnetrznej anteny SMA.
+- Bez zmian polecen RS485 i nastaw kotla. Testy poprawki nie zmieniaja ustawien urzadzenia.
+
 ## 0.7.0-beta.9 - 2026-10-17
 
 - Domyslny panel admin / admin; siec Piec-Setup z haslem piecwifi.
