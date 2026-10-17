@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0-beta.13 - 2026-10-17
+
+- Widoczny przycisk Wroc do panelu w naglowku diagnostyki, dostepny rowniez po przewinieciu strony.
+- Powrot jest tez dostepny w oknie logowania do diagnostyki; nie wymaga logowania ani historii przegladarki.
+- Przycisk wraca do strony glownej tego samego ESP, takze po IP, wlasnej nazwie .local i przez siec Piec-Setup.
+
 ## 0.7.0-beta.12 - 2026-10-17
 
 - Przywrocono dokladne poprzednie pliki schematu i jasnego tla, zamiast nowych grafik z beta.10.

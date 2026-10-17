@@ -9,6 +9,8 @@ sprawdzenie API i katalogu, raport JSON, diagnostyka/OTA i przywrocenie
 ukladu podczas jego edycji. **Wyloguj** jest na koncu listy.
 Menu mozna zamknac kliknieciem poza nim lub Escape; obsluguje tez Tab
 i strzalki klawiatury. Samo otwarcie menu niczego nie wysyla do kotla.
+W diagnostyce przycisk **Wroc do panelu** jest w stale widocznym naglowku.
+Dziala tez z okna logowania i wraca do tego samego ESP, bez zmiany ustawien.
 Przycisk **Aktualizacja** pojawia sie w tym samym gornym pasku, gdy dostepne
 jest nowsze wydanie. Oznaczenie BETA pozostaje widoczne; nacisniecie otwiera
 ustawienia aktualizacji, a nie rozpoczyna instalacji.

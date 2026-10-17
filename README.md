@@ -7,7 +7,7 @@ Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 **[Prosta instalacja w 7 krokach](docs/SZYBKI_START.md)** ·
 **[Pobierz firmware i instrukcje](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases)**
 
-**Wersja 0.7.0-beta.12. Projekt niezalezny, nieoficjalny. Nie jest produktem
+**Wersja 0.7.0-beta.13. Projekt niezalezny, nieoficjalny. Nie jest produktem
 PLUM ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
 

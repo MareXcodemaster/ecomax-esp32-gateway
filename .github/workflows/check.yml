@@ -47,6 +47,8 @@ jobs:
         run: node tools/capture_panel.mjs
       - name: Wi-Fi scan phone configuration browser tests
         run: node tests/wifi_scan_browser.mjs
+      - name: Diagnostics return navigation browser tests
+        run: node tests/diagnostics_navigation.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: ecomax-esp32-gateway-public-beta
