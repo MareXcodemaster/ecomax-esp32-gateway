@@ -82,6 +82,10 @@ bool self_test_api() {
     check("hostname-foreign-origin", request("/api/hostname", auth, nullptr, "{}", true, "http://other.invalid"), 403);
     check("hostname-invalid", request("/api/hostname", auth, nullptr, "{\"hostname\":\"bad name\"}", true), 400);
     check("updates-no-auth",request("/api/updates",nullptr),401);
+    check("access-no-auth",request("/api/access",nullptr,nullptr,"{}",true),401);
+    check("access-missing-guard",request("/api/access",auth,nullptr,"{}"),403);
+    check("access-missing-token",request("/api/access",auth,nullptr,"{}",true),403);
+    check("access-foreign-origin",request("/api/access",auth,nullptr,"{}",true,"http://other.invalid"),403);
     check("updates-snapshot",request("/api/updates",auth),200);
     check("updates-check-guard",request("/api/updates/check",auth,nullptr,"{}"),403);
     check("updates-install-confirm",request("/api/updates/install",auth,nullptr,"{}",true),400);

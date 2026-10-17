@@ -40,6 +40,11 @@ test('USB verifies firmware, writes Wi-Fi once, accepts only matching replies', 
   assert.equal(usb.state.signals.dataTerminalReady, true);
   await serial.close(); assert.equal(usb.state.closed, true);
 });
+test('new firmware uses simple defaults and separate AP password',async()=>{
+ const usb=port(()=>({command:'setup',username:'admin',password:'admin',ap_password:'piecwifi',access_schema:1}));
+ const serial=new DeviceSerial();await serial.open(usb);const setup=await serial.setup();
+ assert.equal(setup.password,'admin');assert.equal(setup.ap_password,'piecwifi');await serial.close();
+});
 test('incompatible firmware and invalid Wi-Fi do not send a write', async () => {
   const serial = new DeviceSerial();
   const usb = port(() => ({ command: 'setup', username: 'admin', password: 'invalid' }));

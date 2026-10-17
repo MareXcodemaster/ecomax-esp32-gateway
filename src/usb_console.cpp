@@ -39,6 +39,8 @@ static void command(char *line) {
         cJSON_AddStringToObject(setup,"command","setup");
         cJSON_AddStringToObject(setup,"username",board::user);
         cJSON_AddStringToObject(setup,"password",board::password());
+        cJSON_AddStringToObject(setup,"ap_password",board::setup_password());
+        cJSON_AddNumberToObject(setup,"access_schema",1);
         cJSON_AddStringToObject(setup,"setup_url","http://192.168.4.1/diagnostics");
         reply(setup);
     } else if (!strcmp(cmd->valuestring, "status")) reply(state::status());

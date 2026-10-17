@@ -110,10 +110,25 @@ try {
   };
   const tools=page.locator('#panel-tools'),summary=tools.locator('summary');
   assert.equal(await page.locator('#update-open').evaluate(el=>!!el.closest('.page-toolbar')),true,'update action shares the toolbar, never a separate band');
+  assert.equal(await page.locator('header #connect-open').count(),0);
+  assert.equal(await page.locator('#panel-tools #connect-open').count(),1);
+  assert.equal(await page.locator('[data-view="pellet"] svg.lucide-cylinder').count(),1,'pellet navigation uses a cylindrical pellet symbol');
   await page.locator('#update-open-label').getByText('Aktualne',{exact:true}).waitFor();
   const resetLayout=async()=>{await summary.click();await page.locator('#tile-layout-reset').click();assert.equal(await tools.getAttribute('open'),null,'action closes the tools menu');};
   await screenshot('01-odczyty');
   const beforeMenu=requests.filter(([method])=>method!=='GET').length;
+  for(const width of [320,390,1280]){
+    await page.setViewportSize({width,height:1080});
+    await page.evaluate(()=>EcoAlarmBadge.render({write_transport:'rs485',alarm_status:{count_fresh:true,pending_count:3,count_age_seconds:1},alarms:[{active:false}]},true));
+    const counter=page.locator('#alarm-count');assert.equal(await counter.textContent(),'3');
+    const style=await counter.evaluate(el=>{const s=getComputedStyle(el);return {display:s.display,color:s.backgroundColor,radius:s.borderRadius,w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height};});
+    assert.equal(style.color,'rgb(198, 40, 40)');assert.equal(style.radius,'50%');assert.equal(style.w,22);assert.equal(style.w,style.h);assert.notEqual(style.display,'none');
+  }
+  await page.setViewportSize({width:1280,height:1080});
+  await page.evaluate(()=>EcoAlarmBadge.render({write_transport:'rs485',alarm_status:{count_fresh:true,pending_count:0}},true));
+  assert.equal(await page.locator('#alarm-count').isVisible(),false);
+  await page.evaluate(()=>EcoAlarmBadge.render({write_transport:'rs485',alarm_status:{count_fresh:true,pending_count:3}},false));
+  assert.equal(await page.locator('#alarm-count').isVisible(),false);
   await summary.click();
   assert.equal(await tools.locator('.tools-list > :last-child').getAttribute('id'),'esp-logout');
   assert.equal(await page.locator('#esp-logout').innerText(),'Wyloguj');
@@ -121,11 +136,12 @@ try {
   await screenshot('09-narzedzia');
   await page.keyboard.press('Escape');assert.equal(await tools.getAttribute('open'),null);
   assert.equal(await summary.evaluate(el=>document.activeElement===el),true,'Escape restores summary focus');
-  await summary.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'scan');
+  await summary.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'connect-open');
   await page.keyboard.press('End');assert.equal(await page.evaluate(()=>document.activeElement.id),'esp-logout');
-  await page.keyboard.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'scan');
+  await page.keyboard.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'connect-open');
   await page.keyboard.press('Escape');
   await summary.click();await page.locator('#read-time').click();assert.equal(await tools.getAttribute('open'),null,'outside click closes menu');
+  await summary.click();await page.locator('#connect-open').click();await page.locator('#connect-dialog').waitFor({state:'visible'});await page.locator('#connect-close').click();
   assert.equal(requests.filter(([method])=>method!=='GET').length,beforeMenu,'opening and navigating the menu never sends commands');
   const aligned=await page.locator('[data-member="fuelLevel"]').evaluate(tile=>{
     const gauge=tile.querySelector('.pellet-gauge').getBoundingClientRect(),value=tile.querySelector('.tile-value').getBoundingClientRect();
@@ -200,6 +216,18 @@ try {
   }
   await page.locator('#update-open').click();
   assert.equal(await page.locator('[data-section="settings"]').isVisible(),true,'toolbar update opens settings only');
+  let accessWrites=0;
+  await page.route('**/api/access',route=>{accessWrites++;return route.fulfill({json:{message:'Saved (DEMO)'}});});
+  for(const width of [320,390,1280]){
+    await page.setViewportSize({width,height:844});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'password fields fit viewport');
+    assert.equal(await page.locator('#access-current').getAttribute('type'),'password');
+  }
+  await page.locator('#access-current').fill('admin');await page.locator('#access-password').fill('example-password');await page.locator('#access-repeat').fill('example-password');
+  page.once('dialog',dialog=>dialog.accept());await page.locator('#access-save').click();
+  await page.waitForFunction(()=>document.getElementById('access-status').textContent==='Saved (DEMO)');
+  assert.equal(accessWrites,1);assert.equal(await page.locator('#access-password').inputValue(),'');
+  await page.unroute('**/api/access');
   assert.equal(requests.filter(([,path])=>path==='/api/updates/install').length,0,'toolbar update never installs by itself');
   await page.locator('[data-view="live"]').click();
   await page.unroute('**/api/updates');

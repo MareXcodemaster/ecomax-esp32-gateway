@@ -39,9 +39,13 @@ def main():
         port.dtr = True
         reply = exchange(port, {"command": "setup"}, "setup", timeout=20)
         secret = reply.get("password", "")
-        if len(secret) != 32 or any(c not in "0123456789abcdef" for c in secret):
+        ap_secret=reply.get("ap_password",secret)
+        legacy=len(secret)==32 and all(c in "0123456789abcdef" for c in secret)
+        current=reply.get("access_schema")==1 and 5<=len(secret)<=48 and 8<=len(ap_secret)<=48 and all(32<=ord(c)<=126 for c in secret+ap_secret)
+        if not (legacy or current):
             raise RuntimeError("Odpowiedz nie zawiera poprawnego hasla tej wersji publicznej.")
-        print("\nHaslo Twojego ESP / sieci konfiguracyjnej (nie publikuj): " + secret)
+        print("\nHaslo panelu ESP: " + secret)
+        print("Haslo Wi-Fi Piec-Setup: " + ap_secret)
         print("Login: " + reply.get("username", "admin"))
         print("Konfiguracja telefonu: " + reply.get("setup_url", "http://192.168.4.1/diagnostics"))
         print("Wybierz siec Piec-Setup-XXXX swojej plytki. Haslo pozostaje po zwyklej OTA.\n")

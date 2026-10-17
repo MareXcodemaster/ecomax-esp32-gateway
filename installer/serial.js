@@ -65,7 +65,9 @@ export class DeviceSerial {
   }
   async setup() {
     const reply = await this.request('setup', {}, 12000);
-    if (reply.username !== 'admin' || !/^[a-f0-9]{32}$/.test(reply.password || ''))
+    const legacy=/^[a-f0-9]{32}$/.test(reply.password||'');
+    const current=reply.access_schema===1&&/^[\x20-\x7e]{5,48}$/.test(reply.password||'')&&/^[\x20-\x7e]{8,48}$/.test(reply.ap_password||'');
+    if (reply.username !== 'admin' || !(legacy||current))
       throw new Error('To nie jest zgodny publiczny firmware. Nie wyslano hasla Wi-Fi.');
     return reply;
   }

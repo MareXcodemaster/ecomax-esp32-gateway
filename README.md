@@ -7,9 +7,17 @@ Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 **[Prosta instalacja w 7 krokach](docs/SZYBKI_START.md)** ·
 **[Pobierz firmware i instrukcje](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases)**
 
-**Wersja 0.7.0-beta.8. Projekt niezalezny, nieoficjalny. Nie jest produktem
+**Wersja 0.7.0-beta.9. Projekt niezalezny, nieoficjalny. Nie jest produktem
 PLUM ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
+
+## Logowanie
+
+Panel: **admin / admin**. Wi-Fi konfiguracyjne **Piec-Setup-XXXX**:
+**piecwifi**. Bez losowego generowania hasel. Oba hasla mozesz zmienic
+w **Ustawienia urzadzenia > Hasla dostepu**. Nie wystawiaj ESP bezposrednio
+do Internetu. Aktualizacja z beta.8 zastapi poprzednie automatyczne haslo;
+kolejne OTA zachowuja hasla wybrane przez uzytkownika.
 
 ## Jak Wyglada Panel
 
@@ -122,7 +130,7 @@ zdalny dostep powinien byc realizowany przez VPN na routerze/bramce.
 ## Stan Wydania
 
 Wydanie opiera sie na funkcjach poprzedniej wersji prywatnej. Publiczne
-zmiany pierwszego startu, generowania hasla i przypisania nowego kotla
+zmiany pierwszego startu, domyslnych hasel i przypisania nowego kotla
 wymagaja jeszcze proby na drugiej, fabrycznie wyczyszczonej plytce.
 Testy programowe i kompilacja nie zastepuja tego testu sprzetowego.
 

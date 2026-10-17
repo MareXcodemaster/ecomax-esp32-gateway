@@ -247,7 +247,7 @@ void start() {
     wifi_config_t ap{};
     memcpy(ap.ap.ssid, ap_name, strlen(ap_name));
     ap.ap.ssid_len = strlen(ap_name); ap.ap.channel = 1; ap.ap.max_connection = 4;
-    snprintf(reinterpret_cast<char *>(ap.ap.password), sizeof(ap.ap.password), "%s", board::password());
+    snprintf(reinterpret_cast<char *>(ap.ap.password), sizeof(ap.ap.password), "%s", board::setup_password());
     ap.ap.authmode = WIFI_AUTH_WPA2_PSK; ap.ap.pmf_cfg.required = false;
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA)); ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap));
     ESP_ERROR_CHECK(esp_wifi_start()); ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
@@ -263,7 +263,7 @@ void start() {
         if (!mdns_ready) mdns_free();
     }
     state::log("mDNS %s.local on STA: %s; address requires router connection", saved_hostname, esp_err_to_name(mdns_error));
-    state::log("Setup AP=%s; http://192.168.4.1; WWW user=%s; unique password available over USB only", ap_name, board::user);
+    state::log("Setup AP=%s; http://192.168.4.1; WWW user=%s; passwords omitted", ap_name, board::user);
     configASSERT(xTaskCreate(wifi_task, "wifi_manager", 4096, nullptr, 4, nullptr) == pdPASS);
     configASSERT(xTaskCreate(dns_task, "setup_dns", 3072, nullptr, 3, nullptr) == pdPASS);
 }

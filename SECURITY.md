@@ -3,8 +3,13 @@
 - Local trusted networks only. HTTP is not encrypted. Do not forward ports 80
   or any diagnostic interface to the Internet. Remote access belongs behind
   a properly configured VPN/router; this firmware is not a Tailscale client.
-- Each erased board creates a random password for its setup AP and admin
-  login. Retrieve it with `tools/setup.py` over USB. Do not post its output.
+- Defaults are intentionally shared: panel admin/admin and setup AP piecwifi.
+  They are publicly known, not randomly generated. Restrict physical/radio/LAN
+  access and choose your own passwords under Device Settings before wider use.
+- Since beta.9, custom passwords persist across OTA. The one-time migration
+  from beta.8 or older replaces the former generated password with these defaults.
+- Password changes require the current panel password, same-origin mutation
+  guard, a valid panel token, explicit confirmation and a restart.
 - The secret and home Wi-Fi credentials are stored in the device's NVS.
   Flash encryption and secure boot are not configured. Physical access to
   the ESP/USB/flash therefore means trusted administrative access.

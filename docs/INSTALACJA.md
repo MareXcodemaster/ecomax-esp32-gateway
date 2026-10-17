@@ -29,11 +29,11 @@ wymaga polaczenia z Internetem.
    nawet gdy nie wybierzesz dodatkowego kasowania calej pamieci.
 4. Zamknij okno wgrywania. Jesli ESP pozostalo w bootloaderze, nacisnij RESET.
 5. Nacisnij Polacz ESP przez USB i ponownie wybierz port. Instalator odczyta
-   indywidualne haslo Twojego urzadzenia; nie trzeba wpisywac polecen.
+   dane dostepu; domyslnie panel ma login admin i haslo admin.
 6. Kliknij Wyszukaj sieci, wybierz wlasne Wi-Fi 2,4 GHz z listy,
    wpisz tylko haslo i nacisnij Zapisz i polacz.
-7. Po uzyskaniu adresu nacisnij Otworz panel ESP. Uzyj loginu admin i hasla ESP
-   wyswietlonego w kroku 3 instalatora. Zachowaj je w menedzerze hasel.
+7. Po uzyskaniu adresu nacisnij Otworz panel ESP. Uzyj loginu admin i hasla admin
+   (lub wlasnego hasla ustawionego w panelu).
 
 Domowe haslo Wi-Fi jest zapisywane na ESP lokalnie przez USB.
 Przy ponownej konfiguracji sieci wystarczy Polacz ESP przez USB, bez wgrywania.
@@ -68,13 +68,16 @@ Po restarcie odczytaj je przez USB:
 python tools/setup.py --port COM7
 ```
 
-Program wysyla tylko lokalne polecenie USB `setup`. Wyswietla indywidualne
-haslo sieci konfiguracyjnej i panelu oraz login `admin`. Zachowaj haslo
-prywatnie; nie wysylaj tego ekranu do publicznego zgloszenia.
+Program wysyla tylko lokalne polecenie USB `setup`.
+Domyslny panel: login **admin**, haslo **admin**.
+Domyslne Wi-Fi **Piec-Setup-XXXX**: haslo **piecwifi**.
+Nie ma losowego generowania hasel. Odczyt USB pokazuje tez wlasne hasla,
+jezeli zostaly zmienione. Nie publikuj ich.
 
-Przy pierwszym starcie haslo jest generowane przez ESP i utrwalane w NVS.
-Zwykla aktualizacja OTA go nie zmienia. Wyczyszczenie NVS/flash powoduje
-wygenerowanie nowego hasla. Haslo nie jest wspolne dla wszystkich plytek.
+Hasla zmienisz w **Ustawienia urzadzenia > Hasla dostepu**.
+Od beta.9 zapisane tam wlasne hasla sa zachowywane przez kolejne OTA.
+Przejscie z beta.8 lub starszej zastapi dawne automatyczne haslo powyzszymi
+domyslnymi danymi. Wyczyszczenie NVS przywraca wartosci domyslne.
 
 Dalej wykonaj [konfiguracje Wi-Fi](WIFI.md).
 
@@ -99,7 +102,7 @@ po odlaczeniu przewodow od kotla i zachowaniu potrzebnych danych.
 
 1. Pobierz `firmware-ota.bin` dla zgodnej plytki i wersji partycji.
 2. Wejdz na `http://piec.local/diagnostics` lub `http://ADRES_ESP/diagnostics`.
-3. Zaloguj sie indywidualnym haslem urzadzenia.
+3. Zaloguj sie jako admin / admin (lub wlasnym haslem panelu).
 4. W sekcji aktualizacji wybierz obraz OTA, nie obraz scalony.
 5. Wyslij go raz. Nie odlaczaj zasilania podczas zapisu i restartu.
 6. Po powrocie panelu sprawdz wersje, odczyty i ewentualny komunikat bledu.

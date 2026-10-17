@@ -24,6 +24,11 @@ Mozesz wtedy przelaczyc kanal; nie zmieniaj oznaczenia wydania na stabilne.
 
 ## Instalacja
 
+Od beta.9 domyslny panel to **admin / admin**, a Piec-Setup ma haslo
+**piecwifi**. Aktualizacja z beta.8 lub starszej zastepuje poprzednie
+wygenerowane haslo. Wlasne hasla ustawione w beta.9 i nowszych pozostaja
+zachowane w kolejnych aktualizacjach. Nie wystawiaj ESP do Internetu.
+
 Od **0.7.0-beta.8** przycisk jest w gornej belce panelu:
 **Aktualne** oznacza udane sprawdzenie bez nowszego wydania w wybranym
 kanale (wynik nie starszy niz 25 godzin). **Aktualizacja** oznacza
@@ -78,7 +83,7 @@ może użyć **pool.ntp.org**, aby zweryfikować certyfikat.
 
 Starsze prywatne wydania 0.6.x maja inna inicjalizacje dostepu niz publiczne
 0.7.x. Automatyczna migracja jest zablokowana i wymaga osobnej procedury:
-zapisania konfiguracji w NVS, utworzenia i zabezpieczenia unikalnego hasla
+zapisania konfiguracji i danych dostepu w NVS
 oraz sprawdzenia zgodnosci partycji. Wersja przejsciowa jest przygotowywana
 indywidualnie, nie jest publicznym obrazem pierwszej instalacji.
 Nie obchodz blokady przez podmiane pliku lub numeru wersji.

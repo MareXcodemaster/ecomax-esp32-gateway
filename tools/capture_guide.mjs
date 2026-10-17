@@ -16,7 +16,7 @@ try {
           const cmd = JSON.parse(new TextDecoder().decode(bytes));
           if (cmd.command === 'wifi') configured = true;
           if (cmd.command === 'scan') scanned = true;
-          const data = cmd.command === 'setup' ? { command: 'setup', username: 'admin', password: '0'.repeat(32) }
+          const data = cmd.command === 'setup' ? { command: 'setup', username: 'admin', password: 'admin', ap_password:'piecwifi', access_schema:1 }
             : cmd.command === 'scan' ? { command: 'scan', ok: true }
             : cmd.command === 'scan_results' ? { command: 'scan_results',busy:false,result:'ESP_OK',sequence:scanned?1:0,networks:[{ssid:'Moja_siec_24GHz',rssi:-48,authmode:3}] }
             : cmd.command === 'wifi' ? { command: 'wifi', ok: true }
@@ -50,7 +50,7 @@ try {
   await panel.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});
   await panel.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});
   await panel.evaluate(()=>{
-    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.8',current_release:'0.7.0-beta.8',version:'0.7.0-beta.8',channel:'all',beta:true,phase:'up_to_date',checked:Date.now()/1000,automatic:true,available:false,install_supported:true});
+    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.9',current_release:'0.7.0-beta.9',version:'0.7.0-beta.9',channel:'all',beta:true,phase:'up_to_date',checked:Date.now()/1000,automatic:true,available:false,install_supported:true});
     EcoUpdates.init();lucide.createIcons();return EcoUpdates.load();
   });
   await panel.locator('.update-panel').screenshot({path:'docs/images/04-aktualizacje.png'});

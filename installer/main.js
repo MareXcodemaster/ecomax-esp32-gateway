@@ -41,6 +41,7 @@ function forget() {
   pollGeneration++;
   $('device-password').value = '';
   $('device-password').type = 'password';
+  $('device-ap-password').value='';$('device-ap-password').type='password';
   $('wifi-password').value = '';
   $('ssid').value = '';
   PiecWifiScan.options($('wifi-networks'),[]);
@@ -72,6 +73,7 @@ $('connect').addEventListener('click', async () => {
     device = candidate;
     const setup = await candidate.setup();
     $('device-password').value = setup.password;
+    $('device-ap-password').value=setup.ap_password||setup.password;
     $('credentials').hidden = false;
     $('wifi-form').hidden = false;
     $('disconnect').hidden = false;
@@ -134,7 +136,7 @@ $('wifi-form').addEventListener('submit', async event => {
   } catch (error) { status(error.message, true); }
   finally { $('wifi-password').value = ''; busy = false; updateButtons(); }
 });
-for (const [buttonId, inputId, label] of [['show-wifi', 'wifi-password', 'Wi-Fi'], ['show-device', 'device-password', 'ESP']]) {
+for (const [buttonId, inputId, label] of [['show-wifi', 'wifi-password', 'Wi-Fi'], ['show-device', 'device-password', 'ESP'],['show-ap','device-ap-password','Piec-Setup']]) {
   $(buttonId).addEventListener('click', () => {
     const visible = $(inputId).type === 'password';
     $(inputId).type = visible ? 'text' : 'password';

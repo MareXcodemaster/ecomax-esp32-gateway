@@ -14,13 +14,13 @@ Hasla nie sa zapisywane w stronie, historii adresow ani wysylane przez Internet.
 
 ## Konfiguracja Telefonem
 
-1. Zainstaluj firmware i odczytaj indywidualne haslo przez USB, zgodnie
+1. Zainstaluj firmware, zgodnie
    z [instrukcja instalacji](INSTALACJA.md).
 2. Polacz telefon z siecia `Piec-Setup-XXXX` utworzona przez Twoja plytke.
-   `XXXX` wynika z adresu sprzetowego. Haslo jest tym odczytanym przez USB.
+   `XXXX` wynika z adresu sprzetowego. Domyslne haslo tej sieci: `piecwifi`.
 3. Telefon moze ostrzegac o braku Internetu. Pozostan w tej sieci.
 4. Otworz w przegladarce **http://192.168.4.1/diagnostics**. Nie wpisuj HTTPS.
-5. Login: `admin`. Haslo: indywidualne haslo Twojego ESP.
+5. Login: `admin`. Haslo domyslne panelu: `admin`.
 6. W sekcji Domowe Wi-Fi nacisnij Wyszukaj sieci, wybierz wlasna siec
    z listy, wpisz haslo i nacisnij Zapisz Wi-Fi.
    Wymagane jest Wi-Fi 2,4 GHz; 5 GHz nie jest obslugiwane.
@@ -52,8 +52,9 @@ lokalna diagnostyka z formularzem. Haslo domowego Wi-Fi nie jest zwracane
 przez API statusu. Polecenie USB `setup` ujawnia tylko haslo dostepu do ESP,
 nie zapisane haslo domowej sieci.
 
-Siec konfiguracyjna pozostaje dostepna i wymaga indywidualnego hasla.
-Chron to haslo tak samo jak dostep administracyjny do kotla.
+Siec konfiguracyjna pozostaje dostepna. Domyslnie ma haslo `piecwifi`.
+Oba hasla mozesz zmienic w Ustawienia urzadzenia > Hasla dostepu.
+Nie wystawiaj ESP bezposrednio do Internetu.
 
 Opcjonalny lokalny ecoNET konfiguruje sie osobno w panelu: adres IP, lokalny
 login i lokalne haslo modulu, nie dane konta ecoNET24.

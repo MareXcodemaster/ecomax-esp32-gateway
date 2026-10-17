@@ -8,7 +8,7 @@
 </style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>ecoMAX Wi-Fi - sterowanie kotłem z telefonu</h1>
 <h2>Instrukcja krok po kroku</h2>
 <p><strong>Pierwszy raz z ESP? Zacznij od <a href="SZYBKI_START.html">prostej instrukcji w 7 krokach</a>.</strong></p>
-<p><strong>Oprogramowanie: 0.7.0-beta.8. Instrukcja: wydanie 8, 17.10.2026.</strong></p>
+<p><strong>Oprogramowanie: 0.7.0-beta.9. Instrukcja: wydanie 8, 17.10.2026.</strong></p>
 <p>Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
 Komputer i kabel USB są potrzebne do pierwszego wgrania. Później panel
@@ -120,7 +120,7 @@ Po ukończeniu wgrywania naciśnij RESET bez trzymania BOOT, aby uruchomić prog
 <h2>4. Zapisz swoją sieć Wi-Fi</h2>
 <ol>
 <li>Na tej samej stronie wybierz <strong>Połącz ESP przez USB</strong> i ponownie wskaż port.</li>
-<li>Instalator odczyta indywidualne hasło dostępu do Twojego ESP.</li>
+<li>Instalator odczyta dane dostepu. Domyslnie panel uzywa admin / admin.</li>
 <li>Kliknij <strong>Wyszukaj sieci</strong> i wybierz swoje Wi-Fi <strong>2,4 GHz</strong> z listy.</li>
 <li>Wpisz tylko hasło <strong>domowego Wi-Fi</strong> i kliknij <strong>Zapisz i połącz</strong>.</li>
 <li>Zaczekaj na połączenie i przydzielenie adresu przez router.</li>
@@ -135,40 +135,40 @@ Nie trzeba wpisywać poleceń, edytować kodu ani instalować Pythona.</p>
 <p>Jeżeli po około minucie połączenia nadal nie ma, sprawdź nazwę, hasło,
 zasięg i pasmo 2,4 GHz. Sieć gościnna z izolacją klientów może uniemożliwić
 późniejsze otwarcie panelu. Poprawienie sieci nie wymaga ponownego wgrywania.</p>
-<h2>5. Zachowaj hasło ESP i otwórz panel</h2>
-<p><strong>Są dwa różne hasła:</strong></p>
+<h2>5. Otworz panel</h2>
 <table>
 <thead>
 <tr>
-<th>Hasło</th>
-<th>Do czego służy</th>
+<th>Polaczenie</th>
+<th>Login</th>
+<th>Haslo domyslne</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Hasło domowego Wi-Fi</td>
-<td>Pozwala ESP połączyć się z Twoim routerem. Wpisujesz je w kroku 4.</td>
+<td>Panel ESP</td>
+<td>admin</td>
+<td>admin</td>
 </tr>
 <tr>
-<td>Indywidualne hasło ESP</td>
-<td>Służy do logowania do panelu oraz do sieci konfiguracyjnej ESP. Instalator odczytuje je przez USB.</td>
+<td>Wi-Fi Piec-Setup-XXXX</td>
+<td>nie dotyczy</td>
+<td>piecwifi</td>
 </tr>
 </tbody></table>
+<p>Hasla nie sa generowane losowo. Nie wpisuj tutaj hasla do domowego routera
+ani konta ecoNET24. W <strong>Ustawienia urzadzenia &gt; Hasla dostepu</strong> mozesz
+zmienic oba hasla. Formularz wymaga obecnego hasla panelu i restartuje ESP
+po zapisie. Zwykle aktualizacje zachowuja hasla wybrane przez uzytkownika.</p>
 <ol>
-<li>W kroku <strong>Otwórz swój panel</strong> zachowaj hasło ESP w swoim menedżerze haseł.
-Przycisk oka pokazuje hasło, a przycisk kopiowania kopiuje je do schowka.</li>
-<li>Kliknij <strong>Otwórz panel ESP</strong>. Login to <strong>admin</strong>, a hasło to hasło ESP,
-<strong>nie</strong> hasło domowego Wi-Fi i <strong>nie</strong> hasło konta ecoNET24.</li>
-<li>Telefon lub tablet podłącz do tej samej domowej sieci.</li>
-<li>Na telefonie otwórz <strong><a href="http://piec.local/">http://piec.local/</a></strong>. Jeżeli adres z końcówką
-<code>.local</code> nie działa, użyj adresu IP pokazanego przez instalator lub router.</li>
-<li>Dodaj stronę do ekranu głównego telefonu/tabletu albo do zakładek.</li>
+<li>Kliknij <strong>Otworz panel ESP</strong> i zaloguj sie jako <strong>admin / admin</strong>.</li>
+<li>Telefon lub tablet podlacz do tej samej domowej sieci.</li>
+<li>Otworz <strong><a href="http://piec.local/">http://piec.local/</a></strong>. Gdy .local nie dziala, uzyj adresu IP
+pokazanego przez instalator lub router.</li>
+<li>Dodaj strone do ekranu glownego lub zakladek.</li>
 </ol>
-<p><img src="images/03-polaczono.png" alt="Przykładowy wynik połączenia: login, hasło ESP i przycisk otwarcia panelu"></p>
-<p><em>Zrzut demonstracyjny. Adres 192.0.2.10 jest wyłącznie przykładem dokumentacyjnym.
-Nie przepisuj go do swojej instalacji. Twój adres zostanie przydzielony przez router.</em></p>
-<p>Po restarcie ESP pamięta dane sieci. Zwykła aktualizacja OTA zachowuje
-indywidualne hasło. Pełne kasowanie pamięci lub pierwsza instalacja USB
-mogą je zmienić. Hasło ESP można ponownie odczytać przez USB.</p>
+<p><img src="images/03-polaczono.png" alt="Przykladowy wynik polaczenia i przycisk otwarcia panelu"></p>
+<p>Adres 192.0.2.10 na zrzucie jest przykladem. Twoje IP przydziela router.
+Domyslne hasla sa publicznie znane. Nie przekierowuj portow ESP do Internetu.</p>
 <h3>Własna nazwa zamiast piec.local</h3>
 <p>Domyślnie panel ma adres <strong><a href="http://piec.local/">http://piec.local/</a></strong>. W zakładce <strong>ESP Wi-Fi</strong>
 wpisz nową nazwę adresu, np. <strong>kotlownia</strong>, i naciśnij <strong>Zapisz nazwę</strong>.
@@ -181,15 +181,15 @@ może odświeżyć się dopiero przy kolejnym połączeniu lub odnowieniu dzier�
 Gdy telefon/router nie obsługuje nazw .local, nadal można użyć adresu IP.</p>
 <h2>6. Alternatywnie ustaw Wi-Fi telefonem</h2>
 <p>Ten wariant jest przydatny, gdy konfigurujesz ESP blisko kotła, a nie przy komputerze.
-Program musi być już wgrany, a indywidualne hasło ESP odczytane w kroku 4.</p>
+Program musi byc juz wgrany. Domyslne haslo sieci Piec-Setup to piecwifi.</p>
 <ol>
 <li>W telefonie otwórz ustawienia Wi-Fi i znajdź sieć <strong>Piec-Setup-XXXX</strong>.
 Końcówka jest zależna od konkretnej płytki.</li>
-<li>Połącz się, używając <strong>hasła ESP</strong>. Pozostań w tej sieci mimo ostrzeżenia
+<li>Polacz sie, uzywajac domyslnego hasla <strong>piecwifi</strong> (lub wlasnego hasla tej sieci). Pozostań w tej sieci mimo ostrzeżenia
 telefonu o braku Internetu. Na czas konfiguracji możesz wyłączyć transmisję
 komórkową, jeżeli telefon sam ucieka do innego połączenia.</li>
 <li>Otwórz <strong><a href="http://192.168.4.1/diagnostics">http://192.168.4.1/diagnostics</a></strong>.</li>
-<li>Zaloguj się jako <strong>admin</strong>, używając hasła ESP.</li>
+<li>Zaloguj sie jako <strong>admin / admin</strong> (lub wlasnym haslem panelu).</li>
 <li>W sekcji <strong>Domowe Wi-Fi</strong> kliknij <strong>Wyszukaj sieci</strong>, wybierz własną sieć 2,4 GHz,
 podaj jej hasło i zapisz.</li>
 <li>Sprawdź uzyskany adres IP, przełącz telefon do swojej domowej sieci

@@ -16,6 +16,7 @@
 #include "esp_app_desc.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/sha256.h"
+#include "mbedtls/platform_util.h"
 #include "nvs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -385,6 +386,24 @@ static esp_err_t unavailable(httpd_req_t *req) {
     if (!authorize(req)) return ESP_OK;
     return message(req, "501 Not Implemented", "Pelny katalog parametrow/harmonogramow nie jest zaimplementowany. Nadawanie do kotla jest wylaczone.");
 }
+static esp_err_t configure_access(httpd_req_t *req){
+    if(!authorize(req,true))return ESP_OK;
+    char csrf[64];
+    if(httpd_req_get_hdr_value_str(req,"X-Tester-Token",csrf,sizeof(csrf))!=ESP_OK||!equal(csrf,panel_csrf))return message(req,"403 Forbidden","Missing panel token");
+    if(panel::is_busy())return message(req,"409 Conflict","Zaczekaj na zakonczenie operacji panelu");
+    auto *body=request_json(req);if(!body)return ESP_OK;
+    auto *current=cJSON_GetObjectItemCaseSensitive(body,"current_password"),*web=cJSON_GetObjectItemCaseSensitive(body,"password"),*ap=cJSON_GetObjectItemCaseSensitive(body,"ap_password"),*confirm=cJSON_GetObjectItemCaseSensitive(body,"confirm");
+    updates::FlashGuard flash_guard;
+    auto result=ESP_ERR_INVALID_STATE;
+    if(flash_guard.acquired&&cJSON_IsString(current)&&cJSON_IsString(web)&&(cJSON_IsNull(ap)||cJSON_IsString(ap))&&cJSON_IsTrue(confirm))
+        result=device_access::configure(current->valuestring,web->valuestring,cJSON_IsString(ap)?ap->valuestring:nullptr);
+    for(auto *item:{current,web,ap})if(cJSON_IsString(item))mbedtls_platform_zeroize(item->valuestring,strlen(item->valuestring));
+    cJSON_Delete(body);
+    if(result!=ESP_OK)return message(req,result==ESP_ERR_INVALID_ARG?"400 Bad Request":"409 Conflict","Nie zapisano hasel. Sprawdz obecne haslo, zakres i stan aktualizacji.");
+    pellet::checkpoint(true);flash_guard.keep=true;
+    message(req,"200 OK","Hasla zapisane. Restart ESP za 2 sekundy; zaloguj sie nowym haslem.");
+    ESP_ERROR_CHECK(esp_timer_start_once(reboot_timer,2000000));return ESP_OK;
+}
 static esp_err_t update_status(httpd_req_t *req) {
     if(!authorize(req))return ESP_OK;
     return json(req,updates::snapshot());
@@ -487,7 +506,7 @@ void start() {
     esp_timer_create_args_t timer{}; timer.callback = [](void *) { esp_restart(); }; timer.name = "ota_reboot";
     ESP_ERROR_CHECK(esp_timer_create(&timer, &reboot_timer));
     httpd_config_t config = HTTPD_DEFAULT_CONFIG(); config.stack_size = 16384;
-    config.max_uri_handlers = 52; config.max_open_sockets = 8; config.lru_purge_enable = true;
+    config.max_uri_handlers = 54; config.max_open_sockets = 8; config.lru_purge_enable = true;
     config.uri_match_fn=httpd_uri_match_wildcard;
     config.recv_wait_timeout = 5; config.send_wait_timeout = 12;
     ESP_ERROR_CHECK(httpd_start(&server, &config));
@@ -502,6 +521,7 @@ void start() {
     add("/api/wifi/scan",HTTP_GET,wifi_scan);add("/api/wifi/scan",HTTP_POST,wifi_scan);
     add("/api/ota", HTTP_POST, ota); add("/api/ecomax", HTTP_GET, ecomax);
     add("/api/updates",HTTP_GET,update_status);add("/api/updates/check",HTTP_POST,update_command);
+    add("/api/access",HTTP_POST,configure_access);
     add("/api/updates/config",HTTP_POST,update_command);add("/api/updates/install",HTTP_POST,update_command);
     add("/api/mixers", HTTP_GET, subset); add("/api/thermostats", HTTP_GET, subset);
     add("/api/alarms", HTTP_GET, alarms); add("/api/frames", HTTP_GET, frame_stats);

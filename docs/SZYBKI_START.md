@@ -1,6 +1,6 @@
 # ecoMAX Wi-Fi: Prosta Instrukcja Instalacji
 
-**Wersja programu 0.7.0-beta.8. Instrukcja 4, 17.10.2026.**
+**Wersja programu 0.7.0-beta.9. Instrukcja 4, 17.10.2026.**
 Nie musisz programowac ani wpisywac komend. Komputer jest potrzebny
 tylko przy pierwszym wgraniu; pozniej korzystasz z telefonu.
 
@@ -56,13 +56,12 @@ Na tej samej stronie przejdz do **Polacz swoje Wi-Fi**.
 Nazwa na zdjeciu jest przykladem; **wybierz wlasne Wi-Fi**, nie przepisuj
 przykladowej nazwy. Siec ukryta: z listy wybierz wpisanie nazwy recznie.
 
-## 5. Zachowaj Haslo ESP I Otworz Panel
+## 5. Otworz Panel
 
-Instalator pokaze **osobne haslo ESP**. Zachowaj je w menedzerze hasel.
-To nie jest haslo domowego Wi-Fi ani haslo do konta ecoNET24.
-
-Kliknij **Otworz panel ESP**. Login: **admin**, haslo: **haslo ESP**
-odczytane przez instalator. Nie publikuj zdjecia z prawdziwym haslem.
+Kliknij **Otworz panel ESP**. Domyslny login: **admin**, haslo: **admin**.
+Nie ma losowego generowania hasel. W **Ustawienia urzadzenia > Hasla dostepu**
+mozesz ustawic wlasne haslo panelu oraz sieci Piec-Setup. Aktualizacja je zachowa.
+Nie udostepniaj panelu bezposrednio w Internecie.
 
 Na telefonie polacz sie z **tym samym domowym Wi-Fi**, a potem otworz:
 
@@ -109,4 +108,4 @@ Nie wystawiaj panelu bezposrednio do Internetu.
 Wiecej: [pelna instrukcja ze zdjeciami](START_PL.md),
 [jak wyglada panel](GALERIA.md), [zdjecia sprzetu](SPRZET.md).
 Awaryjna konfiguracja telefonem uzywa sieci **Piec-Setup-XXXX**
-i indywidualnego hasla ESP; opis jest w pelnej instrukcji.
+z domyslnym haslem **piecwifi**; opis jest w pelnej instrukcji.

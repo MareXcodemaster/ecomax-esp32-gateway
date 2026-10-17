@@ -4,7 +4,7 @@
 
 Gorny pasek: **Kafelki** wlacza edycje ukladu (przycisk zmienia sie na
 **Gotowe**), **Odswiez** pobiera aktualne dane. **Narzedzia** rozwija liste:
-sprawdzenie API i katalogu, raport JSON, diagnostyka/OTA i przywrocenie
+Polaczenie ecoNET, sprawdzenie API i katalogu, raport JSON, diagnostyka/OTA i przywrocenie
 ukladu podczas jego edycji. **Wyloguj** jest na koncu listy.
 Menu mozna zamknac kliknieciem poza nim lub Escape; obsluguje tez Tab
 i strzalki klawiatury. Samo otwarcie menu niczego nie wysyla do kotla.
@@ -34,6 +34,15 @@ Samo ACK nie dowodzi, ze zadana wartosc zostala zastosowana. Niepotwierdzone
 polecenie nie jest automatycznie powtarzane ani automatycznie cofane.
 Zmiany wykonane na kotle/termostacie lub przez ecoNET moga zmieniac nastawy
 niezaleznie od otwartej strony.
+
+## Hasla Dostepu
+
+Domyslnie panel: **admin / admin**, Piec-Setup: **piecwifi**.
+W **Ustawienia urzadzenia > Hasla dostepu** wpisz obecne haslo panelu,
+nowe haslo i jego powtorzenie. Pole Piec-Setup mozesz zostawic puste,
+jesli nie zmieniasz hasla tej sieci. Zapis restartuje tylko ESP.
+Nastawy kotla i domowe Wi-Fi nie sa zmieniane. Kolejne OTA zachowuja
+wlasne hasla; nie ma generowania losowych hasel.
 
 ## Co Robi Ktory Harmonogram
 
@@ -75,6 +84,10 @@ dzienna/nocna. CWU: Parametry uzytkownika > Ustawienia CWU > Temperatura
 zadana CWU. To przyklady, nie odczyt Twoich ustawien.
 
 ## Historia I Alarmy
+
+Czerwony okragly licznik przy **Alarmy** pokazuje biezace zgloszenia
+sterownika, nie liczbe zapisow w historii. Zero lub nieaktualny odczyt
+ukrywa licznik. Jest odswiezany razem z danymi panelu.
 
 Archiwum jest w ESP, nie w pamieci telefonu. Retencja wynosi 3 dni,
 probkowanie dlugiego archiwum raz na minute, wykres ma ograniczona liczbe

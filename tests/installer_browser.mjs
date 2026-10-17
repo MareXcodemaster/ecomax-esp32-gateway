@@ -39,7 +39,7 @@ try {
             const command = JSON.parse(new TextDecoder().decode(bytes));
             window.usbCommands.push(command);
             const response = command.command === 'setup'
-              ? { command: 'setup', username: 'admin', password: '0123456789abcdef'.repeat(2) }
+              ? { command: 'setup', username: 'admin', password: 'admin', ap_password:'piecwifi', access_schema:1 }
               : command.command === 'scan' ? { command: 'scan', ok: true }
               : command.command === 'scan_results' ? { command: 'scan_results', busy: false, result: 'ESP_OK', sequence: window.usbCommands.some(x=>x.command==='scan')?1:0, networks:[{ssid:'Example network',rssi:-48,authmode:3},{ssid:'<b>not markup</b>',rssi:-75,authmode:0}] }
               : command.command === 'wifi' ? { command: 'wifi', ok: true }
@@ -62,6 +62,8 @@ try {
     await page.locator('#connect').click();
     await page.locator('#wifi-form').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#device-password').getAttribute('type'), 'password');
+    assert.equal(await page.locator('#device-password').inputValue(),'admin');
+    assert.equal(await page.locator('#device-ap-password').inputValue(),'piecwifi');
     assert.equal(await page.locator('#install').isEnabled(), false, 'serial is owned by setup, not flasher');
     await page.locator('#scan-wifi').click();
     await page.locator('#wifi-networks option[value="Example network"]').waitFor({state:'attached'});
@@ -84,6 +86,7 @@ try {
     await page.locator('#disconnect').click();
     assert.equal(await page.locator('#credentials').isVisible(), false);
     assert.equal(await page.locator('#device-password').inputValue(), '');
+    assert.equal(await page.locator('#device-ap-password').inputValue(),'');
     assert.deepEqual(errors, []);
     assert.deepEqual(external, [], 'no third-party script, telemetry or credentials request');
     await page.close();

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0-beta.9 - 2026-10-17
+
+- Domyslny panel admin / admin; siec Piec-Setup z haslem piecwifi.
+- Bez losowego generowania hasel. Migracja poprzednich hasel automatycznych.
+- Wlasne hasla panelu i Piec-Setup w Ustawieniach urzadzenia, trwale w NVS.
+- Wymagane obecne haslo, token panelu i potwierdzenie restartu przy zmianie.
+- Polaczenie ecoNET przeniesione do Narzedzi; Wyloguj pozostaje ostatnie.
+- Ikona walca zamiast klosa przy Pellet.
+- Czerwony okragly licznik aktywnych alarmow w menu, z kontrola aktualnosci.
+
 ## 0.7.0-beta.8 - 2026-10-17
 
 - Aktualizacja przeniesiona do wspolnego gornego paska, bez osobnego wiersza.
