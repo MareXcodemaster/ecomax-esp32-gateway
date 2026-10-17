@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0-beta.8 - 2026-10-17
+
+- Aktualizacja przeniesiona do wspolnego gornego paska, bez osobnego wiersza.
+- Aktualne dopiero po udanym sprawdzeniu; brak polaczenia nie udaje aktualnosci.
+- Porownanie numeru wydania, oddzielnie od technicznego numeru kompilacji.
+- Widoczne oznaczenie BETA i numer dostepnej wersji w podpowiedzi.
+- Na telefonie czytelny uklad przyciskow w dwoch kolumnach.
+- Przycisk nadal tylko otwiera ustawienia; instalacja wymaga potwierdzenia.
+
 ## 0.7.0-beta.7 - 2026-10-17
 
 - Podpisane szybkie akcje Kafelki i Odswiez oraz rozwijane Narzedzia.

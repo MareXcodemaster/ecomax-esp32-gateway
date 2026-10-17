@@ -87,7 +87,7 @@ static bool refresh(){
     Candidate value;status("checking");int code=latest(value,beta);
     xSemaphoreTake(mutex,portMAX_DELAY);
     available=false;candidate={};checked=static_cast<uint64_t>(time(nullptr));
-    if(code==200){candidate=value;available=update_manifest::newer(value.version,board::version);}
+    if(code==200){candidate=value;available=update_manifest::newer(value.version,board::release_version);}
     xSemaphoreGive(mutex);
     if(code==404){status("no_release");return true;}
     if(code!=200){status("error",code==403||code==429?"Limit zapytan GitHub. Sprobuj pozniej.":code==-2?"Nieprawidlowe metadane wydania.":"Nie mozna sprawdzic GitHuba przez HTTPS. Kociol dziala niezaleznie.");return false;}
@@ -160,6 +160,7 @@ esp_err_t install(const char *version){
 }
 cJSON *snapshot(){
     auto *out=cJSON_CreateObject();cJSON_AddStringToObject(out,"current",board::version);
+    cJSON_AddStringToObject(out,"current_release",board::release_version);
     cJSON_AddBoolToObject(out,"install_supported",board::github_ota);
     if(!mutex){cJSON_AddStringToObject(out,"phase","error");cJSON_AddStringToObject(out,"error","Aktualizator niedostepny: brak pamieci.");return out;}
     xSemaphoreTake(mutex,portMAX_DELAY);

@@ -2,16 +2,32 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const source=fs.readFileSync(path.join(__dirname,'../src/panel_web/updates.js'),'utf8');
-const {stableOffer,releaseOffer}=require('../src/panel_web/updates.js');
+const {stableOffer,releaseOffer,toolbarStatus}=require('../src/panel_web/updates.js');
 function ui(state,postError=false,confirmation=true){
  const elements={},requests=[],reloads=[];
- const ctx={document:{getElementById:id=>elements[id]??=( {textContent:'',hidden:false,disabled:false,checked:true} )},
+ const ctx={document:{getElementById:id=>elements[id]??=( {textContent:'',hidden:false,disabled:false,checked:true,dataset:{}} )},
   csrf:'test',serverReachable:true,setTimeout:()=>1,clearTimeout(){},confirm:()=>confirmation,selectView(){},location:{reload:()=>reloads.push(true)},
   request:async(url,payload)=>{requests.push({url,payload});if(payload&&postError)throw Error('Lost response');return state;}};
  vm.createContext(ctx);vm.runInContext(source,ctx);ctx.EcoUpdates.init();
  return {elements,requests,ctx,reloads};
 }
 const stable=()=>({current:'0.7.0-beta.3',version:'0.7.0',available:true,install_supported:true,automatic:true,phase:'available',busy:false});
+test('current release is distinct from a private build and never offers itself',async()=>{
+ const state={...stable(),current:'0.6.40-update-toolbar',current_release:'0.7.0-beta.8',version:'0.7.0-beta.8',channel:'all',beta:true,available:false,phase:'up_to_date',checked:Date.now()/1000};
+ assert.equal(releaseOffer({...state,available:true}),false);
+ assert.equal(toolbarStatus(state).label,'Aktualne');
+ const view=ui(state);await view.ctx.EcoUpdates.load();
+ assert.equal(view.elements['update-open-label'].textContent,'Aktualne');
+ assert.equal(view.elements['update-install'].hidden,true);
+ assert.match(view.elements['update-current'].textContent,/beta\.8 \(kompilacja 0\.6\.40/);
+ for(const change of [{phase:'error'},{checked:0},{checked:Date.now()/1000-26*3600},{checked:Date.now()/1000+600},{busy:true},{error:'offline'}])assert.equal(toolbarStatus({...state,...change}).label,'Aktualizacje');
+ assert.equal(toolbarStatus(state,false).label,'Aktualizacje');
+ const newer={...state,version:'0.7.0-beta.9',available:true,phase:'available'};
+ assert.equal(toolbarStatus(newer).label,'Aktualizacja');assert.equal(toolbarStatus(newer).beta,true);
+ view.ctx.request=async()=>{throw Error('offline');};await view.ctx.EcoUpdates.load();
+ assert.equal(view.elements['update-open-label'].textContent,'Aktualizacje');assert.equal(view.elements['update-install'].hidden,true);
+ assert.equal(view.requests.filter(r=>r.payload).length,0);
+});
 test('only an actual stable version can produce an offer',()=>{
  assert.equal(stableOffer(stable()),true);
  for(const version of ['0.7.0-beta.4','v0.7.0','0.7','01.7.0','','<script>'])assert.equal(stableOffer({...stable(),version}),false);
@@ -31,7 +47,8 @@ test('beta is an explicitly labelled opt-in channel offer, installed only after 
 test('opening updater and refreshing never installs anything',async()=>{
  const view=ui({...stable(),available:false,version:'',phase:'no_stable_release'});await view.ctx.EcoUpdates.load();
  assert.equal(view.elements['update-install'].hidden,true);
- assert.equal(view.elements['update-notice'].hidden,true);
+ assert.equal(view.elements['update-notice'].hidden,false);
+ assert.equal(view.elements['update-open-label'].textContent,'Aktualizacje');
  assert.equal(view.requests.filter(r=>r.payload).length,0);
  assert.match(view.elements['update-status'].textContent,/beta/);
 });
@@ -63,6 +80,8 @@ test('firmware checks fixed GitHub stable endpoint, TLS, digest and project befo
  assert.ok(backend.indexOf('strcmp(hex,value.sha256)')<backend.indexOf('esp_ota_set_boot_partition'));
  assert.ok(backend.indexOf('strcmp(description.project_name')<backend.indexOf('esp_ota_set_boot_partition'));
  assert.match(backend,/86400000ULL/);assert.match(backend,/board::github_ota/);
+ assert.match(backend,/newer\(value.version,board::release_version\)/);
+ assert.match(backend,/"current_release",board::release_version/);
  const api=fs.readFileSync(path.join(__dirname,'../src/api.cpp'),'utf8');
  assert.match(api,/updates::FlashGuard flash_guard/);assert.match(api,/if\(updates::installing\(\)\)/);
 });

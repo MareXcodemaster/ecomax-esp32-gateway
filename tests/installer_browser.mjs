@@ -156,7 +156,7 @@ try {
   for(const width of [1280,390]){
     const page=await browser.newPage({viewport:{width,height:850}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
-    await page.setContent('<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body><main>'+updateSection+'</main><div id="update-notice"><strong id="update-notice-version"></strong><button id="update-open">Aktualizacja</button></div></body></html>');
+    await page.setContent('<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body><main>'+updateSection+'</main><div id="update-notice"><strong id="update-notice-version"></strong><b id="update-notice-beta" hidden>BETA</b><button id="update-open"><span id="update-offer-icon"></span><span id="update-current-icon"></span><span id="update-open-label"></span>Aktualizacja</button></div></body></html>');
     for(const file of ['style.css','updates.css'])await page.addStyleTag({content:await readFile('src/panel_web/'+file,'utf8')});
     await page.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});
     await page.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});

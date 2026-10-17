@@ -66,7 +66,7 @@ const server = createServer(async (req, res) => {
       : url.pathname === '/api/panel/clock' ? { ok: true }
       : url.pathname === '/api/logout' ? { ok: true }
       : url.pathname === '/api/history' ? history
-      : url.pathname === '/api/updates' ? { current: version, phase: 'no_stable_release', automatic: true, available: false, install_supported: true }
+      : url.pathname === '/api/updates' ? { current: version, current_release:version,version,channel:'all',beta:true,phase:'up_to_date',checked:now, automatic: true, available: false, install_supported: true }
       : null;
     res.writeHead(data ? 200 : 404, { 'Content-Type': 'application/json' }).end(JSON.stringify(data || { error: 'Demo: endpoint disabled' }));
     return;
@@ -109,6 +109,8 @@ try {
     await page.screenshot({ path: `${output}/${name}.png` });
   };
   const tools=page.locator('#panel-tools'),summary=tools.locator('summary');
+  assert.equal(await page.locator('#update-open').evaluate(el=>!!el.closest('.page-toolbar')),true,'update action shares the toolbar, never a separate band');
+  await page.locator('#update-open-label').getByText('Aktualne',{exact:true}).waitFor();
   const resetLayout=async()=>{await summary.click();await page.locator('#tile-layout-reset').click();assert.equal(await tools.getAttribute('open'),null,'action closes the tools menu');};
   await screenshot('01-odczyty');
   const beforeMenu=requests.filter(([method])=>method!=='GET').length;
@@ -185,6 +187,28 @@ try {
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'named toolbar fits phone');
     await page.keyboard.press('Escape');
   }
+  await page.route('**/api/updates',route=>route.fulfill({json:{current:'0.7.0-beta.7',version,channel:'all',beta:true,available:true,install_supported:true,automatic:true,phase:'available',busy:false}}));
+  await page.evaluate(()=>EcoUpdates.load());
+  assert.equal(await page.locator('#update-open-label').innerText(),'Aktualizacja');
+  for(const width of [320,390,1280]){
+    await page.setViewportSize({width,height:844});
+    assert.equal(await page.locator('#update-open').isVisible(),true);assert.equal(await page.locator('#update-notice-beta').innerText(),'BETA');
+    const bar=await page.locator('.page-toolbar').boundingBox(),button=await page.locator('#update-open').boundingBox();
+    assert.ok(button.x>=bar.x&&button.x+button.width<=bar.x+bar.width+1&&button.y>=bar.y&&button.y+button.height<=bar.y+bar.height,'available update remains within the shared toolbar');
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'toolbar including BETA update fits');
+    await summary.click();const menuBox=await tools.locator('.tools-list').boundingBox();assert.ok(menuBox.x>=0&&menuBox.x+menuBox.width<=width,'tools still fits beside update');await page.keyboard.press('Escape');
+  }
+  await page.locator('#update-open').click();
+  assert.equal(await page.locator('[data-section="settings"]').isVisible(),true,'toolbar update opens settings only');
+  assert.equal(requests.filter(([,path])=>path==='/api/updates/install').length,0,'toolbar update never installs by itself');
+  await page.locator('[data-view="live"]').click();
+  await page.unroute('**/api/updates');
+  await page.route('**/api/updates',route=>route.fulfill({json:{current:'0.6.40-update-toolbar',current_release:version,version,channel:'all',beta:true,available:false,install_supported:false,phase:'up_to_date',checked:now}}));
+  await page.evaluate(()=>EcoUpdates.load());assert.equal(await page.locator('#update-open-label').innerText(),'Aktualne');
+  assert.equal(await page.locator('#update-install').isVisible(),false);
+  await page.unroute('**/api/updates');await page.route('**/api/updates',route=>route.abort());
+  await page.evaluate(()=>EcoUpdates.load());assert.equal(await page.locator('#update-open-label').innerText(),'Aktualizacje','failed request never claims up to date');
+  await page.unroute('**/api/updates');await page.evaluate(()=>EcoUpdates.load());await page.setViewportSize({width:390,height:844});
   assert.equal(await page.locator('[data-member="fuelLevel"]').evaluate(tile=>{
     const gauge=tile.querySelector('.pellet-gauge').getBoundingClientRect(),value=tile.querySelector('.tile-value').getBoundingClientRect();
     return Math.abs(gauge.x+gauge.width/2-value.x-value.width/2)<1&&gauge.bottom<=value.top;

@@ -45,12 +45,12 @@ try {
   const panel=await browser.newPage({viewport:{width:850,height:650}});
   const html=await readFile('src/panel_web/index.html','utf8');
   const section=html.match(/<section data-section="settings"[^>]*>[\s\S]*?<\/section>/)[0].replace(' hidden','');
-  await panel.setContent('<!doctype html><html lang="pl"><meta charset="utf-8"><body><main>'+section+'</main><div id="update-notice" hidden><strong id="update-notice-version"></strong><button id="update-open"></button></div></body></html>');
+  await panel.setContent('<!doctype html><html lang="pl"><meta charset="utf-8"><body><main>'+section+'</main><div id="update-notice" hidden><strong id="update-notice-version"></strong><b id="update-notice-beta" hidden>BETA</b><button id="update-open"><span id="update-offer-icon"></span><span id="update-current-icon"></span><span id="update-open-label"></span></button></div></body></html>');
   for(const name of ['style.css','updates.css'])await panel.addStyleTag({content:await readFile('src/panel_web/'+name,'utf8')});
   await panel.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});
   await panel.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});
   await panel.evaluate(()=>{
-    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.7',version:'0.7.0-beta.7',channel:'all',beta:true,phase:'up_to_date',automatic:true,available:false,install_supported:true});
+    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.8',current_release:'0.7.0-beta.8',version:'0.7.0-beta.8',channel:'all',beta:true,phase:'up_to_date',checked:Date.now()/1000,automatic:true,available:false,install_supported:true});
     EcoUpdates.init();lucide.createIcons();return EcoUpdates.load();
   });
   await panel.locator('.update-panel').screenshot({path:'docs/images/04-aktualizacje.png'});

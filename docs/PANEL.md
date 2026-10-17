@@ -8,6 +8,11 @@ sprawdzenie API i katalogu, raport JSON, diagnostyka/OTA i przywrocenie
 ukladu podczas jego edycji. **Wyloguj** jest na koncu listy.
 Menu mozna zamknac kliknieciem poza nim lub Escape; obsluguje tez Tab
 i strzalki klawiatury. Samo otwarcie menu niczego nie wysyla do kotla.
+Przycisk **Aktualizacja** pojawia sie w tym samym gornym pasku, gdy dostepne
+jest nowsze wydanie. Oznaczenie BETA pozostaje widoczne; nacisniecie otwiera
+ustawienia aktualizacji, a nie rozpoczyna instalacji.
+Po udanym sprawdzeniu bez nowszego wydania ma nazwe **Aktualne**.
+Przy braku aktualnego potwierdzenia pokazuje neutralne **Aktualizacje**.
 
 Kolejnosc kafelkow w Danych biezacych mozesz zmienic przyciskiem
 **Edytuj uklad** (symbol siatki). Przeciagnij uchwyt wybranego kafelka

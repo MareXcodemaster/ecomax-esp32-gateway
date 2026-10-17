@@ -24,6 +24,17 @@ Mozesz wtedy przelaczyc kanal; nie zmieniaj oznaczenia wydania na stabilne.
 
 ## Instalacja
 
+Od **0.7.0-beta.8** przycisk jest w gornej belce panelu:
+**Aktualne** oznacza udane sprawdzenie bez nowszego wydania w wybranym
+kanale (wynik nie starszy niz 25 godzin). **Aktualizacja** oznacza
+dostepne nowsze wydanie. **Aktualizacje** oznacza brak aktualnego
+potwierdzenia, np. po bledzie sieci. Przycisk tylko otwiera ustawienia.
+Oznaczenie **BETA** pozostaje widoczne przy wydaniu testowym.
+
+Porownywany jest numer wydania. Numer technicznej kompilacji jest
+pokazywany osobno, jezeli sie rozni. Nie omija to blokady migracji
+prywatnego firmware do publicznego.
+
 1. Sprawdź aktualną wersję i dostępność nowszej.
 2. Naciśnij **Zaktualizuj** i potwierdź restart ESP.
 3. Nie odłączaj zasilania ESP. Pobierany jest tylko **firmware-ota.bin**,
@@ -65,9 +76,12 @@ może użyć **pool.ntp.org**, aby zweryfikować certyfikat.
 
 ## Instalacje Prywatne I Ograniczenia
 
-Prywatne wydania 0.6.x mają inną inicjalizację dostępu niż publiczne 0.7.x.
-Automatyczna migracja jest zablokowana i wymaga osobnej procedury.
-Nie obchodź blokady przez podmianę pliku lub numeru wersji.
+Starsze prywatne wydania 0.6.x maja inna inicjalizacje dostepu niz publiczne
+0.7.x. Automatyczna migracja jest zablokowana i wymaga osobnej procedury:
+zapisania konfiguracji w NVS, utworzenia i zabezpieczenia unikalnego hasla
+oraz sprawdzenia zgodnosci partycji. Wersja przejsciowa jest przygotowywana
+indywidualnie, nie jest publicznym obrazem pierwszej instalacji.
+Nie obchodz blokady przez podmiane pliku lub numeru wersji.
 
 Parser i panel są testowane syntetycznie. Pełne pobranie i uruchomienie
 nowego stabilnego obrazu z GitHuba nie jest jeszcze potwierdzoną próbą

@@ -1,6 +1,6 @@
 # Jak Wyglada Panel ecoMAX Wi-Fi
 
-Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.7**, uruchomionego
+Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.8**, uruchomionego
 lokalnie z **danymi przykladowymi (DEMO)**. Nie jest to potwierdzenie
 obslugi kazdej nastawy w dowolnym kotle.
 Kliknij zdjecie, aby je powiekszyc w GitHubie.

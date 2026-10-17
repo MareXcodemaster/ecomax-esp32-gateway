@@ -19,6 +19,9 @@ int main() {
     assert(!update_manifest::newer("0.7.0-beta.9","0.7.0-beta.10"));
     assert(!update_manifest::newer("0.7.0-beta.4","0.7.0"));
     assert(!update_manifest::newer("0.7.0-beta.4","0.7.0-beta.4"));
+    assert(!update_manifest::newer("0.7.0-beta.8","0.7.0-beta.8"));
+    assert(!update_manifest::newer("0.7.0-beta.7","0.7.0-beta.8"));
+    assert(update_manifest::newer("0.7.0-beta.9","0.7.0-beta.8"));
     assert(!update_manifest::newer("0.7.0","0.7.0"));
     assert(!update_manifest::newer("0.6.99","0.7.0"));
     update_manifest::Version version;
