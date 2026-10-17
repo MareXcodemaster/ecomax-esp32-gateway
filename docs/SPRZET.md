@@ -34,6 +34,30 @@ USB-C sluzy do pierwszego wgrania i zasilania 5 V. Osobne wejscie
 
 ![Waveshare: oznaczenia zaciskow RS485, CAN, zasilania i USB-C](https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-17.jpg)
 
+<a id="boot-usb"></a>
+
+## Gdzie Jest Przycisk BOOT
+
+Na zdjeciu producenta **BOOT to element 13**, a sasiedni **RESET to 14**.
+Szukaj napisu BOOT na plytce, obok kolumny diod. Zdjecie pokazuje plytke
+bez obudowy; dostep do przyciskow zalezy od wersji obudowy. Jezeli trzeba
+zdjac obudowe ESP, najpierw odlacz USB i wszystkie inne zrodla zasilania.
+Nie otwieraj pracujacego kotla i nie zwieraj pinow ani zaciskow.
+
+![Zdjecie Waveshare: BOOT oznaczony numerem 13, RESET numerem 14, USB-C numerem 5](https://docs.waveshare.net/assets/images/ESP32-S3-RS485-CAN-details-intro-259fd812b2f10c65831ab2efc6c161ef.webp)
+
+Zdjecie ladowane od producenta, wymaga Internetu i nie jest objete MIT
+projektu. [Opis elementow 13/14 w dokumentacji Waveshare](https://docs.waveshare.net/ESP32-S3-RS485-CAN/#%E8%B5%84%E6%BA%90%E7%AE%80%E4%BB%8B).
+
+Przy pustym flash i znikajacym USB: odlacz cale zasilanie ESP, przytrzymaj
+BOOT, trzymajac przycisk podlacz USB do komputera, po 2-3 sekundach pusc
+BOOT i ponownie wybierz port w instalatorze.
+
+![Rysunek pogladowy: wyrozniony BOOT i kolejnosc podlaczania pustego ESP](images/boot-usb.svg)
+
+Zrodlo procedury: [Waveshare: BOOT podczas ponownego podania zasilania](https://docs.waveshare.net/ESP32-S3-RS485-CAN/Firmware-Flashing/).
+Sam BOOT nie kasuje pamieci. Nie trzeba trzymac go przez caly zapis.
+
 ## Gdzie Wpiac Sie Do Kotla
 
 **Tylko dla potwierdzonej wersji ecoMAX860P-LZ TOUCH / ecoMAX860P4-LZ:**

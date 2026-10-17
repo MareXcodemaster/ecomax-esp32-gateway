@@ -4,16 +4,18 @@
 
 **Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
 
-**Oprogramowanie: 0.7.0-beta.9. Instrukcja: wydanie 8, 17.10.2026.**
+**Oprogramowanie: 0.7.0-beta.9. Instrukcja: wydanie 9, 17.10.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
 Komputer i kabel USB są potrzebne do pierwszego wgrania. Później panel
 działa przez Wi-Fi, także bez komputera i bez konta w chmurze.
 
-**To wersja beta. Pierwsze uruchomienie na osobnej, wyczyszczonej płytce
-nie zostało jeszcze potwierdzone sprzętowo.** Zgodność jest ograniczona
-do wskazanego profilu, a nie do wszystkich kotłów PLUM.
+**To wersja beta.** 17.10.2026 użytkownik potwierdził samodzielną instalację
+według publicznej instrukcji, konfigurację i uruchomienie na swoim module
+po pełnym wyczyszczeniu 16 MB flash. Nie jest to test drugiego egzemplarza
+ani potwierdzenie wszystkich funkcji i kotłów PLUM. Zgodność pozostaje
+ograniczona do wskazanego profilu.
 
 Wygląd programu: [galeria panelu, harmonogramów i wykresów](GALERIA.md).
 Zrzuty pokazują rzeczywisty interfejs z przykładowymi danymi DEMO.
@@ -118,9 +120,33 @@ tylko po to, aby zmienić nazwę domowej sieci.
 
 **Nie widzisz portu?** Sprawdź inny kabel z transmisją danych i inny port USB.
 Zamknij monitor portu, PlatformIO i inne aplikacje korzystające z ESP.
-Jeżeli płytka nadal nie wchodzi w tryb wgrywania: przytrzymaj **BOOT**,
-naciśnij i zwolnij **RESET**, a potem zwolnij BOOT. Ponownie wybierz port.
-Po ukończeniu wgrywania naciśnij RESET bez trzymania BOOT, aby uruchomić program.
+
+<a id="boot-usb"></a>
+
+### Pusta pamięć: USB pojawia się i znika albo instalator ciągle łączy
+
+Po pełnym wyczyszczeniu flash ESP może ciągle restartować się, przez co
+komputer nie utrzymuje połączenia USB. W takim przypadku nie czekaj bez końca:
+
+1. Odłącz USB oraz inne zasilanie **samego modułu ESP**. Przewody RS485 do kotła mają być odłączone.
+2. Naciśnij i **trzymaj BOOT**, nie RESET.
+3. **Trzymając BOOT, podłącz kabel USB do komputera.** Przycisk ma być wciśnięty już przed podłączeniem.
+4. Po 2-3 sekundach puść BOOT. Ponownie wybierz port w instalatorze i rozpocznij wgrywanie.
+
+![Gdzie jest BOOT i jak podłączyć puste ESP: trzymaj przycisk podczas wkładania USB](images/boot-usb.svg)
+
+Rysunek jest poglądowy. [Zdjęcie producenta z przyciskiem BOOT nr 13 i RESET nr 14](SPRZET.md#boot-usb).
+Jeśli obudowa zasłania przyciski, dostęp do nich przygotuj przy całkowicie
+odłączonym zasilaniu ESP. Nie wciskaj przypadkowych otworów ani nie zwieraj
+pinów. Nie otwieraj w tym celu pracującego kotła.
+
+BOOT wybiera tryb wgrywania; **sam nie kasuje pamięci**. Po wejściu w ten tryb
+nie trzeba trzymać go przez cały zapis. Nie odłączaj USB podczas wgrywania.
+Alternatywa przy już podłączonym USB: trzymaj BOOT, naciśnij i zwolnij RESET,
+następnie puść BOOT. Po zakończeniu instalacji, jeśli program nie startuje,
+naciśnij RESET bez trzymania BOOT.
+
+Źródło: [Waveshare: oczekiwanie na połączenie i BOOT przy ponownym zasileniu](https://docs.waveshare.net/ESP32-S3-RS485-CAN/Firmware-Flashing/).
 
 ## 4. Zapisz swoją sieć Wi-Fi
 

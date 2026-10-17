@@ -64,10 +64,14 @@ are development tools only. https://github.com/esphome/esp-web-tools
 
 The Polish HTML guide is rendered at build time using Marked 18.1.1 (MIT).
 Its license is included in LICENSES/installer; no Marked runtime is sent to ESP.
-The guides link three official Waveshare product photos hosted by Waveshare,
+The guides link four official Waveshare product photos hosted by Waveshare,
 with attribution (model variants and terminal labels). These photos are not
 bundled or covered by this project's MIT license. Installer and DEMO panel
-screenshots and the wiring diagram are original project assets.
+screenshots, the wiring diagram and the BOOT/USB procedural illustration
+are original project assets. The latter is a schematic top view, not a
+manufacturer photograph; component positions and BOOT 13 / RESET 14 labels
+were checked against the manufacturer's component map:
+https://docs.waveshare.net/ESP32-S3-RS485-CAN/
 
 PlatformIO Core, esptool (GPL-2.0-or-later) and pyserial are installed
 separately from their official packages. They are tools, not linked into

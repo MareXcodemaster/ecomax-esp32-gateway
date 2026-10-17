@@ -59,6 +59,16 @@ try {
     await page.locator('#compatible').check();
     assert.equal(await page.locator('#install').isEnabled(), true);
     assert.ok(await page.locator('.lucide').count() > 5, 'local icons rendered');
+    await page.locator('#usb-boot-help > summary').click();
+    const bootImage=page.locator('#usb-boot-help img');
+    await bootImage.evaluate(img=>img.decode());
+    assert.equal(await bootImage.evaluate(img=>img.naturalWidth>0),true,'local BOOT illustration loads');
+    assert.equal(await page.locator('#usb-boot-help li').count(),4);
+    assert.match(await page.locator('#usb-boot-help li').nth(2).innerText(),/Nie puszczajac BOOT, podlacz USB/);
+    assert.equal(await page.evaluate(()=>window.usbCommands.length),0,'opening BOOT instructions never opens USB or flashes');
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'BOOT help fits viewport');
+    await page.screenshot({path:`test-results/boot-help-${width}.png`,fullPage:true});
+    await page.locator('#usb-boot-help > summary').click();
     await page.locator('#connect').click();
     await page.locator('#wifi-form').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#device-password').getAttribute('type'), 'password');
@@ -101,12 +111,14 @@ try {
   await unsupported.close();
   for (const width of [1280,390]) {
     const page=await browser.newPage({viewport:{width,height:900}});
-    await page.route('https://www.waveshare.com/**',route=>route.abort());
+    await page.route(/^https:\/\/(?:www\.waveshare\.com|docs\.waveshare\.net)\//,route=>route.abort());
     await page.goto(origin+'/instrukcja.html');
     assert.match(await page.title(),/ecoMAX/);
     assert.equal(await page.locator('h1').count(),1);
     await page.waitForFunction(()=>[...document.images].filter(img=>img.src.startsWith(location.origin)).every(img=>img.complete&&img.naturalWidth>0));
-    assert.equal(await page.locator('img').count(),8);
+    assert.equal(await page.locator('img').count(),9);
+    assert.equal(await page.locator('img[src="images/boot-usb.svg"]').count(),1);
+    assert.equal(await page.locator('#boot-usb').count(),1);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'guide fits screen');
     await page.screenshot({path:`test-results/guide-${width}.png`,fullPage:true});
     await page.close();
@@ -115,7 +127,7 @@ try {
   const html=await readFile('src/panel_web/index.html','utf8');
   for (const width of [1280,390]) for (const stem of ['SZYBKI_START','GALERIA','SPRZET','ZGODNOSC']) {
     const page=await browser.newPage({viewport:{width,height:900}});
-    await page.route('https://www.waveshare.com/**',route=>route.abort());
+    await page.route(/^https:\/\/(?:www\.waveshare\.com|docs\.waveshare\.net)\//,route=>route.abort());
     await page.goto(origin+'/'+stem+'.html');
     assert.equal(await page.locator('h1').count(),1);
     await page.waitForFunction(()=>[...document.images].filter(img=>img.src.startsWith(location.origin)).every(img=>img.complete&&img.naturalWidth>0));
@@ -124,6 +136,12 @@ try {
     await page.close();
     console.log(`PASS ${stem} ${width}px: local images and layout`);
   }
+  const bootPage=await browser.newPage({viewport:{width:780,height:1040}});
+  await bootPage.goto(origin+'/images/boot-usb.svg');
+  const overflow=await bootPage.locator('svg text').evaluateAll(nodes=>nodes.filter(node=>{const b=node.getBBox();return b.x<0||b.y<0||b.x+b.width>780||b.y+b.height>1040;}).map(node=>node.textContent));
+  assert.deepEqual(overflow,[],'all instructional labels fit inside the illustration');
+  await bootPage.screenshot({path:'test-results/boot-illustration.png'});
+  await bootPage.close();
   const section=html.match(/<section data-section="espwifi"[^>]*>[\s\S]*?<\/section>/)[0].replace(' hidden','');
   for (const width of [1280,390]) {
     const page=await browser.newPage({viewport:{width,height:850}});

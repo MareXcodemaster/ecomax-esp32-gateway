@@ -26,7 +26,18 @@
           <span slot="unsupported">Wgrywanie USB wymaga zgodnej przegladarki na komputerze.</span>
           <span slot="not-allowed">Wgrywanie USB wymaga HTTPS lub localhost.</span>
         </esp-web-install-button>
-        <details><summary>Nie widze portu albo wgrywanie nie rusza</summary><p>Zamknij programy korzystajace z portu USB. Sprawdz kabel z transmisja danych. Przytrzymaj BOOT, nacisnij i zwolnij RESET, zwolnij BOOT, potem wybierz port ponownie. Po wgraniu nacisnij RESET bez trzymania BOOT.</p></details>
+        <details id="usb-boot-help"><summary>Puste ESP, USB znika albo laczenie trwa bez konca</summary>
+          <p>Po wyczyszczeniu pamieci flash ESP moze ciagle restartowac sie i gubic port USB. Wtedy wejdz recznie w tryb wgrywania:</p>
+          <ol>
+            <li>Odlacz USB i inne zasilanie samego ESP. Przewody RS485 do kotla maja byc odlaczone.</li>
+            <li>Przytrzymaj <strong>BOOT</strong>, nie RESET.</li>
+            <li><strong>Nie puszczajac BOOT, podlacz USB do komputera.</strong></li>
+            <li>Po 2-3 sekundach pusc BOOT. Ponownie wybierz port i kliknij Wgraj na ESP.</li>
+          </ol>
+          <img class="boot-help-image" src="../docs/images/boot-usb.svg" width="780" height="1040" alt="Wyrozniony przycisk BOOT: odlacz zasilanie, trzymaj BOOT podczas podlaczania USB, po 2-3 sekundach pusc przycisk">
+          <p><a href="./SPRZET.html#boot-usb">Zdjecie plytki: BOOT nr 13, RESET nr 14</a>. Jesli obudowa zakrywa przycisk, dostep przygotuj przy odlaczonym zasilaniu. Nie zwieraj pinow. Sam BOOT nie kasuje pamieci; nie trzymaj go przez caly zapis.</p>
+          <p>Zamknij tez inne programy korzystajace z USB i sprawdz kabel z transmisja danych. Alternatywa: trzymaj BOOT, nacisnij i zwolnij RESET, potem pusc BOOT. Po wgraniu, jesli program nie startuje, nacisnij RESET bez trzymania BOOT. Podczas zapisu nie odlaczaj USB.</p>
+        </details>
       </div>
     </section>
     <section aria-labelledby="step2">
@@ -61,7 +72,7 @@
         <details><summary>Chce skonfigurowac Wi-Fi telefonem lub zmienic siec pozniej</summary><p>Polacz telefon z siecia <strong>Piec-Setup-XXXX</strong>, haslo domyslne: <strong>piecwifi</strong>. Otworz <a href="http://192.168.4.1/diagnostics" target="_blank" rel="noopener noreferrer">192.168.4.1/diagnostics</a>, zaloguj sie jako <strong>admin / admin</strong> (lub wlasnym haslem) i wybierz swoja siec 2,4 GHz. Pozostan polaczony mimo komunikatu telefonu o braku Internetu.</p></details>
       </div>
     </section>
-    <aside><h2>Przed polaczeniem z kotlem</h2><p>Wersja beta, dla zgodnego profilu ecoMAX860P-LZ TOUCH. Pierwszy start na pustym ESP wymaga jeszcze testu sprzetowego. Podlaczenie wewnatrz kotla powierz osobie z odpowiednimi kwalifikacjami.</p><nav><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PODLACZENIE.md" target="_blank" rel="noopener noreferrer">Schemat i bezpieczenstwo</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases" target="_blank" rel="noopener noreferrer">Pliki BIN i instrukcje</a></nav></aside>
+    <aside><h2>Przed polaczeniem z kotlem</h2><p>Wersja beta, dla zgodnego profilu ecoMAX860P-LZ TOUCH. Pierwsza instalacja na wyczyszczonym module i konfiguracja Wi-Fi zostaly potwierdzone przez uzytkownika 17.10.2026; nie oznacza to zgodnosci ze wszystkimi kotlami. Podlaczenie wewnatrz kotla powierz osobie z odpowiednimi kwalifikacjami.</p><nav><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PODLACZENIE.md" target="_blank" rel="noopener noreferrer">Schemat i bezpieczenstwo</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases" target="_blank" rel="noopener noreferrer">Pliki BIN i instrukcje</a></nav></aside>
   </main>
   <footer>Projekt niezalezny. Bez konta w chmurze. Nazwa sieci i haslo sa wysylane do ESP tylko przez USB.</footer>
 </body>

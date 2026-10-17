@@ -1,21 +1,23 @@
 <!doctype html>
 <html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com https://docs.waveshare.net; base-uri 'none'; form-action 'none'">
 <title>ecoMAX Wi-Fi - Pelna instrukcja</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
 </style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>ecoMAX Wi-Fi - sterowanie kotłem z telefonu</h1>
 <h2>Instrukcja krok po kroku</h2>
 <p><strong>Pierwszy raz z ESP? Zacznij od <a href="SZYBKI_START.html">prostej instrukcji w 7 krokach</a>.</strong></p>
-<p><strong>Oprogramowanie: 0.7.0-beta.9. Instrukcja: wydanie 8, 17.10.2026.</strong></p>
+<p><strong>Oprogramowanie: 0.7.0-beta.9. Instrukcja: wydanie 9, 17.10.2026.</strong></p>
 <p>Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
 Komputer i kabel USB są potrzebne do pierwszego wgrania. Później panel
 działa przez Wi-Fi, także bez komputera i bez konta w chmurze.</p>
-<p><strong>To wersja beta. Pierwsze uruchomienie na osobnej, wyczyszczonej płytce
-nie zostało jeszcze potwierdzone sprzętowo.</strong> Zgodność jest ograniczona
-do wskazanego profilu, a nie do wszystkich kotłów PLUM.</p>
+<p><strong>To wersja beta.</strong> 17.10.2026 użytkownik potwierdził samodzielną instalację
+według publicznej instrukcji, konfigurację i uruchomienie na swoim module
+po pełnym wyczyszczeniu 16 MB flash. Nie jest to test drugiego egzemplarza
+ani potwierdzenie wszystkich funkcji i kotłów PLUM. Zgodność pozostaje
+ograniczona do wskazanego profilu.</p>
 <p>Wygląd programu: <a href="GALERIA.html">galeria panelu, harmonogramów i wykresów</a>.
 Zrzuty pokazują rzeczywisty interfejs z przykładowymi danymi DEMO.</p>
 <h2>1. Przygotuj właściwy sprzęt</h2>
@@ -113,10 +115,28 @@ ustawieniami ESP. Dotyczy to również sytuacji, gdy nie wybierzesz dodatkowego
 kasowania całej pamięci. Nie wgrywaj tego obrazu na działającą instalację
 tylko po to, aby zmienić nazwę domowej sieci.</p>
 <p><strong>Nie widzisz portu?</strong> Sprawdź inny kabel z transmisją danych i inny port USB.
-Zamknij monitor portu, PlatformIO i inne aplikacje korzystające z ESP.
-Jeżeli płytka nadal nie wchodzi w tryb wgrywania: przytrzymaj <strong>BOOT</strong>,
-naciśnij i zwolnij <strong>RESET</strong>, a potem zwolnij BOOT. Ponownie wybierz port.
-Po ukończeniu wgrywania naciśnij RESET bez trzymania BOOT, aby uruchomić program.</p>
+Zamknij monitor portu, PlatformIO i inne aplikacje korzystające z ESP.</p>
+<p><a id="boot-usb"></a></p>
+<h3>Pusta pamięć: USB pojawia się i znika albo instalator ciągle łączy</h3>
+<p>Po pełnym wyczyszczeniu flash ESP może ciągle restartować się, przez co
+komputer nie utrzymuje połączenia USB. W takim przypadku nie czekaj bez końca:</p>
+<ol>
+<li>Odłącz USB oraz inne zasilanie <strong>samego modułu ESP</strong>. Przewody RS485 do kotła mają być odłączone.</li>
+<li>Naciśnij i <strong>trzymaj BOOT</strong>, nie RESET.</li>
+<li><strong>Trzymając BOOT, podłącz kabel USB do komputera.</strong> Przycisk ma być wciśnięty już przed podłączeniem.</li>
+<li>Po 2-3 sekundach puść BOOT. Ponownie wybierz port w instalatorze i rozpocznij wgrywanie.</li>
+</ol>
+<p><img src="images/boot-usb.svg" alt="Gdzie jest BOOT i jak podłączyć puste ESP: trzymaj przycisk podczas wkładania USB"></p>
+<p>Rysunek jest poglądowy. <a href="SPRZET.html#boot-usb">Zdjęcie producenta z przyciskiem BOOT nr 13 i RESET nr 14</a>.
+Jeśli obudowa zasłania przyciski, dostęp do nich przygotuj przy całkowicie
+odłączonym zasilaniu ESP. Nie wciskaj przypadkowych otworów ani nie zwieraj
+pinów. Nie otwieraj w tym celu pracującego kotła.</p>
+<p>BOOT wybiera tryb wgrywania; <strong>sam nie kasuje pamięci</strong>. Po wejściu w ten tryb
+nie trzeba trzymać go przez cały zapis. Nie odłączaj USB podczas wgrywania.
+Alternatywa przy już podłączonym USB: trzymaj BOOT, naciśnij i zwolnij RESET,
+następnie puść BOOT. Po zakończeniu instalacji, jeśli program nie startuje,
+naciśnij RESET bez trzymania BOOT.</p>
+<p>Źródło: <a href="https://docs.waveshare.net/ESP32-S3-RS485-CAN/Firmware-Flashing/">Waveshare: oczekiwanie na połączenie i BOOT przy ponownym zasileniu</a>.</p>
 <h2>4. Zapisz swoją sieć Wi-Fi</h2>
 <ol>
 <li>Na tej samej stronie wybierz <strong>Połącz ESP przez USB</strong> i ponownie wskaż port.</li>

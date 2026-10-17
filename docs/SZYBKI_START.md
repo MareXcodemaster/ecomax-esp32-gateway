@@ -1,6 +1,6 @@
 # ecoMAX Wi-Fi: Prosta Instrukcja Instalacji
 
-**Wersja programu 0.7.0-beta.9. Instrukcja 4, 17.10.2026.**
+**Wersja programu 0.7.0-beta.9. Instrukcja 5, 17.10.2026.**
 Nie musisz programowac ani wpisywac komend. Komputer jest potrzebny
 tylko przy pierwszym wgraniu; pozniej korzystasz z telefonu.
 
@@ -41,6 +41,28 @@ na komputerze w Chrome albo Edge.
 
 Wgranie usuwa poprzedni program i ustawienia ESP. Nie uzywaj tego
 przycisku tylko po to, zeby zmienic Wi-Fi dzialajacego juz modulu.
+
+<a id="boot-usb"></a>
+
+### Puste ESP: USB Znika Albo Laczenie Trwa Bez Konca
+
+Po wyczyszczeniu pamieci ESP moze ciagle restartowac sie, a port USB
+pojawia sie i znika lub instalator nie konczy laczenia. Wtedy:
+
+1. **Odlacz USB oraz inne zasilanie samego ESP.** Modul nadal ma byc bez RS485 do kotla.
+2. **Przytrzymaj przycisk BOOT na urzadzeniu** - nie RESET.
+3. **Nie puszczajac BOOT, podlacz kabel USB do komputera.**
+4. Po 2-3 sekundach zwolnij BOOT. W instalatorze ponownie wybierz port i rozpocznij wgrywanie.
+
+![Puste ESP: odlacz zasilanie, trzymaj BOOT, podlacz USB, po 2-3 sekundach pusc BOOT](images/boot-usb.svg)
+
+To tryb wgrywania; samo przytrzymanie BOOT nie kasuje pamieci. Nie trzeba
+trzymac go przez caly zapis. **Podczas wgrywania nie odlaczaj USB.**
+Jesli przycisk jest zakryty obudowa ESP, dostep do niego przygotuj dopiero
+po odlaczeniu calego zasilania. Nie otwieraj w tym celu pracujacego kotla.
+[Gdzie jest BOOT: zdjecie producenta i oznaczenia 13/14](SPRZET.md#boot-usb).
+
+Zrodlo: [Waveshare: BOOT przy ponownym podaniu zasilania](https://docs.waveshare.net/ESP32-S3-RS485-CAN/Firmware-Flashing/).
 
 ## 4. Wpisz Swoje Wi-Fi
 
@@ -99,8 +121,9 @@ Nie wystawiaj panelu bezposrednio do Internetu.
 
 | Problem | Najpierw sprawdz |
 | --- | --- |
-| Nie widac portu USB | Inny kabel z transmisja danych i inny port USB |
-| Wgrywanie nie rusza | Zamknij inne programy USB. Przytrzymaj BOOT, nacisnij i zwolnij RESET, zwolnij BOOT i wybierz port ponownie |
+| Puste ESP, USB znika lub laczy sie bez konca | Odlacz cale zasilanie ESP, przytrzymaj BOOT, podlacz USB, po 2-3 s pusc BOOT i ponownie wybierz port. Rysunek powyzej |
+| Nie widac portu USB | Kabel z transmisja danych, inny port USB i powyzsza procedura BOOT |
+| Wgrywanie nie rusza | Zamknij inne programy USB. Wykonaj powyzsza procedure; alternatywnie trzymaj BOOT, nacisnij i zwolnij RESET, potem zwolnij BOOT |
 | Nie laczy sie Wi-Fi | Nazwa, haslo, 2,4 GHz i zasieg |
 | Nie otwiera piec.local | Ten sam domowy router; sprobuj IP pokazanego przez instalator |
 | Panel dziala, ale temperatur brak | Tryb RS485/ecoNET, zgodnosc regulatora i polaczenie wykonane przez instalatora |

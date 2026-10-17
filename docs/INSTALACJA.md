@@ -39,6 +39,24 @@ Domowe haslo Wi-Fi jest zapisywane na ESP lokalnie przez USB.
 Przy ponownej konfiguracji sieci wystarczy Polacz ESP przez USB, bez wgrywania.
 Mozesz tez uzyc telefonu przez siec ESP, zgodnie z [WIFI.md](WIFI.md).
 
+## Pusta Pamiec: USB Nie Laczy Lub Ciagle Znika
+
+Po pelnym wyczyszczeniu flash modul moze restartowac sie, a instalator
+czekac bez konca lub gubic port USB. Wejdz recznie w tryb wgrywania:
+
+1. Odlacz USB i inne zasilanie ESP; RS485 do kotla ma byc odlaczone.
+2. Przytrzymaj **BOOT**, nie RESET.
+3. **Trzymajac BOOT, podlacz USB do komputera.**
+4. Po 2-3 sekundach pusc BOOT, ponownie wybierz port i rozpocznij wgrywanie.
+
+![BOOT przed podlaczeniem USB: rysunek i cztery kroki](images/boot-usb.svg)
+
+[Zdjecie producenta: BOOT nr 13, RESET nr 14](SPRZET.md#boot-usb).
+Jesli obudowa zakrywa przycisk, dostep przygotuj przy odlaczonym zasilaniu.
+Nie zwieraj pinow. Sam BOOT nie kasuje pamieci; nie trzymaj go przez caly
+zapis i nie odlaczaj USB w trakcie zapisu firmware.
+Zrodlo: [procedura Waveshare](https://docs.waveshare.net/ESP32-S3-RS485-CAN/Firmware-Flashing/).
+
 ## Zapasowo: Wariant Z Gotowej Paczki
 
 Pobierz ZIP instalacyjny z Releases i rozpakuj go. W terminalu otwartym

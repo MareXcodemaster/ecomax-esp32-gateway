@@ -73,6 +73,12 @@ Zdjecie jest ladowane ze strony Waveshare i nie jest objete MIT projektu.
    wykonaj [polaczenie RS485](docs/PODLACZENIE.md).
 6. Otworz `http://piec.local/` lub adres IP nadany ESP przez Twoj router.
 
+**Puste ESP, znikajace USB albo laczenie bez konca?** Odlacz cale zasilanie
+modulu, przytrzymaj **BOOT** i **trzymajac go podlacz USB do komputera**.
+Po 2-3 sekundach pusc BOOT i ponownie wybierz port.
+[Rysunek krok po kroku](docs/SZYBKI_START.md#boot-usb) oraz
+[zdjecie plytki z BOOT nr 13 i RESET nr 14](docs/SPRZET.md#boot-usb).
+
 Domyslna nazwe `piec.local` mozesz zmienic w zakladce **ESP Wi-Fi**,
 np. na `kotlownia.local`. Zostaje zapamietana po restarcie.
 
@@ -129,10 +135,12 @@ zdalny dostep powinien byc realizowany przez VPN na routerze/bramce.
 
 ## Stan Wydania
 
-Wydanie opiera sie na funkcjach poprzedniej wersji prywatnej. Publiczne
-zmiany pierwszego startu, domyslnych hasel i przypisania nowego kotla
-wymagaja jeszcze proby na drugiej, fabrycznie wyczyszczonej plytce.
-Testy programowe i kompilacja nie zastepuja tego testu sprzetowego.
+17.10.2026 uzytkownik potwierdzil samodzielne wgranie publicznej wersji
+wedlug instrukcji, konfiguracje Wi-Fi i uruchomienie na swoim module
+po calkowitym wyczyszczeniu 16 MB flash. Przy pustej pamieci moze byc
+potrzebne trzymanie BOOT podczas podlaczania USB, zgodnie z instrukcja.
+To nie jest test drugiego egzemplarza, nowego modelu regulatora ani kazdej
+funkcji zapisu. Zgodnosc i testy programowe nadal maja opisane ograniczenia.
 
 Licencja kodu projektu: [MIT](LICENSE). Zaleznosci zachowuja wlasne
 licencje i atrybucje: [THIRD_PARTY.md](THIRD_PARTY.md).
