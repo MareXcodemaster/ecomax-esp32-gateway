@@ -1,4 +1,4 @@
-# ecoMAX Wi-Fi - sterowanie kotłem z telefonu
+# ecoMAX RS485: lokalne sterowanie kotłem bez chmury
 
 Lokalny panel kotla ecoMAX na ESP32: **RS485 lub lokalny ecoNET**, telefon/tablet,
 nastawy, ecoSTER, harmonogramy, alarmy i historia pomiarow z ostatnich 3 dni.
