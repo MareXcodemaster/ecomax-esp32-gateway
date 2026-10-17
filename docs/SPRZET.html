@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com; base-uri 'none'; form-action 'none'">
+<title>ecoMAX Wi-Fi - Sprzet i podlaczenie</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
+</style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>Jaki Modul Kupic I Gdzie Podlaczyc Przewody</h1>
+<p>Wybierz dokladnie <strong>Waveshare ESP32-S3-RS485-CAN</strong> albo
+<strong>Waveshare ESP32-S3-RS485-CAN-U</strong>, <strong>16 MB flash / 8 MB PSRAM</strong>.
+Nie zamawiaj innej plytki tylko dlatego, ze ma ESP32-S3 lub RS485.
+Oba ponizsze modele korzystaja z tego samego firmware.</p>
+<h2>Antena Zewnetrzna: Wariant -U</h2>
+<p><strong>ESP32-S3-RS485-CAN-U</strong> ma zlacze SMA i fabrycznie aktywny tor anteny
+zewnetrznej. Podlacz antene Wi-Fi 2,4 GHz przy wylaczonym zasilaniu.</p>
+<p><img src="https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-2-2.jpg" alt="Waveshare ESP32-S3-RS485-CAN-U, model ze zlaczem anteny SMA"></p>
+<h2>Antena Wbudowana: Wariant Bez -U</h2>
+<p><strong>ESP32-S3-RS485-CAN</strong> domyslnie uzywa anteny wbudowanej. Dodatkowa antena
+wymaga sprzetowej zmiany polozenia rezystora zgodnie z instrukcja
+producenta; samo wpiecie przewodu nie wystarcza. W programie nie ma
+przelacznika anteny. Prace lutownicze zlec serwisowi.</p>
+<p><img src="https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-2-1.jpg" alt="Waveshare ESP32-S3-RS485-CAN, model z antena wbudowana"></p>
+<p>Zrodlo zdjec i porownania: <a href="https://www.waveshare.com/product/iot-communication/short-range-wireless/esp32-s3-rs485-can.htm">Waveshare - oba warianty produktu</a>.
+Zdjecia sa ladowane od producenta, wymagaja Internetu i nie sa objete
+licencja MIT projektu. Projekt nie prowadzi sklepu i nie potwierdza
+sprzetowo kazdej rewizji plytki. Porownaj etykiete, pamiec i zlacza.</p>
+<h2>Gdzie Wpiac Sie Do Waveshare</h2>
+<p>Wybierz zaciski srubowe <strong>RS485 A+ i B-</strong>, nie CAN H/L ani zasilanie.
+USB-C sluzy do pierwszego wgrania i zasilania 5 V. Osobne wejscie
+<strong>DC 7-36 V</strong> to alternatywne zasilanie, nie magistrala kotla.</p>
+<p><img src="https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-17.jpg" alt="Waveshare: oznaczenia zaciskow RS485, CAN, zasilania i USB-C"></p>
+<h2>Gdzie Wpiac Sie Do Kotla</h2>
+<p><strong>Tylko dla potwierdzonej wersji ecoMAX860P-LZ TOUCH / ecoMAX860P4-LZ:</strong>
+magistrala panelu <strong>G4</strong>, sygnaly <strong>D+ i D-</strong>. <strong>Nie G1 / M-BUS.</strong>
+Jezeli do G4 jest juz podlaczony ekran, ESP dolacza do tej samej
+magistrali; ekran zostaje podlaczony. Nie zwieraj pozostalych pinow.</p>
+<p><img src="images/polaczenie-rs485.svg" alt="Schemat G4 dla potwierdzonego profilu: A+ do D+, B- do D-"></p>
+<table>
+<thead>
+<tr>
+<th>Waveshare, RS485</th>
+<th>Potwierdzona magistrala G4 regulatora</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A+</td>
+<td>D+</td>
+</tr>
+<tr>
+<td>B-</td>
+<td>D-</td>
+</tr>
+</tbody></table>
+<p>Uzyj jednej skreconej pary przewodow, np. pary z UTP. To schemat
+<strong>sygnalow</strong>, nie uniwersalny rozklad pinow wtyczki RJ i nie schemat
+wszystkich modeli ecoMAX. Nie zgaduj numerow pinow na podstawie kolorow.
+Na innej plycie potwierdz gniazdo i sygnaly w jej dokumentacji.
+Nie pobieraj zasilania ESP z niepotwierdzonych pinow G4.</p>
+<p><strong>Wewnatrz kotla wystepuje 230 V.</strong> Podlaczenie wykonuje instalator po
+bezpiecznym odlaczeniu zasilania. Nie ruszaj obwodow STB, palnika i pomp.
+Przeczytaj <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PODLACZENIE.md">pelne zasady podlaczenia, terminacji i konfliktu z ecoNET</a>
+przed uruchomieniem. Aktywny RS485 ESP i fizyczny ecoNET nie moga
+nadawac na tej samej magistrali pod adresem 0x56.</p>
+<p>Dalej: <a href="START_PL.html">instalacja i wlasne Wi-Fi krok po kroku</a>,
+<a href="GALERIA.html">galeria panelu</a>, <a href="ZGODNOSC.html">zgodnosc i ograniczenia</a>.</p>
+</main></body></html>

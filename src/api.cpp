@@ -308,6 +308,15 @@ static esp_err_t configure_wifi(httpd_req_t *req) {
     cJSON_Delete(body);
     return message(req, result == ESP_OK ? "202 Accepted" : "400 Bad Request", result == ESP_OK ? "Zapisano WiFi. AP pozostaje wlaczony." : esp_err_to_name(result));
 }
+static esp_err_t wifi_scan(httpd_req_t *req) {
+    if(!authorize(req, req->method == HTTP_POST))return ESP_OK;
+    if(req->method == HTTP_POST) {
+        if(updates::installing())return message(req,"409 Conflict","Trwa aktualizacja ESP.");
+        network::request_scan();
+        return message(req,"202 Accepted","Wyszukiwanie sieci Wi-Fi 2,4 GHz.");
+    }
+    return json(req,network::scan_results());
+}
 static esp_err_t configure_hostname(httpd_req_t *req) {
     if (!authorize(req, true)) return ESP_OK;
     auto *body = request_json(req); if (!body) return ESP_OK;
@@ -490,6 +499,7 @@ void start() {
     add("/api/status", HTTP_GET, status); add("/api/ping", HTTP_GET, ping);
     add("/api/capture", HTTP_GET, capture); add("/api/logs", HTTP_GET, logs);
     add("/api/wifi", HTTP_POST, configure_wifi); add("/api/hostname", HTTP_POST, configure_hostname); add("/api/sniffer", HTTP_POST, configure_sniffer);
+    add("/api/wifi/scan",HTTP_GET,wifi_scan);add("/api/wifi/scan",HTTP_POST,wifi_scan);
     add("/api/ota", HTTP_POST, ota); add("/api/ecomax", HTTP_GET, ecomax);
     add("/api/updates",HTTP_GET,update_status);add("/api/updates/check",HTTP_POST,update_command);
     add("/api/updates/config",HTTP_POST,update_command);add("/api/updates/install",HTTP_POST,update_command);

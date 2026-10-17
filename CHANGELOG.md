@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0-beta.4 - 2026-10-17
+
+- Wyszukaj sieci: lista Wi-Fi 2,4 GHz w instalatorze USB i konfiguracji
+  przez telefon; reczne wpisanie nazwy zostaje dla sieci ukrytych.
+- Siec konfiguracyjna Piec-Setup-XXXX, neutralne nazwy panelu i diagnostyki.
+- Prosta instrukcja w 7 krokach, tabela regulatorow i termostatow ze statusem testow.
+
+- Doprecyzowane dwa warianty sprzetu: ESP32-S3-RS485-CAN i -CAN-U.
+- Ten sam firmware; wyjasnienie anteny SMA w -U i sprzetowej zmiany toru
+  RF w wersji bez -U. Instalator wymienia oba modele.
+- Galeria rzeczywistego panelu z szescioma zrzutami na sztucznych danych.
+- Zdjecia obu modeli producenta, schemat G4 dla profilu referencyjnego.
+- Poprawiony opis "Cel teraz" w kafelkach: tekst pod wartoscia, nie w ikonie.
+
 ## 0.7.0-beta.3 - 2026-10-17
 
 - Optional stable-only GitHub checks, daily or manually, with a saved opt-out.

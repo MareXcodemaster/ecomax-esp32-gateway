@@ -49,7 +49,7 @@ void log(const char *format, ...) {
     va_list ap; va_start(ap, format); vsnprintf(text, sizeof(text), format, ap); va_end(ap);
     { Lock lock; auto &entry = entries[log_seq % 48]; entry.seq = ++log_seq;
       entry.ms = esp_timer_get_time() / 1000; snprintf(entry.text, sizeof(entry.text), "%s", text); }
-    printf("[LAZAR] %s\n", text);
+    printf("[ESP] %s\n", text);
 }
 void network(const Network &value) { Lock lock; net = value; }
 Network network() { Lock lock; return net; }

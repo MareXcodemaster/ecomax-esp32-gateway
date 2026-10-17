@@ -40,6 +40,8 @@ try {
             window.usbCommands.push(command);
             const response = command.command === 'setup'
               ? { command: 'setup', username: 'admin', password: '0123456789abcdef'.repeat(2) }
+              : command.command === 'scan' ? { command: 'scan', ok: true }
+              : command.command === 'scan_results' ? { command: 'scan_results', busy: false, result: 'ESP_OK', sequence: window.usbCommands.some(x=>x.command==='scan')?1:0, networks:[{ssid:'Example network',rssi:-48,authmode:3},{ssid:'<b>not markup</b>',rssi:-75,authmode:0}] }
               : command.command === 'wifi' ? { command: 'wifi', ok: true }
               : { wifi: { ssid: window.usbCommands.find(x => x.command === 'wifi')?.ssid || '',
                   connected: window.usbCommands.some(x => x.command === 'wifi'), ip: '192.0.2.10' } };
@@ -61,7 +63,12 @@ try {
     await page.locator('#wifi-form').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#device-password').getAttribute('type'), 'password');
     assert.equal(await page.locator('#install').isEnabled(), false, 'serial is owned by setup, not flasher');
-    await page.locator('#ssid').fill('Example network');
+    await page.locator('#scan-wifi').click();
+    await page.locator('#wifi-networks option[value="Example network"]').waitFor({state:'attached'});
+    await page.locator('#wifi-networks').selectOption('Example network');
+    assert.equal(await page.locator('#ssid').isVisible(),false);
+    assert.equal(await page.evaluate(()=>window.usbCommands.filter(x=>x.command==='scan').length),1);
+    assert.equal(await page.locator('#wifi-networks b').count(),0,'SSID is text, never markup');
     await page.locator('#wifi-password').fill('example-pass-123');
     await page.locator('#save-wifi').click();
     await page.locator('#open-panel').waitFor({ state: 'visible' });
@@ -96,13 +103,24 @@ try {
     assert.match(await page.title(),/ecoMAX/);
     assert.equal(await page.locator('h1').count(),1);
     await page.waitForFunction(()=>[...document.images].filter(img=>img.src.startsWith(location.origin)).every(img=>img.complete&&img.naturalWidth>0));
-    assert.equal(await page.locator('img').count(),6);
+    assert.equal(await page.locator('img').count(),8);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'guide fits screen');
     await page.screenshot({path:`test-results/guide-${width}.png`,fullPage:true});
     await page.close();
     console.log(`PASS Polish guide ${width}px: local screenshots and wiring image loaded, layout`);
   }
   const html=await readFile('src/panel_web/index.html','utf8');
+  for (const width of [1280,390]) for (const stem of ['SZYBKI_START','GALERIA','SPRZET','ZGODNOSC']) {
+    const page=await browser.newPage({viewport:{width,height:900}});
+    await page.route('https://www.waveshare.com/**',route=>route.abort());
+    await page.goto(origin+'/'+stem+'.html');
+    assert.equal(await page.locator('h1').count(),1);
+    await page.waitForFunction(()=>[...document.images].filter(img=>img.src.startsWith(location.origin)).every(img=>img.complete&&img.naturalWidth>0));
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,stem+' fits screen');
+    assert.ok((await page.locator('main').innerText()).length>500);
+    await page.close();
+    console.log(`PASS ${stem} ${width}px: local images and layout`);
+  }
   const section=html.match(/<section data-section="espwifi"[^>]*>[\s\S]*?<\/section>/)[0].replace(' hidden','');
   for (const width of [1280,390]) {
     const page=await browser.newPage({viewport:{width,height:850}});

@@ -8,14 +8,17 @@ const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1120, height: 820 } });
   await page.addInitScript(() => {
-    let controller, configured = false;
+    let controller, configured = false, scanned = false;
     const port = {
       async open() {
         this.readable = new ReadableStream({ start(c) { controller = c; } });
         this.writable = new WritableStream({ write(bytes) {
           const cmd = JSON.parse(new TextDecoder().decode(bytes));
           if (cmd.command === 'wifi') configured = true;
+          if (cmd.command === 'scan') scanned = true;
           const data = cmd.command === 'setup' ? { command: 'setup', username: 'admin', password: '0'.repeat(32) }
+            : cmd.command === 'scan' ? { command: 'scan', ok: true }
+            : cmd.command === 'scan_results' ? { command: 'scan_results',busy:false,result:'ESP_OK',sequence:scanned?1:0,networks:[{ssid:'Moja_siec_24GHz',rssi:-48,authmode:3}] }
             : cmd.command === 'wifi' ? { command: 'wifi', ok: true }
             : { wifi: { ssid: configured ? 'Moja_siec_24GHz' : '', connected: configured, ip: '192.0.2.10' } };
           controller.enqueue(new TextEncoder().encode('[USB] ' + JSON.stringify(data) + '\n'));
@@ -31,7 +34,9 @@ try {
   await page.screenshot({ path: 'docs/images/01-instalator.png' });
   await page.locator('#connect').click();
   await page.locator('#wifi-form').waitFor({ state: 'visible' });
-  await page.locator('#ssid').fill('Moja_siec_24GHz');
+  await page.locator('#scan-wifi').click();
+  await page.locator('#wifi-networks option[value="Moja_siec_24GHz"]').waitFor({state:'attached'});
+  await page.locator('#wifi-networks').selectOption('Moja_siec_24GHz');
   await page.locator('#wifi-password').fill('przykladowe-haslo');
   await page.locator('section[aria-labelledby="step2"]').screenshot({ path: 'docs/images/02-siec-wifi.png' });
   await page.locator('#save-wifi').click();
@@ -45,7 +50,7 @@ try {
   await panel.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});
   await panel.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});
   await panel.evaluate(()=>{
-    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.3',version:'',phase:'no_stable_release',automatic:true,available:false,install_supported:true});
+    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.4',version:'',phase:'no_stable_release',automatic:true,available:false,install_supported:true});
     EcoUpdates.init();lucide.createIcons();return EcoUpdates.load();
   });
   await panel.locator('.update-panel').screenshot({path:'docs/images/04-aktualizacje.png'});

@@ -243,7 +243,7 @@ void start() {
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, event, nullptr));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, event, nullptr));
     uint8_t mac[6]; ESP_ERROR_CHECK(esp_read_mac(mac, ESP_MAC_WIFI_STA));
-    snprintf(ap_name, sizeof(ap_name), "Lazar-Setup-%02X%02X", mac[4], mac[5]);
+    snprintf(ap_name, sizeof(ap_name), "Piec-Setup-%02X%02X", mac[4], mac[5]);
     wifi_config_t ap{};
     memcpy(ap.ap.ssid, ap_name, strlen(ap_name));
     ap.ap.ssid_len = strlen(ap_name); ap.ap.channel = 1; ap.ap.max_connection = 4;
@@ -257,7 +257,7 @@ void start() {
         mdns_error = mdns_netif_action(ap_netif,
             static_cast<mdns_event_actions_t>(MDNS_EVENT_DISABLE_IP4 | MDNS_EVENT_DISABLE_IP6));
         if (mdns_error == ESP_OK) mdns_error = mdns_hostname_set(saved_hostname);
-        if (mdns_error == ESP_OK) mdns_error = mdns_instance_name_set("Lazar Gateway");
+        if (mdns_error == ESP_OK) mdns_error = mdns_instance_name_set("ecoMAX Wi-Fi");
         if (mdns_error == ESP_OK) mdns_error = mdns_service_add(nullptr, "_http", "_tcp", 80, nullptr, 0);
         mdns_ready = mdns_started = mdns_error == ESP_OK;
         if (!mdns_ready) mdns_free();

@@ -9,17 +9,18 @@
   <script type="module" src="./main.js"></script>
 </head>
 <body>
-  <header><a class="brand" href="./"><i data-lucide="cpu"></i> ecoMAX Wi-Fi</a><span class="version">0.7.0-beta.3</span></header>
+  <header><a class="brand" href="./"><i data-lucide="cpu"></i> ecoMAX Wi-Fi</a><span class="version">0.7.0-beta.4</span></header>
   <main>
     <h1>Instalacja i Wi-Fi</h1>
-    <p>Sterowanie kot&#322;em z telefonu. <a href="./instrukcja.html">Instrukcja krok po kroku ze zdj&#281;ciami</a></p>
-    <p class="intro">Waveshare ESP32-S3-RS485-CAN <span>16 MB flash / 8 MB PSRAM</span></p>
+    <p>Sterowanie kot&#322;em z telefonu. <a href="./szybki-start.html">Prosta instrukcja: 7 krokow</a> · <a href="./instrukcja.html">Pelna instrukcja ze zdjeciami</a> · <a href="./GALERIA.html">Zobacz panel</a></p>
+    <p class="intro">Waveshare ESP32-S3-RS485-CAN / ESP32-S3-RS485-CAN-U <span>16 MB flash / 8 MB PSRAM</span></p>
     <div class="notice"><i data-lucide="unplug"></i><p>Na czas instalacji odlacz RS485 od kotla. Uzyj kabla USB z transmisja danych. Wgranie zastapi obecny program i ustawienia ESP.</p></div>
     <p id="unsupported" role="alert" hidden>Otworz instalator na komputerze w Chrome lub Edge, przez HTTPS (lokalny podglad: localhost). Telefon sluzy do korzystania z gotowego panelu.</p>
     <section aria-labelledby="step1">
       <div class="step-number">1</div><div class="step-content">
         <h2 id="step1">Wgraj firmware</h2>
-        <label class="check"><input id="compatible" type="checkbox"> Mam Waveshare ESP32-S3-RS485-CAN 16 MB / 8 MB PSRAM i zgadzam sie na zastapienie programu oraz ustawien.</label>
+        <label class="check"><input id="compatible" type="checkbox"> Mam Waveshare ESP32-S3-RS485-CAN lub ESP32-S3-RS485-CAN-U, 16 MB flash / 8 MB PSRAM, i zgadzam sie na zastapienie programu oraz ustawien.</label>
+        <details><summary>Wariant -U i antena zewnetrzna</summary><p>Oba modele uzywaja tego samego firmware. ESP32-S3-RS485-CAN-U ma zlacze SMA i domyslnie korzysta z anteny zewnetrznej 2,4 GHz; podlacz ja przed wlaczeniem. Wersja bez -U domyslnie uzywa anteny wbudowanej. Samo dolaczenie anteny do wersji bez -U nie przelacza toru radiowego: producent wymaga zmiany polozenia rezystora na plytce. Zlec to serwisowi. Nie ma przelacznika anteny w programie.</p></details>
         <esp-web-install-button manifest="./manifest.json">
           <button id="install" slot="activate" disabled><i data-lucide="download"></i> Wgraj na ESP</button>
           <span slot="unsupported">Wgrywanie USB wymaga zgodnej przegladarki na komputerze.</span>
@@ -34,8 +35,9 @@
         <p>Zamknij okno wgrywania. Polacz ponownie port USB, zeby odczytac haslo ESP i zapisac siec.</p>
         <div class="actions"><button id="connect"><i data-lucide="usb"></i> Polacz ESP przez USB</button><button id="disconnect" class="secondary" hidden><i data-lucide="unplug"></i> Rozlacz</button></div>
         <form id="wifi-form" hidden>
+          <div class="actions"><button id="scan-wifi" type="button" class="secondary"><i data-lucide="search"></i> Wyszukaj sieci</button></div>
           <div class="fields">
-            <label>Nazwa sieci Wi-Fi 2,4 GHz<input id="ssid" autocomplete="off" required maxlength="32"></label>
+            <label>Siec Wi-Fi 2,4 GHz<select id="wifi-networks"><option value="">Najpierw wyszukaj sieci</option><option value="" data-manual="true">Siec ukryta / wpisz nazwe recznie</option></select><input id="ssid" aria-label="Nazwa sieci ukrytej" autocomplete="off" hidden maxlength="32"></label>
             <label>Haslo Wi-Fi<div class="input-action"><input id="wifi-password" type="password" autocomplete="off" maxlength="63"><button type="button" class="icon secondary" id="show-wifi" title="Pokaz haslo Wi-Fi" aria-label="Pokaz haslo Wi-Fi"><i data-lucide="eye"></i></button></div></label>
           </div>
           <button type="submit" id="save-wifi"><i data-lucide="wifi"></i> Zapisz i polacz</button>
@@ -56,7 +58,7 @@
         </div>
         <a id="open-panel" class="button" target="_blank" rel="noopener noreferrer" hidden><i data-lucide="external-link"></i> Otworz panel ESP</a>
         <p id="device-address">Adres panelu pojawi sie po polaczeniu ESP z Wi-Fi.</p>
-        <details><summary>Chce skonfigurowac Wi-Fi telefonem lub zmienic siec pozniej</summary><p>Odczytaj haslo ESP przez USB w kroku 2. Polacz telefon z siecia <strong>Lazar-Setup-XXXX</strong> i uzyj tego hasla. Otworz <a href="http://192.168.4.1/diagnostics" target="_blank" rel="noopener noreferrer">192.168.4.1/diagnostics</a>, zaloguj sie jako admin i wybierz swoja siec 2,4 GHz. Pozostan polaczony mimo komunikatu telefonu o braku Internetu.</p></details>
+        <details><summary>Chce skonfigurowac Wi-Fi telefonem lub zmienic siec pozniej</summary><p>Odczytaj haslo ESP przez USB w kroku 2. Polacz telefon z siecia <strong>Piec-Setup-XXXX</strong> i uzyj tego hasla. Otworz <a href="http://192.168.4.1/diagnostics" target="_blank" rel="noopener noreferrer">192.168.4.1/diagnostics</a>, zaloguj sie jako admin i wybierz swoja siec 2,4 GHz. Pozostan polaczony mimo komunikatu telefonu o braku Internetu.</p></details>
       </div>
     </section>
     <aside><h2>Przed polaczeniem z kotlem</h2><p>Wersja beta, dla zgodnego profilu ecoMAX860P-LZ TOUCH. Pierwszy start na pustym ESP wymaga jeszcze testu sprzetowego. Podlaczenie wewnatrz kotla powierz osobie z odpowiednimi kwalifikacjami.</p><nav><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PODLACZENIE.md" target="_blank" rel="noopener noreferrer">Schemat i bezpieczenstwo</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases" target="_blank" rel="noopener noreferrer">Pliki BIN i instrukcje</a></nav></aside>

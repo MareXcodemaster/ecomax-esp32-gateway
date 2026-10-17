@@ -2,7 +2,9 @@
 
 ## Instrukcja krok po kroku
 
-**Oprogramowanie: 0.7.0-beta.3. Instrukcja: wydanie 3, 17.10.2026.**
+**Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
+
+**Oprogramowanie: 0.7.0-beta.4. Instrukcja: wydanie 4, 17.10.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -13,11 +15,28 @@ działa przez Wi-Fi, także bez komputera i bez konta w chmurze.
 nie zostało jeszcze potwierdzone sprzętowo.** Zgodność jest ograniczona
 do wskazanego profilu, a nie do wszystkich kotłów PLUM.
 
+Wygląd programu: [galeria panelu, harmonogramów i wykresów](GALERIA.md).
+Zrzuty pokazują rzeczywisty interfejs z przykładowymi danymi DEMO.
+
 ## 1. Przygotuj właściwy sprzęt
+
+**[Zdjęcia obu modeli, oznaczenia zacisków i schemat wpięcia do G4](SPRZET.md)**
+
+Wariant z anteną zewnętrzną, **ESP32-S3-RS485-CAN-U**:
+
+![Waveshare ESP32-S3-RS485-CAN-U, zdjęcie producenta](https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-2-2.jpg)
+
+Wariant z anteną wbudowaną, **ESP32-S3-RS485-CAN**:
+
+![Waveshare ESP32-S3-RS485-CAN, zdjęcie producenta](https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-2-1.jpg)
+
+Zdjęcia Waveshare są ładowane od producenta, wymagają Internetu i nie są
+objęte licencją MIT projektu. Sprawdź pełną nazwę i parametry oferty.
 
 Potrzebujesz:
 
-- **Waveshare ESP32-S3-RS485-CAN, 16 MB flash i 8 MB PSRAM.** Sam napis
+- **Waveshare ESP32-S3-RS485-CAN lub ESP32-S3-RS485-CAN-U,
+  16 MB flash i 8 MB PSRAM.** Sam napis
   ESP32-S3 na innej płytce nie wystarcza.
 - Kabla USB-C **z transmisją danych**, nie tylko do ładowania.
 - Komputera z aktualnym Chrome albo Edge i dostępem do Internetu.
@@ -36,6 +55,32 @@ Na zdjęciu **Type-C** to USB-C. Na drugim końcu obudowy są osobne zaciski
 **RS485: A+, B-** oraz **CAN: H, L**. Projekt nie używa zacisków CAN.
 **Zaciski zasilania DC 7-36 V nie są zaciskami RS485.** Do pierwszej
 konfiguracji wystarczy zasilanie z USB-C 5 V.
+
+### Antena wbudowana i zewnętrzna: który model?
+
+| Dokładny model Waveshare | Domyślna antena | Firmware |
+| --- | --- | --- |
+| **ESP32-S3-RS485-CAN** | Wbudowana na płytce | Ten sam obraz projektu |
+| **ESP32-S3-RS485-CAN-U** | Zewnętrzna, złącze SMA na obudowie | Ten sam obraz projektu |
+
+Wariant **-U jest właściwą wersją z fabrycznie aktywną anteną zewnętrzną**.
+Przy wyłączonym zasilaniu podłącz do niego antenę Wi-Fi **2,4 GHz**,
+a następnie uruchom urządzenie. Nie trzeba wybierać anteny w panelu,
+zmieniać GPIO ani wgrywać osobnego programu. Umieść antenę poza metalową
+obudową kotła, w bezpiecznej odległości od gorących elementów.
+
+W wersji **bez -U** samo wpięcie anteny do wewnętrznego IPEX nie wystarczy:
+producent opisuje **sprzętową zmianę położenia rezystora toru antenowego**.
+Zleć tę drobną pracę lutowniczą serwisowi, przy odłączonym zasilaniu.
+Program nie przełączy nieprzelutowanego toru. Jeżeli tor został już
+prawidłowo przełączony, używaj tego samego firmware co dla -U.
+
+Źródło: [porównanie obu modeli Waveshare](https://www.waveshare.com/esp32-s3-rs485-can.htm)
+i [FAQ producenta: antena zewnętrzna](https://www.waveshare.com/wiki/ESP32-S3-RS485-CAN#FAQ).
+**Zgodność -U wynika z dokumentacji wspólnej platformy, nie z osobnego
+testu pierwszego uruchomienia publicznej bety na drugiej płytce.**
+Sprawdź etykietę i pamięć własnego urządzenia; programu nie można użyć
+do odczytania, jak fizycznie jest przełączona antena.
 
 ## 2. Najpierw skonfiguruj samo ESP, bez kotła
 
@@ -81,17 +126,18 @@ Po ukończeniu wgrywania naciśnij RESET bez trzymania BOOT, aby uruchomić prog
 
 1. Na tej samej stronie wybierz **Połącz ESP przez USB** i ponownie wskaż port.
 2. Instalator odczyta indywidualne hasło dostępu do Twojego ESP.
-3. Wpisz dokładną nazwę swojej sieci **2,4 GHz**. Duże i małe litery mają znaczenie.
-4. Wpisz hasło **domowego Wi-Fi** i kliknij **Zapisz i połącz**.
+3. Kliknij **Wyszukaj sieci** i wybierz swoje Wi-Fi **2,4 GHz** z listy.
+4. Wpisz tylko hasło **domowego Wi-Fi** i kliknij **Zapisz i połącz**.
 5. Zaczekaj na połączenie i przydzielenie adresu przez router.
 
 ![Przykładowy formularz: nazwa domowej sieci 2,4 GHz i jej hasło](images/02-siec-wifi.png)
 
-*Zrzut demonstracyjny z symulowanego USB, nie z instalacji autora.
-Nazwa „Moja_siec_24GHz” jest przykładem. Wpisz własną nazwę i hasło.*
+*Zrzut demonstracyjny z symulowanego USB.
+Nazwa „Moja_siec_24GHz” jest przykładem. Wybierz swoją sieć i wpisz jej hasło.
+Ręczne wpisanie nazwy jest potrzebne tylko dla sieci ukrytych.*
 
 Hasło Wi-Fi jest przekazywane **lokalnie przez USB do ESP**. Instalator
-nie wysyła go do GitHuba ani autora i nie zapisuje w przeglądarce.
+nie zapisuje go w przeglądarce.
 Nie trzeba wpisywać poleceń, edytować kodu ani instalować Pythona.
 
 Jeżeli po około minucie połączenia nadal nie ma, sprawdź nazwę, hasło,
@@ -143,14 +189,14 @@ Gdy telefon/router nie obsługuje nazw .local, nadal można użyć adresu IP.
 Ten wariant jest przydatny, gdy konfigurujesz ESP blisko kotła, a nie przy komputerze.
 Program musi być już wgrany, a indywidualne hasło ESP odczytane w kroku 4.
 
-1. W telefonie otwórz ustawienia Wi-Fi i znajdź sieć **Lazar-Setup-XXXX**.
+1. W telefonie otwórz ustawienia Wi-Fi i znajdź sieć **Piec-Setup-XXXX**.
    Końcówka jest zależna od konkretnej płytki.
 2. Połącz się, używając **hasła ESP**. Pozostań w tej sieci mimo ostrzeżenia
    telefonu o braku Internetu. Na czas konfiguracji możesz wyłączyć transmisję
    komórkową, jeżeli telefon sam ucieka do innego połączenia.
 3. Otwórz **http://192.168.4.1/diagnostics**.
 4. Zaloguj się jako **admin**, używając hasła ESP.
-5. W sekcji **Domowe Wi-Fi** wybierz lub wpisz nazwę własnej sieci 2,4 GHz,
+5. W sekcji **Domowe Wi-Fi** kliknij **Wyszukaj sieci**, wybierz własną sieć 2,4 GHz,
    podaj jej hasło i zapisz.
 6. Sprawdź uzyskany adres IP, przełącz telefon do swojej domowej sieci
    i otwórz panel ESP.
@@ -193,7 +239,6 @@ Nie przenoś tego oznaczenia automatycznie na inne wersje regulatorów.
 - Zamknij obudowę, zanim przywrócisz zasilanie.
 
 Więcej: [pełny opis podłączenia i konfliktu adresu](PODLACZENIE.md),
-[instrukcje HKS Lazar](https://www.hkslazar.pl/instrukcje-pozostale),
 [dokumentacja Waveshare](https://www.waveshare.com/wiki/ESP32-S3-RS485-CAN).
 
 ## 8. Wybierz sposób komunikacji
@@ -212,7 +257,6 @@ nadawania przez ustawienie losowego adresu.
 Tryb wybierasz listą **Odczyt i zapis**. Ikona koła zębatego przy stanie
 połączenia otwiera dane modułu ecoNET. Dla ecoNET podaj jego **lokalny
 adres, lokalny login i lokalne hasło**. To nie są dane konta ecoNET24.
-Program nie ma wpisanego adresu ani hasła modułu należącego do autora.
 
 ## 9. Sprawdź, czy instalacja działa
 
@@ -240,7 +284,7 @@ tożsamości lub niezgodny model blokują zapis. Przeczytaj
 | Harmonogram | Tydzień od poniedziałku do niedzieli; jedna kratka to 30 minut. Obok jest opis działania wybranego harmonogramu. |
 | Historia danych | Pomiary z maksymalnie ostatnich 3 dni. Historia zbiera się dopiero podczas pracy tej instalacji. |
 | Alarmy | Powiadomienia i odczytywana historia zgłoszona przez regulator. |
-| Pellet | Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. W wersji 0.7.0-beta.3 usunięto dwa puste kafelki strumienia i zużycia ESP. |
+| Pellet | Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. Dwa puste kafelki strumienia i zużycia ESP pozostają usunięte. |
 | ESP Wi-Fi | Łączność samego ESP. Dane sieci modułu ecoNET są osobnym zestawem. |
 
 Temperatura **zmierzona** to odczyt czujnika. Temperatura **zadana** to cel.

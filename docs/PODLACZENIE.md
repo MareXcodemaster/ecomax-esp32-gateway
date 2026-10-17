@@ -21,7 +21,11 @@ Zawsze sprawdz oznaczenia na konkretnej plycie i jej aktualna dokumentacje.
 
 ## Wymagane Elementy
 
-- Waveshare ESP32-S3-RS485-CAN, flash 16 MB / PSRAM 8 MB.
+- Waveshare ESP32-S3-RS485-CAN lub ESP32-S3-RS485-CAN-U,
+  flash 16 MB / PSRAM 8 MB. Polaczenie RS485 i firmware sa takie same.
+- W wariancie -U podlacz antene zewnetrzna Wi-Fi 2,4 GHz do SMA przed
+  wlaczeniem. W wersji bez -U antena zewnetrzna wymaga sprzetowego
+  przelaczenia toru RF wedlug dokumentacji producenta, nie opcji w WWW.
 - Kabel z jedna skrecona para, np. para ze skretki UTP, do sygnalow D+/D-.
 - Osobne bezpieczne zasilanie plytki: USB-C 5 V albo zgodny z dokumentacja
   Waveshare zasilacz DC 7-36 V na dedykowanych zaciskach zasilania.
@@ -90,7 +94,6 @@ kierunek GPIO21; 115200 bit/s, 8N1. Nie lacz tych GPIO bezposrednio z kotlem.
 
 - [Waveshare: ESP32-S3-RS485-CAN](https://www.waveshare.com/wiki/ESP32-S3-RS485-CAN)
 - [Waveshare: schemat plytki](https://files.waveshare.com/wiki/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-Schematic.pdf)
-- [HKS Lazar: instrukcje sterownikow](https://www.hkslazar.pl/instrukcje-pozostale)
 
 Projekt nie dolacza cudzych instrukcji PDF, zdjec instalacji ani grafiki
 producenta. Aktualna instrukcje dla swojego regulatora pobierz od producenta.

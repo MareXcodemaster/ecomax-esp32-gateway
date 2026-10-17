@@ -4,10 +4,12 @@
  <rect width="720" height="390" fill="#ffffff"/>
  <g font-family="Arial, sans-serif" fill="#253137" text-anchor="middle">
   <text x="360" y="38" font-size="25" font-weight="700">RS485: połączenie dwóch sygnałów</text>
-  <text x="155" y="92" font-size="22" font-weight="700">Waveshare ESP32</text>
-  <text x="565" y="92" font-size="22" font-weight="700">Regulator ecoMAX</text>
-  <text x="155" y="120" font-size="19">Zaciski RS485</text>
-  <text x="565" y="120" font-size="19">Magistrala panelu</text>
+  <text x="155" y="82" font-size="20" font-weight="700">Waveshare ESP32-S3</text>
+  <text x="565" y="82" font-size="20" font-weight="700">ecoMAX860P-LZ TOUCH</text>
+  <text x="155" y="106" font-size="14">RS485-CAN / RS485-CAN-U</text>
+  <text x="565" y="106" font-size="16">ecoMAX860P4-LZ</text>
+  <text x="155" y="132" font-size="18">Zaciski RS485</text>
+  <text x="565" y="132" font-size="18">G4: magistrala panelu</text>
  </g>
  <rect x="38" y="144" width="234" height="146" rx="5" fill="#eef7f5" stroke="#a3c6bd" stroke-width="2"/>
  <rect x="448" y="144" width="234" height="146" rx="5" fill="#f0f5fb" stroke="#a9bed6" stroke-width="2"/>

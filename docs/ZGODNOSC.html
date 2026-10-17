@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com; base-uri 'none'; form-action 'none'">
+<title>ecoMAX Wi-Fi - Lista zgodnosci</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
+</style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>Zgodnosc I Ograniczenia Bety</h1>
+<h2>Profil Referencyjny</h2>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Profil</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Plytka</td>
+<td>Waveshare ESP32-S3-RS485-CAN lub ESP32-S3-RS485-CAN-U</td>
+</tr>
+<tr>
+<td>Pamiec</td>
+<td>16 MB flash, 8 MB PSRAM</td>
+</tr>
+<tr>
+<td>Model regulatora</td>
+<td>ecoMAX860P-LZ TOUCH / ecoMAX860P4-LZ</td>
+</tr>
+<tr>
+<td>Modul A</td>
+<td>8.41.38.L0</td>
+</tr>
+<tr>
+<td>Panel kotla</td>
+<td>8.30.28</td>
+</tr>
+<tr>
+<td>Termostat</td>
+<td>ecoSTER / eSTER x40, zaobserwowany uklad 1.21.38</td>
+</tr>
+<tr>
+<td>RS485</td>
+<td>115200, 8N1, GPIO17/18/21 na wskazanej plytce</td>
+</tr>
+</tbody></table>
+<p>Oba warianty uzywaja tego samego obrazu. Wedlug
+<a href="https://www.waveshare.com/esp32-s3-rs485-can.htm">Waveshare</a> wariant -U
+ma SMA i domyslnie wlaczona antene zewnetrzna, a wersja bez -U korzysta
+domyslnie z anteny wbudowanej. Wybor toru anteny jest sprzetowy.
+Nie jest to osobny test fizyczny publicznej bety na wariancie -U.
+Z poziomu programu nie da sie potwierdzic polozenia rezystora ani
+odczytac etykiety obudowy; samo wykrycie ESP32-S3 nie identyfikuje modelu.</p>
+<p>To nie znaczy, ze wszystkie kotly z nazwa ecoMAX860P maja identyczny
+protokol, katalog i mozliwosci zapisu. Wersje nazw, jednostek, enumow,
+metadanych oraz struktury i uprawnien sa sprawdzane przed udostepnieniem
+edycji. Nieznany wariant ma pozostac zablokowany, nie otrzymac zgadywanych
+indeksow. Odczyt danych i mozliwosc zapisu to dwie osobne kwestie.</p>
+<h2>Sterowniki: Lista I Status</h2>
+<p><strong>Posiadanie ecoNET nie jest potwierdzeniem pelnej zgodnosci tej bety.</strong>
+To niezalezny panel, nie kopia calego oprogramowania ecoNET. Lokalny
+modul HTTP pomaga ujednolicic odczyty, ale wersje API, nazwy pol,
+indeksy nastaw, termostaty i uprawnienia moga sie roznic.</p>
+<table>
+<thead>
+<tr>
+<th>Regulator</th>
+<th>Status w tym projekcie</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ecoMAX860P-LZ TOUCH, modul A 8.41.38.L0, panel 8.30.28</td>
+<td>Profil referencyjny, uzywany w instalacji prywatnej; nie kazdy zapis przetestowany</td>
+</tr>
+<tr>
+<td>ecoMAX860P4-LZ</td>
+<td>Oznaczenie sprzetowe modulu w tej samej instalacji referencyjnej, nie osobny drugi test</td>
+</tr>
+<tr>
+<td>ecoMAX810P-L TOUCH</td>
+<td>Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci</td>
+</tr>
+<tr>
+<td>ecoMAX850R2-X</td>
+<td>Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci</td>
+</tr>
+<tr>
+<td>ecoMAX360</td>
+<td>Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci</td>
+</tr>
+<tr>
+<td>ecoMAX860P2-N</td>
+<td>Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci</td>
+</tr>
+<tr>
+<td>ecoMAX860P3-V</td>
+<td>Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci</td>
+</tr>
+<tr>
+<td>Inny ecoMAX lub inny firmware modelu powyzej</td>
+<td>Niezweryfikowany; nie obiecujemy pelnego odczytu i zapisu</td>
+</tr>
+</tbody></table>
+<p>Lista pieciu dodatkowych modeli pochodzi z
+<a href="https://github.com/jontofront/ecoNET-300-Home-Assistant-Integration#-supported-devices">README projektu jontofront</a>,
+sprawdzonego 17.10.2026. To <strong>lista innego projektu</strong>, a nie deklaracja
+obslugi przez ten firmware. Nie przenosimy z niej obslugi ecoSOL,
+pomp ciepla ani innych urzadzen do panelu kotla.</p>
+<p><strong>Lokalny ecoNET:</strong> czesc odczytow moze dzialac przez wspolne API.
+Specjalne nastawy pokojowe i sterowanie kotlem w obecnym kodzie maja
+kontrole konkretnego modelu i firmware. Nie nalezy ich odblokowywac
+przez podmiane identyfikatora modelu.</p>
+<p><strong>Bezposredni RS485:</strong> identyfikacja i katalog zapisu sa ograniczone
+do profilu referencyjnego. Inny model nie otrzymuje zgadywanych komend.
+Fakt, ze PyPlumIO obsluguje wiecej wariantow protokolu, nie oznacza,
+ze wszystkie jego mozliwosci zostaly przeniesione do tej aplikacji C++.</p>
+<h2>Termostaty I Panele Pokojowe</h2>
+<table>
+<thead>
+<tr>
+<th>Urzadzenie</th>
+<th>Status w tym projekcie</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>eSTER_x40, pierwszy termostat instalacji referencyjnej</td>
+<td>Odczyt i nastawy udostepniane przez zgodny kociol; obserwowany uklad parametrow 1.21.38</td>
+</tr>
+<tr>
+<td>eSTER_x80</td>
+<td>Rodzina urzadzen wspolpracujacych z wybranymi ecoMAX; brak osobnego testu tego panelu</td>
+</tr>
+<tr>
+<td>ecoSTER TOUCH</td>
+<td>Brak osobnego testu odczytu i edycji w tym projekcie</td>
+</tr>
+<tr>
+<td>ecoSTER200</td>
+<td>Brak osobnego testu odczytu i edycji w tym projekcie</td>
+</tr>
+<tr>
+<td>Zwykly termostat ON/OFF</td>
+<td>Nie przekazuje przez styk cyfrowej temperatury i profili do edycji</td>
+</tr>
+<tr>
+<td>Wlasne czujniki DS18B20, Zigbee, BLE, Tuya</td>
+<td>Nie sa w tej wersji bezposrednimi czujnikami pokojowymi ESP</td>
+</tr>
+</tbody></table>
+<p>ESP komunikuje sie z kotlem i odczytuje dane udostepnione przez regulator.
+Nie laczy sie radiowo bezposrednio z eSTER, nie emuluje nowego termostatu
+i nie zastepuje zabezpieczen ogrzewania. Brak termostatu w instalacji
+oznacza brak jego danych, a nie wartosc zero.</p>
+<p>Zrodla rodzin urzadzen i ograniczen protokolu:
+<a href="https://hvac.plum.pl/wp-content/uploads/2023/12/ecoMAX362P1-KV_T4_DTR_UA_wydanie_1.0.pdf">instrukcja regulatora opublikowana przez PLUM</a>,
+<a href="https://pyplumio.denpa.pro/mixers_thermostats.html">PyPlumIO: mieszacze i termostaty</a>,
+<a href="https://pyplumio.denpa.pro/reading.html">PyPlumIO: dane regulatora sa zalezne od urzadzenia</a>.
+Nowszych modeli o podobnej nazwie nie uznajemy automatycznie za ten sam termostat.</p>
+<h2>Czy Bedzie Dzialac Z Wiekszoscia Kotlow?</h2>
+<p>To mozliwy kierunek rozwoju, <strong>nie potwierdzony stan tej wersji</strong>.
+Do rozszerzenia listy potrzeba odczytu modelu i wersji, zanonimizowanego
+katalogu/API lub ramek oraz osobnego potwierdzenia konkretnych zapisow.
+Nie wystarczy ten sam wyglad strony w chmurze. Producent ecoNET300 sam
+zastrzega zgodnosc z odpowiednim oprogramowaniem regulatora:
+<a href="https://hvac.plum.pl/wp-content/uploads/2024/02/ecoNET300_DTR_EN_wydanie_1.2.pdf">instrukcja ecoNET300, rozdzial 5</a>.</p>
+<h2>Weryfikacja Wydania</h2>
+<p>Poprzednia wersja prywatna byla uzywana z powyzszym profilem. Publiczna beta
+zachowuje jej logike protokolu i zabezpieczen, ale zmienia provisioning,
+przypisanie tozsamosci oraz zasoby interfejsu.</p>
+<p>Oczyszczenie, testy parserow/interfejsu i kompilacja sa sprawdzane programowo.
+Nowy proces od wymazanego ESP do wlasnej sieci i obcego, zgodnego kotla
+<strong>nie zostal jeszcze potwierdzony na osobnym fizycznym zestawie</strong>.
+Dlatego wydanie jest beta, a nie stabilna, certyfikowana premiera.</p>
+<p>Nie testowano na kazdym kotle kazdej nastawy. Nie ma gwarancji zastapienia
+wszystkich funkcji chmury ecoNET24. Nie wlaczaj edycji serwisowej, jesli
+nie rozumiesz skutku parametru, nawet gdy sterownik udostepnia zakres.</p>
+<h2>Znane Ograniczenia</h2>
+<ul>
+<li>Nie ma osobnej symulacji fizycznego termostatu ani nowych czujnikow
+pokojowych. ecoSTER jest odczytywany i konfigurowany, nie zastapiony.</li>
+<li>Poziom i strumien pelletu zaleza od danych sterownika. Obliczenia ESP sa
+szacunkiem. Brak potwierdzonej uniwersalnej komendy kalibracji 100% kotla.</li>
+<li>Historia zaczyna sie od uruchomienia archiwum. Nie odtwarza przeszlosci
+z chmury. Probki minutowe moga pominac bardzo krotkie stany.</li>
+<li>Po restarcie potrzebny jest prawidlowy czas. Otworz panel z urzadzenia
+z poprawnym zegarem. Opcjonalny aktualizator moze pobrac czas przez NTP;
+bez wiarygodnej daty archiwum nie tworzy fikcyjnych wpisow.</li>
+<li>Po zaniku zasilania ostatnia minuta archiwum moze nie zostac zapisana.</li>
+<li>Obraz pierwszej instalacji i OTA to rozne pliki. Zmiana tablicy partycji
+nie jest zwykla aktualizacja OTA.</li>
+<li>Nie ma HTTPS, bezposredniego klienta Tailscale ani automatycznej chmury.</li>
+</ul>
+</main></body></html>

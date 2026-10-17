@@ -1,12 +1,13 @@
 # Pierwsze Polaczenie Wi-Fi
 
-ESP nie ma zaszytej domowej sieci ani hasla autora.
+Przy pierwszym uruchomieniu podaj swoja domowa siec Wi-Fi 2,4 GHz.
 
 ## Najprosciej: Formularz W Instalatorze
 
 Po wgraniu firmware zamknij okno wgrywania i wybierz Polacz ESP przez USB.
-Instalator odczyta haslo dostepu do ESP. Wpisz nazwe i haslo swojej sieci
-2,4 GHz, nacisnij Zapisz i polacz i poczekaj na przycisk Otworz panel ESP.
+Instalator odczyta haslo dostepu do ESP. Nacisnij Wyszukaj sieci, wybierz
+swoja siec 2,4 GHz z listy i wpisz tylko haslo. Nacisnij Zapisz i polacz
+i poczekaj na przycisk Otworz panel ESP. Dla sieci ukrytej wybierz wpisanie nazwy recznie.
 Nie trzeba instalowac dodatkowego programu ani wpisywac polecen.
 Tego samego formularza mozna uzyc pozniej bez ponownego wgrywania.
 Hasla nie sa zapisywane w stronie, historii adresow ani wysylane przez Internet.
@@ -15,12 +16,13 @@ Hasla nie sa zapisywane w stronie, historii adresow ani wysylane przez Internet.
 
 1. Zainstaluj firmware i odczytaj indywidualne haslo przez USB, zgodnie
    z [instrukcja instalacji](INSTALACJA.md).
-2. Polacz telefon z siecia `Lazar-Setup-XXXX` utworzona przez Twoja plytke.
+2. Polacz telefon z siecia `Piec-Setup-XXXX` utworzona przez Twoja plytke.
    `XXXX` wynika z adresu sprzetowego. Haslo jest tym odczytanym przez USB.
 3. Telefon moze ostrzegac o braku Internetu. Pozostan w tej sieci.
 4. Otworz w przegladarce **http://192.168.4.1/diagnostics**. Nie wpisuj HTTPS.
 5. Login: `admin`. Haslo: indywidualne haslo Twojego ESP.
-6. W sekcji Domowe Wi-Fi wpisz wlasny SSID i haslo i nacisnij Zapisz Wi-Fi.
+6. W sekcji Domowe Wi-Fi nacisnij Wyszukaj sieci, wybierz wlasna siec
+   z listy, wpisz haslo i nacisnij Zapisz Wi-Fi.
    Wymagane jest Wi-Fi 2,4 GHz; 5 GHz nie jest obslugiwane.
 7. Sprawdz status polaczenia i adres IP w diagnostyce. ESP zapisuje pare
    SSID/haslo w NVS i laczy sie ponownie po restarcie.
@@ -54,5 +56,4 @@ Siec konfiguracyjna pozostaje dostepna i wymaga indywidualnego hasla.
 Chron to haslo tak samo jak dostep administracyjny do kotla.
 
 Opcjonalny lokalny ecoNET konfiguruje sie osobno w panelu: adres IP, lokalny
-login i lokalne haslo modulu, nie dane konta ecoNET24. Nie ma domyslnego
-adresu ani hasla modulu nalezacego do autora.
+login i lokalne haslo modulu, nie dane konta ecoNET24.

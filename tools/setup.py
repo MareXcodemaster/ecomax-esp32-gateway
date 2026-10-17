@@ -44,7 +44,7 @@ def main():
         print("\nHaslo Twojego ESP / sieci konfiguracyjnej (nie publikuj): " + secret)
         print("Login: " + reply.get("username", "admin"))
         print("Konfiguracja telefonu: " + reply.get("setup_url", "http://192.168.4.1/diagnostics"))
-        print("Wybierz siec Lazar-Setup-XXXX swojej plytki. Haslo pozostaje po zwyklej OTA.\n")
+        print("Wybierz siec Piec-Setup-XXXX swojej plytki. Haslo pozostaje po zwyklej OTA.\n")
         if args.wifi:
             ssid = input("Twoja siec Wi-Fi 2,4 GHz (SSID): ").strip()
             password = getpass.getpass("Haslo tej sieci (nie jest wyswietlane): ")

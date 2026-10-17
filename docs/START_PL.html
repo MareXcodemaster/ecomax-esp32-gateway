@@ -2,12 +2,13 @@
 <html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com; base-uri 'none'; form-action 'none'">
-<title>ecoMAX Wi-Fi - instrukcja po polsku ze zdjęciami</title>
+<title>ecoMAX Wi-Fi - Pelna instrukcja</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
 </style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>ecoMAX Wi-Fi - sterowanie kotłem z telefonu</h1>
 <h2>Instrukcja krok po kroku</h2>
-<p><strong>Oprogramowanie: 0.7.0-beta.3. Instrukcja: wydanie 3, 17.10.2026.</strong></p>
+<p><strong>Pierwszy raz z ESP? Zacznij od <a href="SZYBKI_START.html">prostej instrukcji w 7 krokach</a>.</strong></p>
+<p><strong>Oprogramowanie: 0.7.0-beta.4. Instrukcja: wydanie 4, 17.10.2026.</strong></p>
 <p>Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
 Komputer i kabel USB są potrzebne do pierwszego wgrania. Później panel
@@ -15,10 +16,20 @@ działa przez Wi-Fi, także bez komputera i bez konta w chmurze.</p>
 <p><strong>To wersja beta. Pierwsze uruchomienie na osobnej, wyczyszczonej płytce
 nie zostało jeszcze potwierdzone sprzętowo.</strong> Zgodność jest ograniczona
 do wskazanego profilu, a nie do wszystkich kotłów PLUM.</p>
+<p>Wygląd programu: <a href="GALERIA.html">galeria panelu, harmonogramów i wykresów</a>.
+Zrzuty pokazują rzeczywisty interfejs z przykładowymi danymi DEMO.</p>
 <h2>1. Przygotuj właściwy sprzęt</h2>
+<p><strong><a href="SPRZET.html">Zdjęcia obu modeli, oznaczenia zacisków i schemat wpięcia do G4</a></strong></p>
+<p>Wariant z anteną zewnętrzną, <strong>ESP32-S3-RS485-CAN-U</strong>:</p>
+<p><img src="https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-2-2.jpg" alt="Waveshare ESP32-S3-RS485-CAN-U, zdjęcie producenta"></p>
+<p>Wariant z anteną wbudowaną, <strong>ESP32-S3-RS485-CAN</strong>:</p>
+<p><img src="https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-2-1.jpg" alt="Waveshare ESP32-S3-RS485-CAN, zdjęcie producenta"></p>
+<p>Zdjęcia Waveshare są ładowane od producenta, wymagają Internetu i nie są
+objęte licencją MIT projektu. Sprawdź pełną nazwę i parametry oferty.</p>
 <p>Potrzebujesz:</p>
 <ul>
-<li><strong>Waveshare ESP32-S3-RS485-CAN, 16 MB flash i 8 MB PSRAM.</strong> Sam napis
+<li><strong>Waveshare ESP32-S3-RS485-CAN lub ESP32-S3-RS485-CAN-U,
+16 MB flash i 8 MB PSRAM.</strong> Sam napis
 ESP32-S3 na innej płytce nie wystarcza.</li>
 <li>Kabla USB-C <strong>z transmisją danych</strong>, nie tylko do ładowania.</li>
 <li>Komputera z aktualnym Chrome albo Edge i dostępem do Internetu.</li>
@@ -35,6 +46,42 @@ Porównuj oznaczenia na swojej wersji urządzenia, nie sam wygląd obudowy.</em>
 <strong>RS485: A+, B-</strong> oraz <strong>CAN: H, L</strong>. Projekt nie używa zacisków CAN.
 <strong>Zaciski zasilania DC 7-36 V nie są zaciskami RS485.</strong> Do pierwszej
 konfiguracji wystarczy zasilanie z USB-C 5 V.</p>
+<h3>Antena wbudowana i zewnętrzna: który model?</h3>
+<table>
+<thead>
+<tr>
+<th>Dokładny model Waveshare</th>
+<th>Domyślna antena</th>
+<th>Firmware</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>ESP32-S3-RS485-CAN</strong></td>
+<td>Wbudowana na płytce</td>
+<td>Ten sam obraz projektu</td>
+</tr>
+<tr>
+<td><strong>ESP32-S3-RS485-CAN-U</strong></td>
+<td>Zewnętrzna, złącze SMA na obudowie</td>
+<td>Ten sam obraz projektu</td>
+</tr>
+</tbody></table>
+<p>Wariant <strong>-U jest właściwą wersją z fabrycznie aktywną anteną zewnętrzną</strong>.
+Przy wyłączonym zasilaniu podłącz do niego antenę Wi-Fi <strong>2,4 GHz</strong>,
+a następnie uruchom urządzenie. Nie trzeba wybierać anteny w panelu,
+zmieniać GPIO ani wgrywać osobnego programu. Umieść antenę poza metalową
+obudową kotła, w bezpiecznej odległości od gorących elementów.</p>
+<p>W wersji <strong>bez -U</strong> samo wpięcie anteny do wewnętrznego IPEX nie wystarczy:
+producent opisuje <strong>sprzętową zmianę położenia rezystora toru antenowego</strong>.
+Zleć tę drobną pracę lutowniczą serwisowi, przy odłączonym zasilaniu.
+Program nie przełączy nieprzelutowanego toru. Jeżeli tor został już
+prawidłowo przełączony, używaj tego samego firmware co dla -U.</p>
+<p>Źródło: <a href="https://www.waveshare.com/esp32-s3-rs485-can.htm">porównanie obu modeli Waveshare</a>
+i <a href="https://www.waveshare.com/wiki/ESP32-S3-RS485-CAN#FAQ">FAQ producenta: antena zewnętrzna</a>.
+<strong>Zgodność -U wynika z dokumentacji wspólnej platformy, nie z osobnego
+testu pierwszego uruchomienia publicznej bety na drugiej płytce.</strong>
+Sprawdź etykietę i pamięć własnego urządzenia; programu nie można użyć
+do odczytania, jak fizycznie jest przełączona antena.</p>
 <h2>2. Najpierw skonfiguruj samo ESP, bez kotła</h2>
 <p><strong>Na czas wgrywania i pierwszej konfiguracji odłącz przewody RS485 od ESP.</strong>
 Nie rozkręcaj pracującego kotła. Jeżeli przewody są już podłączone wewnątrz
@@ -74,15 +121,16 @@ Po ukończeniu wgrywania naciśnij RESET bez trzymania BOOT, aby uruchomić prog
 <ol>
 <li>Na tej samej stronie wybierz <strong>Połącz ESP przez USB</strong> i ponownie wskaż port.</li>
 <li>Instalator odczyta indywidualne hasło dostępu do Twojego ESP.</li>
-<li>Wpisz dokładną nazwę swojej sieci <strong>2,4 GHz</strong>. Duże i małe litery mają znaczenie.</li>
-<li>Wpisz hasło <strong>domowego Wi-Fi</strong> i kliknij <strong>Zapisz i połącz</strong>.</li>
+<li>Kliknij <strong>Wyszukaj sieci</strong> i wybierz swoje Wi-Fi <strong>2,4 GHz</strong> z listy.</li>
+<li>Wpisz tylko hasło <strong>domowego Wi-Fi</strong> i kliknij <strong>Zapisz i połącz</strong>.</li>
 <li>Zaczekaj na połączenie i przydzielenie adresu przez router.</li>
 </ol>
 <p><img src="images/02-siec-wifi.png" alt="Przykładowy formularz: nazwa domowej sieci 2,4 GHz i jej hasło"></p>
-<p><em>Zrzut demonstracyjny z symulowanego USB, nie z instalacji autora.
-Nazwa „Moja_siec_24GHz” jest przykładem. Wpisz własną nazwę i hasło.</em></p>
+<p><em>Zrzut demonstracyjny z symulowanego USB.
+Nazwa „Moja_siec_24GHz” jest przykładem. Wybierz swoją sieć i wpisz jej hasło.
+Ręczne wpisanie nazwy jest potrzebne tylko dla sieci ukrytych.</em></p>
 <p>Hasło Wi-Fi jest przekazywane <strong>lokalnie przez USB do ESP</strong>. Instalator
-nie wysyła go do GitHuba ani autora i nie zapisuje w przeglądarce.
+nie zapisuje go w przeglądarce.
 Nie trzeba wpisywać poleceń, edytować kodu ani instalować Pythona.</p>
 <p>Jeżeli po około minucie połączenia nadal nie ma, sprawdź nazwę, hasło,
 zasięg i pasmo 2,4 GHz. Sieć gościnna z izolacją klientów może uniemożliwić
@@ -135,14 +183,14 @@ Gdy telefon/router nie obsługuje nazw .local, nadal można użyć adresu IP.</p
 <p>Ten wariant jest przydatny, gdy konfigurujesz ESP blisko kotła, a nie przy komputerze.
 Program musi być już wgrany, a indywidualne hasło ESP odczytane w kroku 4.</p>
 <ol>
-<li>W telefonie otwórz ustawienia Wi-Fi i znajdź sieć <strong>Lazar-Setup-XXXX</strong>.
+<li>W telefonie otwórz ustawienia Wi-Fi i znajdź sieć <strong>Piec-Setup-XXXX</strong>.
 Końcówka jest zależna od konkretnej płytki.</li>
 <li>Połącz się, używając <strong>hasła ESP</strong>. Pozostań w tej sieci mimo ostrzeżenia
 telefonu o braku Internetu. Na czas konfiguracji możesz wyłączyć transmisję
 komórkową, jeżeli telefon sam ucieka do innego połączenia.</li>
 <li>Otwórz <strong><a href="http://192.168.4.1/diagnostics">http://192.168.4.1/diagnostics</a></strong>.</li>
 <li>Zaloguj się jako <strong>admin</strong>, używając hasła ESP.</li>
-<li>W sekcji <strong>Domowe Wi-Fi</strong> wybierz lub wpisz nazwę własnej sieci 2,4 GHz,
+<li>W sekcji <strong>Domowe Wi-Fi</strong> kliknij <strong>Wyszukaj sieci</strong>, wybierz własną sieć 2,4 GHz,
 podaj jej hasło i zapisz.</li>
 <li>Sprawdź uzyskany adres IP, przełącz telefon do swojej domowej sieci
 i otwórz panel ESP.</li>
@@ -191,7 +239,6 @@ a nie do każdego urządzenia.</li>
 <li>Zamknij obudowę, zanim przywrócisz zasilanie.</li>
 </ul>
 <p>Więcej: <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PODLACZENIE.md">pełny opis podłączenia i konfliktu adresu</a>,
-<a href="https://www.hkslazar.pl/instrukcje-pozostale">instrukcje HKS Lazar</a>,
 <a href="https://www.waveshare.com/wiki/ESP32-S3-RS485-CAN">dokumentacja Waveshare</a>.</p>
 <h2>8. Wybierz sposób komunikacji</h2>
 <table>
@@ -224,8 +271,7 @@ pod tym samym adresem mogą zakłócać komunikację. Nie obchodź blokady
 nadawania przez ustawienie losowego adresu.</p>
 <p>Tryb wybierasz listą <strong>Odczyt i zapis</strong>. Ikona koła zębatego przy stanie
 połączenia otwiera dane modułu ecoNET. Dla ecoNET podaj jego <strong>lokalny
-adres, lokalny login i lokalne hasło</strong>. To nie są dane konta ecoNET24.
-Program nie ma wpisanego adresu ani hasła modułu należącego do autora.</p>
+adres, lokalny login i lokalne hasło</strong>. To nie są dane konta ecoNET24.</p>
 <h2>9. Sprawdź, czy instalacja działa</h2>
 <ol>
 <li>Sprawdź, czy panel pokazuje połączenie, model regulatora i świeże odczyty.</li>
@@ -240,7 +286,7 @@ wersję katalogu albo konflikt na magistrali.</li>
 </ol>
 <p>ESP zapisuje lokalnie tożsamość pierwszego zgodnego regulatora. Zmiana
 tożsamości lub niezgodny model blokują zapis. Przeczytaj
-<a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/ZGODNOSC.md">zgodność i ograniczenia</a> przed użyciem funkcji sterujących.</p>
+<a href="ZGODNOSC.html">zgodność i ograniczenia</a> przed użyciem funkcji sterujących.</p>
 <h2>10. Codzienna obsługa z telefonu</h2>
 <table>
 <thead>
@@ -275,7 +321,7 @@ tożsamości lub niezgodny model blokują zapis. Przeczytaj
 </tr>
 <tr>
 <td>Pellet</td>
-<td>Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. W wersji 0.7.0-beta.3 usunięto dwa puste kafelki strumienia i zużycia ESP.</td>
+<td>Poziom udostępniony przez regulator i pozostałe dane diagnostyczne. Dwa puste kafelki strumienia i zużycia ESP pozostają usunięte.</td>
 </tr>
 <tr>
 <td>ESP Wi-Fi</td>

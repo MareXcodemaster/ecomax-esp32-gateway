@@ -1,10 +1,11 @@
 import 'esp-web-tools/dist/web/install-button.js';
-import { createIcons, Cpu, Unplug, Download, Usb, Wifi, Eye, KeyRound, Copy, ExternalLink } from 'lucide';
+import { createIcons, Cpu, Unplug, Download, Usb, Wifi, Search, Eye, KeyRound, Copy, ExternalLink } from 'lucide';
+import '../src/panel_web/wifi_scan.js';
 import './style.css';
 import { DeviceSerial, validateWifi, panelUrl } from './serial.js';
 
 const $ = id => document.getElementById(id);
-createIcons({ icons: { Cpu, Unplug, Download, Usb, Wifi, Eye, KeyRound, Copy, ExternalLink } });
+createIcons({ icons: { Cpu, Unplug, Download, Usb, Wifi, Search, Eye, KeyRound, Copy, ExternalLink } });
 let device = null, busy = false, pollGeneration = 0;
 const supported = !!navigator.serial && window.isSecureContext;
 $('unsupported').hidden = supported;
@@ -32,6 +33,8 @@ function updateButtons() {
   $('connect').disabled = !supported || !!device || busy;
   $('disconnect').disabled = busy;
   $('save-wifi').disabled = busy;
+  $('scan-wifi').disabled = busy || !device;
+  $('wifi-networks').disabled = busy;
 }
 $('compatible').addEventListener('change', updateButtons);
 function forget() {
@@ -39,6 +42,10 @@ function forget() {
   $('device-password').value = '';
   $('device-password').type = 'password';
   $('wifi-password').value = '';
+  $('ssid').value = '';
+  PiecWifiScan.options($('wifi-networks'),[]);
+  $('ssid').hidden = true;
+  $('ssid').required = false;
   $('credentials').hidden = true;
   $('wifi-form').hidden = true;
   $('disconnect').hidden = true;
@@ -68,7 +75,7 @@ $('connect').addEventListener('click', async () => {
     $('credentials').hidden = false;
     $('wifi-form').hidden = false;
     $('disconnect').hidden = false;
-    status('ESP polaczone. Wpisz swoja siec Wi-Fi 2,4 GHz.');
+    status('ESP polaczone. Nacisnij Wyszukaj sieci i wybierz swoje Wi-Fi 2,4 GHz.');
     const reply = await candidate.request('status');
     if (typeof reply.wifi.ssid === 'string') $('ssid').value = reply.wifi.ssid;
     if (showAddress(reply.wifi)) status('ESP jest juz polaczone z Wi-Fi. Mozesz otworzyc panel lub zmienic siec.');
@@ -77,10 +84,35 @@ $('connect').addEventListener('click', async () => {
     status(error.name === 'NotFoundError' ? 'Nie wybrano portu USB.' : error.message, true);
   } finally { busy = false; updateButtons(); }
 });
+$('wifi-networks').onchange = () => {
+  const manual = $('wifi-networks').selectedOptions[0]?.dataset.manual === 'true';
+  const next = manual ? '' : $('wifi-networks').value;
+  if ($('ssid').value !== next) $('wifi-password').value = '';
+  $('ssid').hidden = !manual; $('ssid').required = manual; $('ssid').value = next;
+  if (manual) $('ssid').focus();
+};
+$('scan-wifi').onclick = async () => {
+  if (busy || !device) return;
+  busy = true; updateButtons(); status('Wyszukiwanie sieci Wi-Fi 2,4 GHz...');
+  const current = device;
+  try {
+    const items = await PiecWifiScan.scan(() => current.request('scan_results'), async () => {
+      const result = await current.request('scan');
+      if (!result.ok) throw new Error('ESP odrzucilo wyszukiwanie sieci.');
+    });
+    if (device !== current) return;
+    PiecWifiScan.options($('wifi-networks'), items, $('ssid').value);
+    $('ssid').hidden = true; $('ssid').required = false;
+    if ($('wifi-networks').value) $('ssid').value = $('wifi-networks').value;
+    status(items.length ? 'Wybierz swoja siec z listy i wpisz jej haslo.' : 'Nie znaleziono sieci. Mozesz wyszukac ponownie lub wybrac wpisanie nazwy recznie.');
+  } catch (error) { status(error.message, true); }
+  finally { busy = false; updateButtons(); }
+};
 $('wifi-form').addEventListener('submit', async event => {
   event.preventDefault();
   if (busy || !device) return;
-  const ssid = $('ssid').value, password = $('wifi-password').value;
+  const manual = $('wifi-networks').selectedOptions[0]?.dataset.manual === 'true';
+  const ssid = manual ? $('ssid').value : $('wifi-networks').value, password = $('wifi-password').value;
   try { validateWifi(ssid, password); } catch (error) { status(error.message, true); return; }
   busy = true; updateButtons(); clearAddress();
   const current = device, generation = ++pollGeneration;

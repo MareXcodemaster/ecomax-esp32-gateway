@@ -98,8 +98,10 @@ def main():
                 raise ValueError("Unsafe archive path")
     print("PUBLIC RELEASE: " + output.name + "; files=" + str(len(paths)))
     guide = artifacts / ("instrukcja-PL-" + version + ".zip")
-    guide_paths = [ROOT / "docs/START_PL.html", ROOT / "docs/START_PL.md",
-                   *(ROOT / "docs/images").glob("*")]
+    guide_paths = [*(ROOT / ("docs/" + stem + suffix)
+                     for stem in ["START_PL", "SZYBKI_START", "GALERIA", "SPRZET", "ZGODNOSC"]
+                     for suffix in [".html", ".md"]),
+                   *(ROOT / "docs/images").rglob("*")]
     with zipfile.ZipFile(guide, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for path in sorted(guide_paths):
             if path.is_file():

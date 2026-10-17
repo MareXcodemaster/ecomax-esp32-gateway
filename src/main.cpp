@@ -27,7 +27,7 @@ extern "C" void app_main() {
     };
     json_hooks.free_fn=heap_caps_free;
     cJSON_InitHooks(&json_hooks);
-    state::init(); boiler::init(); protocol::init(); state::log("LazarGateway %s; reset_reason=%d", board::version, esp_reset_reason());
+    state::init(); boiler::init(); protocol::init(); state::log("ecoMAX Wi-Fi %s; reset_reason=%d", board::version, esp_reset_reason());
     bool passed = transport::self_test();
     state::log("Parser self-test (fragmentation, bad XOR, length, timeout, resync): %s", passed ? "PASS" : "FAIL");
     configASSERT(passed);

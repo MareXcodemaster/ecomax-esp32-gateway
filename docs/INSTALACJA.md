@@ -7,7 +7,9 @@ wymaga polaczenia z Internetem.
 
 ## Przed Instalacja
 
-- Wymagana plytka: Waveshare ESP32-S3-RS485-CAN, 16 MB flash, 8 MB PSRAM.
+- Wymagana plytka: Waveshare ESP32-S3-RS485-CAN lub ESP32-S3-RS485-CAN-U,
+  16 MB flash, 8 MB PSRAM. Ten sam obraz dla obu modeli. Wariant -U ma
+  fabrycznie aktywna antene zewnetrzna SMA; podlacz antene Wi-Fi 2,4 GHz.
 - Odlacz RS485 od kotla na czas pierwszego uruchomienia i konfiguracji.
 - Potrzebny jest kabel USB-C z transmisja danych. Instalator w przegladarce
   nie wymaga Pythona; Python 3.10+ jest potrzebny tylko do wariantu recznego.
@@ -28,12 +30,12 @@ wymaga polaczenia z Internetem.
 4. Zamknij okno wgrywania. Jesli ESP pozostalo w bootloaderze, nacisnij RESET.
 5. Nacisnij Polacz ESP przez USB i ponownie wybierz port. Instalator odczyta
    indywidualne haslo Twojego urzadzenia; nie trzeba wpisywac polecen.
-6. Wpisz nazwe i haslo wlasnej sieci 2,4 GHz i nacisnij Zapisz i polacz.
+6. Kliknij Wyszukaj sieci, wybierz wlasne Wi-Fi 2,4 GHz z listy,
+   wpisz tylko haslo i nacisnij Zapisz i polacz.
 7. Po uzyskaniu adresu nacisnij Otworz panel ESP. Uzyj loginu admin i hasla ESP
    wyswietlonego w kroku 3 instalatora. Zachowaj je w menedzerze hasel.
 
-Domowe haslo Wi-Fi idzie tylko przez USB, nie do GitHuba ani autora. Skrypty
-instalatora i pliki BIN sa hostowane razem, bez zewnetrznego CDN i analityki.
+Domowe haslo Wi-Fi jest zapisywane na ESP lokalnie przez USB.
 Przy ponownej konfiguracji sieci wystarczy Polacz ESP przez USB, bez wgrywania.
 Mozesz tez uzyc telefonu przez siec ESP, zgodnie z [WIFI.md](WIFI.md).
 

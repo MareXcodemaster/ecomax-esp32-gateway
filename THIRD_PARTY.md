@@ -58,9 +58,10 @@ are development tools only. https://github.com/esphome/esp-web-tools
 
 The Polish HTML guide is rendered at build time using Marked 18.1.1 (MIT).
 Its license is included in LICENSES/installer; no Marked runtime is sent to ESP.
-The guide links an official Waveshare product photo hosted by Waveshare,
-with attribution. That photo is not bundled or covered by this project's MIT
-license. Installer screenshots and the wiring diagram are original project assets.
+The guides link three official Waveshare product photos hosted by Waveshare,
+with attribution (model variants and terminal labels). These photos are not
+bundled or covered by this project's MIT license. Installer and DEMO panel
+screenshots and the wiring diagram are original project assets.
 
 PlatformIO Core, esptool (GPL-2.0-or-later) and pyserial are installed
 separately from their official packages. They are tools, not linked into

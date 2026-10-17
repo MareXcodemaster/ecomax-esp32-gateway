@@ -4,11 +4,49 @@ Lokalny panel kotla ecoMAX na ESP32: **RS485 lub lokalny ecoNET**, telefon/table
 nastawy, ecoSTER, harmonogramy, alarmy i historia pomiarow z ostatnich 3 dni.
 Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 
-**Wersja 0.7.0-beta.3. Projekt niezalezny, nieoficjalny. Nie jest produktem
-PLUM, HKS Lazar ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
+**[Prosta instalacja w 7 krokach](docs/SZYBKI_START.md)** ·
+**[Pobierz firmware i instrukcje](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases)**
+
+**Wersja 0.7.0-beta.4. Projekt niezalezny, nieoficjalny. Nie jest produktem
+PLUM ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
 
+## Jak Wyglada Panel
+
+![Panel ecoMAX Wi-Fi - odczyty i nastawy, przykladowe dane DEMO](docs/images/panel/01-odczyty.png)
+
+### Harmonogram Tygodniowy
+
+![Harmonogram CWU: dni tygodnia i godziny, dane DEMO](docs/images/panel/02-harmonogram.png)
+
+### Historia Temperatur I Pracy Kotla
+
+![Historia temperatur CO i CWU oraz stanow kotla, dane DEMO](docs/images/panel/03-historia.png)
+
+**[Galeria: harmonogram, wykresy, stany kotla, zmiana nastawy i telefon](docs/GALERIA.md)**
+
+Zrzuty przedstawiaja rzeczywisty interfejs z danymi przykladowymi (DEMO).
+
+## Co Kupic I Jak Podlaczyc
+
+**Waveshare ESP32-S3-RS485-CAN-U** to wariant z antena zewnetrzna SMA.
+Wersja **ESP32-S3-RS485-CAN** ma domyslnie antene wbudowana.
+Wymagane 16 MB flash / 8 MB PSRAM; ten sam obraz dla obu wariantow.
+
+![Waveshare ESP32-S3-RS485-CAN-U z antena zewnetrzna, zdjecie producenta](https://www.waveshare.com/img/devkit/ESP32-S3-RS485-CAN/ESP32-S3-RS485-CAN-details-2-2.jpg)
+
+**[Zdjecia obu modeli, oznaczenia zaciskow i schemat G4](docs/SPRZET.md)**
+
+![RS485 Waveshare do G4 potwierdzonego modelu ecoMAX](docs/images/polaczenie-rs485.svg)
+
+Schemat dotyczy sygnalow A+/B- i D+/D-, nie numerow pinow dowolnej wtyczki.
+G4 dotyczy wskazanego profilu regulatora, nie kazdego ecoMAX.
+Prace wewnatrz kotla przy odlaczonym zasilaniu powierz instalatorowi.
+Zdjecie jest ladowane ze strony Waveshare i nie jest objete MIT projektu.
+
 ## Zacznij Tutaj
+
+**[Prosta instrukcja dla poczatkujacych: 7 krokow bez programowania](docs/SZYBKI_START.md)**
 
 **[Polska instrukcja ze zdjeciami: od USB do sterowania kotlem](docs/START_PL.md)**
 
@@ -17,10 +55,12 @@ kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
 1. Przeczytaj [zgodnosc i ograniczenia](docs/ZGODNOSC.md).
 2. Na komputerze otworz [instalator USB](https://marexcodemaster.github.io/ecomax-esp32-gateway/)
    w Chrome lub Edge. Podlacz plytke kablem USB z transmisja danych.
-3. Potwierdz model **Waveshare ESP32-S3-RS485-CAN, 16 MB flash / 8 MB PSRAM**,
+3. Potwierdz model **Waveshare ESP32-S3-RS485-CAN lub ESP32-S3-RS485-CAN-U,
+   16 MB flash / 8 MB PSRAM** (wariant -U ma antene zewnetrzna),
    nacisnij **Wgraj na ESP** i wybierz port. Inne plytki nie sa objete wydaniem.
-4. Zamknij okno wgrywania, nacisnij **Polacz ESP przez USB** i wpisz wlasne
-   Wi-Fi 2,4 GHz. Instalator odczyta haslo ESP i pokaze przycisk otwarcia panelu.
+4. Zamknij okno wgrywania, nacisnij **Polacz ESP przez USB**, potem
+   **Wyszukaj sieci**. Wybierz wlasne Wi-Fi 2,4 GHz i wpisz tylko haslo.
+   Instalator odczyta haslo ESP i pokaze przycisk otwarcia panelu.
 5. Dopiero potem, po bezpiecznym wylaczeniu zasilania kotla,
    wykonaj [polaczenie RS485](docs/PODLACZENIE.md).
 6. Otworz `http://piec.local/` lub adres IP nadany ESP przez Twoj router.
@@ -37,7 +77,18 @@ Instalator nie wymaga Pythona ani edycji kodu. Wi-Fi mozna tez skonfigurowac
 i [instrukcja recznej instalacji](docs/INSTALACJA.md).
 Instrukcje mozna tez otworzyc [bezposrednio przy instalatorze](https://marexcodemaster.github.io/ecomax-esp32-gateway/instrukcja.html).
 
-## Co Zawiera
+## Sterowniki I Termostaty
+
+Profil referencyjny: **ecoMAX860P-LZ TOUCH / modul ecoMAX860P4-LZ**,
+oprogramowanie modulu A **8.41.38.L0**, panelu **8.30.28**,
+termostat **eSTER_x40** w obserwowanym ukladzie parametrow.
+
+**[Lista modeli, termostatow i status zgodnosci](docs/ZGODNOSC.md#sterowniki-lista-i-status)**
+oddziela sprawdzony profil od modeli wymienianych przez inne integracje.
+Posiadanie ecoNET nie gwarantuje pelnej obslugi tego panelu. Inne modele
+i wersje wymagaja weryfikacji; nie omijaj blokad zapisu.
+
+## Funkcje
 
 | Funkcja | Zakres |
 | --- | --- |
@@ -54,19 +105,11 @@ Instrukcje mozna tez otworzyc [bezposrednio przy instalatorze](https://marexcode
 Szczegoly: [instrukcja panelu](docs/PANEL.md),
 [bezpieczenstwo](SECURITY.md), [budowanie](docs/BUDOWANIE.md).
 
-## Prywatnosc
+## Twoje Dane
 
-- W firmware nie ma sieci Wi-Fi autora, hasel ecoNET, UID kotla, konta ecoNET24,
-  historii pomiarow ani tokenow sesji.
-- Haslo administratora i sieci konfiguracyjnej powstaje losowo na kazdej
-  wyczyszczonej plytce. Odczytasz je lokalnie przez USB, nie z GitHuba.
-- Wlasna siec, hasla i tozsamosc kotla pozostaja w NVS Twojego ESP.
-- Katalog zawiera nazwy i metadane zgodnosci; wszystkie poczatkowe wartosci
-  nastaw/pomiarow sa puste. Testy uzywaja sztucznych danych.
-- Nie dodano telemetrii, analityki ani automatycznej transmisji do autora.
-  Wybrany tryb ecoNET odpytuje wskazany przez Ciebie adres w sieci lokalnej.
-- Opcjonalny aktualizator sprawdza GitHuba; przy braku czasu moze uzyc
-  pool.ntp.org. Nie wysyla danych kotla ani hasel. Sprawdzanie mozna wylaczyc.
+Wi-Fi, haslo panelu i ustawienia sa przechowywane na Twoim ESP.
+Do codziennego dzialania w domu nie potrzebujesz konta w chmurze.
+Sprawdzanie nowych wersji na GitHubie jest opcjonalne; mozesz je wylaczyc.
 
 Aktualizacje **nie sa wymagane** i nie instaluja sie samoczynnie. Kanal jest
 ograniczony do stabilnych wydan; bety sa pomijane. Szczegoly i ograniczenia

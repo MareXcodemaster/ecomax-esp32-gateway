@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com; base-uri 'none'; form-action 'none'">
+<title>ecoMAX Wi-Fi - Prosta instalacja</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
+</style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>ecoMAX Wi-Fi: Prosta Instrukcja Instalacji</h1>
+<p><strong>Wersja programu 0.7.0-beta.4. Instrukcja 4, 17.10.2026.</strong>
+Nie musisz programowac ani wpisywac komend. Komputer jest potrzebny
+tylko przy pierwszym wgraniu; pozniej korzystasz z telefonu.</p>
+<h2>1. Sprawdz, Czy To Zestaw Dla Ciebie</h2>
+<p>Potrzebujesz modulu <strong>Waveshare ESP32-S3-RS485-CAN</strong> lub
+<strong>ESP32-S3-RS485-CAN-U</strong>, z pamiecia <strong>16 MB flash i 8 MB PSRAM</strong>.
+Wariant <strong>-U</strong> ma antene zewnetrzna. Potrzebne sa tez kabel USB-C
+z transmisja danych, komputer z Chrome lub Edge i domowe Wi-Fi 2,4 GHz.</p>
+<p><strong>Najpierw sprawdz <a href="ZGODNOSC.html">liste regulatorow i termostatow</a>.</strong>
+Nie kazdy kociol z ecoNET jest jeszcze obslugiwany przez ten program.
+To nadal beta, nie uniwersalny zamiennik dla kazdego kotla.</p>
+<p><a href="SPRZET.html">Zdjecia modulu: co kupic i gdzie sa zaciski</a>.</p>
+<h2>2. Podlacz Sam Modul Do Komputera</h2>
+<p>Na poczatek ESP ma byc <strong>bez przewodow RS485 do kotla</strong>.
+Podlacz je kablem USB-C do komputera. Jesli masz wersje -U, przed
+wlaczeniem podlacz jej antene Wi-Fi 2,4 GHz.</p>
+<p><strong>Nie otwieraj pracujacego kotla.</strong> Odlaczenie lub podlaczenie przewodow
+wewnatrz obudowy powierz instalatorowi; sa tam obwody 230 V.</p>
+<h2>3. Kliknij Wgraj Na ESP</h2>
+<p>Otworz <strong><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">instalator ecoMAX Wi-Fi</a></strong>
+na komputerze w Chrome albo Edge.</p>
+<ol>
+<li>Zaznacz potwierdzenie wlasciwego modelu modulu.</li>
+<li>Kliknij <strong>Wgraj na ESP</strong>.</li>
+<li>Wybierz port USB swojego modulu i kliknij <strong>Polacz / Connect</strong>.</li>
+<li>W oknie wgrywania wybierz <strong>Install</strong> i potwierdz zastapienie programu.</li>
+<li>Poczekaj do konca. <strong>Nie odlaczaj kabla.</strong> Potem zamknij okno wgrywania.</li>
+</ol>
+<p><img src="images/01-instalator.png" alt="Instalator: potwierdzenie plytki i przycisk wgrywania"></p>
+<p>Wgranie usuwa poprzedni program i ustawienia ESP. Nie uzywaj tego
+przycisku tylko po to, zeby zmienic Wi-Fi dzialajacego juz modulu.</p>
+<h2>4. Wpisz Swoje Wi-Fi</h2>
+<p>Na tej samej stronie przejdz do <strong>Polacz swoje Wi-Fi</strong>.</p>
+<ol>
+<li>Kliknij <strong>Polacz ESP przez USB</strong> i jeszcze raz wybierz ten sam modul.</li>
+<li>Kliknij <strong>Wyszukaj sieci</strong> i poczekaj kilka sekund.</li>
+<li>Wybierz swoje Wi-Fi z listy. Wpisz tylko jego haslo.</li>
+<li>Kliknij <strong>Zapisz i polacz</strong>. Poczekaj, az pojawi sie adres panelu.</li>
+</ol>
+<p><img src="images/02-siec-wifi.png" alt="Formularz: nazwa Twojej sieci i haslo domowego Wi-Fi"></p>
+<p>Nazwa na zdjeciu jest przykladem; <strong>wybierz wlasne Wi-Fi</strong>, nie przepisuj
+przykladowej nazwy. Siec ukryta: z listy wybierz wpisanie nazwy recznie.</p>
+<h2>5. Zachowaj Haslo ESP I Otworz Panel</h2>
+<p>Instalator pokaze <strong>osobne haslo ESP</strong>. Zachowaj je w menedzerze hasel.
+To nie jest haslo domowego Wi-Fi ani haslo do konta ecoNET24.</p>
+<p>Kliknij <strong>Otworz panel ESP</strong>. Login: <strong>admin</strong>, haslo: <strong>haslo ESP</strong>
+odczytane przez instalator. Nie publikuj zdjecia z prawdziwym haslem.</p>
+<p>Na telefonie polacz sie z <strong>tym samym domowym Wi-Fi</strong>, a potem otworz:</p>
+<p><strong><a href="http://piec.local/">http://piec.local/</a></strong></p>
+<p>Gdy ta nazwa nie dziala, uzyj adresu IP pokazanego przez instalator.
+Adres mozesz dodac do zakladek lub ekranu glownego telefonu.
+W <strong>ESP Wi-Fi</strong> mozesz pozniej zmienic nazwe <code>piec.local</code> na wlasna.</p>
+<h2>6. Instalator Podlacza Kociol</h2>
+<p>Po sprawdzeniu Wi-Fi i zgodnosci instalator moze podlaczyc magistrale
+przy <strong>wylaczonym i bezpiecznie odizolowanym zasilaniu kotla</strong>.</p>
+<p><img src="images/polaczenie-rs485.svg" alt="Polaczenie RS485 do G4 tylko dla potwierdzonej wersji regulatora"></p>
+<p>W potwierdzonej wersji ecoMAX860P-LZ TOUCH / ecoMAX860P4-LZ chodzi
+o magistrale <strong>G4: D+ i D-</strong>, nie G1/M-BUS. Waveshare <strong>A+ do D+</strong>,
+<strong>B- do D-</strong>, jedna skrecona para przewodow. Rysunek nie pokazuje
+numerow pinow wtyczki i nie dotyczy automatycznie innych regulatorow.</p>
+<p><strong><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PODLACZENIE.md">Pelny opis podlaczenia i zasad wyboru trybu</a></strong>.
+Nie podlaczaj dwoch aktywnych urzadzen pod adresem RS485 0x56.</p>
+<h2>7. Sprawdz Temperatury Na Telefonie</h2>
+<p>Poczekaj na polaczenie i odczyty. Porownaj temperatury z ekranem kotla.
+Samo dzialajace Wi-Fi nie oznacza jeszcze polaczenia z regulatorem.
+Nie zmieniaj parametrow serwisowych, ktorych znaczenia nie znasz.</p>
+<p>Gotowe: komputer nie jest juz potrzebny. ESP pamieta Wi-Fi po restarcie.
+Nie wystawiaj panelu bezposrednio do Internetu.</p>
+<h2>Gdy Cos Nie Dziala</h2>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Najpierw sprawdz</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Nie widac portu USB</td>
+<td>Inny kabel z transmisja danych i inny port USB</td>
+</tr>
+<tr>
+<td>Wgrywanie nie rusza</td>
+<td>Zamknij inne programy USB. Przytrzymaj BOOT, nacisnij i zwolnij RESET, zwolnij BOOT i wybierz port ponownie</td>
+</tr>
+<tr>
+<td>Nie laczy sie Wi-Fi</td>
+<td>Nazwa, haslo, 2,4 GHz i zasieg</td>
+</tr>
+<tr>
+<td>Nie otwiera piec.local</td>
+<td>Ten sam domowy router; sprobuj IP pokazanego przez instalator</td>
+</tr>
+<tr>
+<td>Panel dziala, ale temperatur brak</td>
+<td>Tryb RS485/ecoNET, zgodnosc regulatora i polaczenie wykonane przez instalatora</td>
+</tr>
+</tbody></table>
+<p>Wiecej: <a href="START_PL.html">pelna instrukcja ze zdjeciami</a>,
+<a href="GALERIA.html">jak wyglada panel</a>, <a href="SPRZET.html">zdjecia sprzetu</a>.
+Awaryjna konfiguracja telefonem uzywa sieci <strong>Piec-Setup-XXXX</strong>
+i indywidualnego hasla ESP; opis jest w pelnej instrukcji.</p>
+</main></body></html>
