@@ -78,15 +78,13 @@ separately from their official packages. They are tools, not linked into
 the firmware. Their source/licensing information is available through
 https://pypi.org/project/platformio/ and https://pypi.org/project/esptool/.
 
-Manufacturer logos, photo/bitmap sprites, font and hydraulic SVG obtained
-from a private ecoNET installation are not distributed. Brand names are
-used only to describe compatibility, not affiliation or endorsement.
+The restored src/panel_web/assets/schema.svg and devicebg.jpg are
+third-party visual assets from the user's supplied earlier panel project.
+They are not original artwork by this project's author and are excluded
+from the project's MIT license. Their original owners retain their rights;
+no additional redistribution license is granted here. No manufacturer
+logo, account identifier, network configuration or recorded measurement
+is included in these assets. The SVG contains empty live-reading labels
+which the panel fills from the current controller data.
 
-The hydraulic drawing src/panel_web/assets/heating-schema.svg is original
-project artwork, not a manufacturer's installation plan. The photographic
-background boiler-room.jpg is AI-generated original artwork, not a photo
-of a supported product or a user's installation. It was generated in
-text-to-image mode: bright neutral utility room, generic unbranded pellet
-boiler and hot water cylinder on the right, red/blue pipes, no logos or
-text, landscape composition. The optimized JPEG is bundled locally; no
-external image service is contacted by the panel.
+Brand names describe compatibility, not affiliation or endorsement.

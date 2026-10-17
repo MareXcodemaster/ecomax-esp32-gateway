@@ -5,5 +5,8 @@ Firmware dependencies and protocol references retain their original
 copyrights and licenses. See THIRD_PARTY.md and LICENSES/ for the complete
 notices distributed with this release.
 
+The restored third-party schema.svg and devicebg.jpg visual assets are
+excluded from the project's MIT license. See THIRD_PARTY.md.
+
 The project's first public release is an experimental beta. It does not
 replace the boiler controller or its hardware/software safety mechanisms.

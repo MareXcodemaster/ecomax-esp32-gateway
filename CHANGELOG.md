@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0-beta.12 - 2026-10-17
+
+- Przywrocono dokladne poprzednie pliki schematu i jasnego tla, zamiast nowych grafik z beta.10.
+- Schemat zachowuje pionowa kolumne wskaznikow po lewej, poprzedni kociol, grzejnik, mieszacz i CWU.
+- Bez zmian geometrii i kolorow grafiki. Aktualne pomiary i stany pomp nadal sa odswiezane, stare odczyty czyszczone.
+- Zachowano poprawki wyszukiwania aktualizacji z beta.11, Narzedzia i zmiane Wi-Fi.
+- Testy kontroluja sumy SHA-256 obu przywroconych plikow, aby nie zastapic ich ponownie innymi grafikami.
+
 ## 0.7.0-beta.11 - 2026-10-17
 
 - Aktualizator przeglada kolejne strony wydan GitHuba, zamiast tylko pierwszych pieciu pozycji.

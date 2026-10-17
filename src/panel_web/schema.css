@@ -1,10 +1,7 @@
-.schema-graphic{overflow-x:auto;background:#fff;scrollbar-gutter:stable}
-.schema-graphic>svg{display:block;width:100%;min-width:720px;height:auto;aspect-ratio:1000/680;min-height:0}
-#schema-readings{display:block;font-size:13px;color:#50605c;line-height:1.6;padding:14px 0}
+.schema-graphic{overflow-x:auto;scrollbar-gutter:stable}
+.schema-graphic>svg{display:block;width:100%;min-width:720px;height:auto;aspect-ratio:841.66/437.104;min-height:0}
+.schema-graphic[hidden]{display:none}
 #wifi-dialog{width:480px}#wifi-title{font-size:19px}#wifi-select{width:100%}
 #wifi-form>.check{margin:12px 0}#wifi-form>p{font-size:13px;line-height:1.6;overflow-wrap:anywhere}
 #wifi-result{min-height:22px}#wifi-form [hidden]{display:none}
-body[data-view=live] main,body[data-view=schema] main{background:#f1f4f2 url('/assets/boiler-room.jpg') center/cover fixed;min-height:calc(100vh - 58px)}
-body[data-view=schema] .page-toolbar,body[data-view=schema] #schema-readings{background:#ffffffed;padding:10px 12px}
-body[data-view=live] .transport-toolbar,body[data-view=schema] .transport-toolbar,body[data-view=live] .boiler-controls{background:#ffffffed;padding:10px 12px}
-body[data-view=live] footer,body[data-view=schema] footer{color:#30433e;background:#ffffffed;padding:10px 12px;margin-top:15px}
+body[data-view=live] main{background:url('/assets/devicebg.jpg') center top/cover fixed no-repeat;min-height:calc(100vh - 58px)}

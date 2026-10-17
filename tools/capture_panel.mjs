@@ -175,19 +175,21 @@ try {
   assert.equal(await page.locator('#wifi-password').inputValue(),'','closing clears password');
   await page.locator('[data-view="live"]').click();
   await page.locator('[data-view="schema"]').click();await page.locator('#schema-graphic svg').waitFor();
-  assert.equal(await page.locator('[data-value="co"]').textContent(),'72,5 \u00b0C');
-  assert.equal(await page.locator('[data-pump="mixerPumpWorks1"]').getAttribute('data-state'),'on');
-  assert.equal(await page.locator('[data-pump="pumpCWUWorks"]').getAttribute('data-state'),'off');
+  assert.equal(await page.locator('#lbSchema_tempCO').textContent(),'72,5 \u00b0C');
+  assert.equal(await page.locator('#schema_pumpMixerA').getAttribute('data-state'),'on');
+  assert.equal(await page.locator('#schema_pumpCWU').getAttribute('data-state'),'off');
   assert.deepEqual(await page.locator('#schema-graphic svg text').evaluateAll(nodes=>nodes.filter(node=>{
     const b=node.getBBox(),matrix=node.ownerSVGElement.getScreenCTM().inverse().multiply(node.getScreenCTM());
-    return [[b.x,b.y],[b.x+b.width,b.y+b.height]].some(([x,y])=>{const p=new DOMPoint(x,y).matrixTransform(matrix);return p.x<0||p.y<0||p.x>1000||p.y>680;});
+    return [[b.x,b.y],[b.x+b.width,b.y+b.height]].some(([x,y])=>{const p=new DOMPoint(x,y).matrixTransform(matrix);return p.x<0||p.y<0||p.x>841.66||p.y>437.104;});
   }).map(node=>node.textContent)),[],'schematic text fits drawing');
   await screenshot('10-schemat');
   await page.evaluate(()=>EcoHeatingSchema.render(state,false));
-  assert.equal(await page.locator('[data-value="co"]').textContent(),'---');
-  assert.equal(await page.locator('[data-pump="mixerPumpWorks1"]').getAttribute('data-state'),'unknown');
+  assert.equal(await page.locator('#lbSchema_tempCO').textContent(),'---');
+  assert.equal(await page.locator('#schema_pumpMixerA').getAttribute('data-state'),'unknown');
   await page.evaluate(()=>EcoHeatingSchema.render({...state,system:{schemaID:99}},true));
-  assert.ok((await page.locator('#schema-readings').textContent()).includes('Nie potwierdza'));
+  assert.equal(await page.locator('#schema-graphic').isVisible(),false);
+  assert.ok((await page.locator('#schema-readings').textContent()).includes('Brak schematu'));
+  await page.evaluate(()=>EcoHeatingSchema.render(state,true));
   for(const width of [320,390,1280]){
     await page.setViewportSize({width,height:844});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'diagram scroll is local, not full-page');
@@ -198,8 +200,8 @@ try {
   }
   await page.setViewportSize({width:1280,height:1080});
   await page.locator('[data-view="live"]').click();
-  assert.ok((await page.locator('main').evaluate(el=>getComputedStyle(el).backgroundImage)).includes('boiler-room.jpg'));
-  assert.equal(await page.evaluate(async()=>{const i=new Image();i.src='/assets/boiler-room.jpg';await i.decode();return i.naturalWidth>1000;}),true,'background bitmap decodes');
+  assert.ok((await page.locator('main').evaluate(el=>getComputedStyle(el).backgroundImage)).includes('devicebg.jpg'));
+  assert.equal(await page.evaluate(async()=>{const i=new Image();i.src='/assets/devicebg.jpg';await i.decode();return i.naturalWidth>1000;}),true,'restored background bitmap decodes');
   const aligned=await page.locator('[data-member="fuelLevel"]').evaluate(tile=>{
     const gauge=tile.querySelector('.pellet-gauge').getBoundingClientRect(),value=tile.querySelector('.tile-value').getBoundingClientRect();
     return Math.abs(gauge.x+gauge.width/2-value.x-value.width/2)<1&&gauge.bottom<=value.top;
