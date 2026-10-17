@@ -51,6 +51,8 @@ jobs:
         run: node tests/diagnostics_navigation.mjs
       - name: Read-only frame inspector browser tests
         run: node tests/diagnostics_frames.mjs
+      - name: Collapsible diagnostics sidebar browser tests
+        run: node tests/sidebar_diagnostics.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: ecomax-esp32-gateway-public-beta

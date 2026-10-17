@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-beta.15 - 2026-10-17
+
+- Zwijana sekcja Diagnostyka lokalna w lewym menu; domyslnie zamknieta.
+- Strzalka rozwija wszystkie pozycje ponizej: Pola danych, Katalog nastaw, API, Testy zapisu oraz adres urzadzenia.
+- Obsluga myszka, dotykiem i klawiatura przez natywny element details; bez nowych zapytan do ESP i kotla.
+- Pozostale menu, schemat, tlo i dzialanie diagnostyki z beta.14 bez zmian.
+
 ## 0.7.0-beta.14 - 2026-10-17
 
 - Diagnostyka RS485: nazwy i opisy typow 10, 106, 107, 137, 185, 192, 234 i 235.
