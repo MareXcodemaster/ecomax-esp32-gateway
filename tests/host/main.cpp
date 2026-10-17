@@ -14,7 +14,11 @@ void access_tests();
 int main() {
     assert(update_manifest::newer("0.7.0","0.7.0-beta.3"));
     assert(update_manifest::newer("0.10.0","0.9.9"));
-    assert(!update_manifest::newer("0.7.0-beta.4","0.7.0-beta.3"));
+    assert(update_manifest::newer("0.7.0-beta.4","0.7.0-beta.3"));
+    assert(update_manifest::newer("0.7.0-beta.10","0.7.0-beta.9"));
+    assert(!update_manifest::newer("0.7.0-beta.9","0.7.0-beta.10"));
+    assert(!update_manifest::newer("0.7.0-beta.4","0.7.0"));
+    assert(!update_manifest::newer("0.7.0-beta.4","0.7.0-beta.4"));
     assert(!update_manifest::newer("0.7.0","0.7.0"));
     assert(!update_manifest::newer("0.6.99","0.7.0"));
     update_manifest::Version version;
@@ -42,6 +46,11 @@ int main() {
     assert(!update_manifest::parse(release,candidate));
     cJSON_Delete(release);
     assert(!update_manifest::parse(nullptr,candidate));
+    auto *betas=cJSON_Parse(R"JSON([{"prerelease":true,"draft":false,"tag_name":"v0.7.0-beta.10","assets":[{"name":"firmware-ota.bin","size":200000,"digest":"sha256:0000000000000000000000000000000000000000000000000000000000000000","browser_download_url":"https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases/download/v0.7.0-beta.10/firmware-ota.bin"}]}])JSON");
+    assert(update_manifest::select(betas,candidate,true)&&candidate.beta&&!strcmp(candidate.version,"0.7.0-beta.10"));
+    assert(!update_manifest::select(betas,candidate,false));
+    cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetArrayItem(betas,0),"draft",cJSON_CreateTrue());
+    assert(!update_manifest::select(betas,candidate,true));cJSON_Delete(betas);
     assert(network_name::valid("piec") && network_name::valid("kotlownia-2"));
     assert(network_name::valid(std::string(63, 'a').c_str()));
     for (const auto *bad : {"", "-piec", "piec-", "dwa piece", "PIEC", "piec.local", "localhost", "x/y"})

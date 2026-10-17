@@ -3,11 +3,15 @@
 Od **0.7.0-beta.3** publiczny panel zawiera opcjonalny aktualizator
 w **Ustawienia urządzenia → Aktualizacje ESP z GitHuba**.
 
-## Kanał Stabilny
+## Stabilne I Beta
 
 - Repozytorium: **MareXcodemaster/ecomax-esp32-gateway**.
-- Tylko opublikowane stabilne tagi **vX.Y.Z**, bez prerelease i draft.
-  Wydania beta są pomijane.
+- Od **0.7.0-beta.5** wybierz **Stabilne i beta** (domyslnie) albo
+  **Tylko stabilne**. Wybor jest zapamietywany w ESP.
+- Beta ma oznaczenie **BETA** przy numerze i ostrzezenie przy instalacji.
+  To wydanie testowe, ktore moze zawierac bledy.
+- Szkice wydan sa zawsze pomijane. W kanale laczonym sprawdzane jest
+  piec ostatnio opublikowanych wydan; wybierana jest najwyzsza zgodna wersja.
 - Automatyczne sprawdzanie raz na dobę jest domyślnie włączone.
   Możesz je wyłączyć; ustawienie jest zapamiętywane.
 - Po błędzie kolejna automatyczna próba sprawdzenia jest opóźniona do godziny.
@@ -15,8 +19,8 @@ w **Ustawienia urządzenia → Aktualizacje ESP z GitHuba**.
 - Komunikat o nowej wersji nie zmienia nastaw ani nie restartuje ESP.
   **Nie ma obowiązku aktualizacji.**
 
-Brak stabilnego wydania jest prawidłowym stanem, gdy projekt ma tylko bety.
-Nie zmieniaj oznaczenia wydania na stabilne tylko po to, aby wymusić przycisk.
+Brak stabilnego wydania jest prawidlowy, gdy projekt ma tylko bety.
+Mozesz wtedy przelaczyc kanal; nie zmieniaj oznaczenia wydania na stabilne.
 
 ## Instalacja
 
@@ -35,7 +39,8 @@ Nie wysyłaj instalacji w pętli. Panel sam nie ponawia POST instalacji.
 - HTTPS z weryfikacją certyfikatu i nazwy serwera, bez wyłączania TLS.
 - SHA-256 raportowany przez GitHuba dla dokładnie tego pliku.
   Brak poprawnego digestu blokuje propozycję.
-- Stabilny numer wersji musi być nowszy od obecnego.
+- Numer wersji musi byc nowszy od obecnego. Beta nie zastapi nowszej
+  stabilnej wersji o tym samym numerze glownym.
 - Rozmiar metadanych, obrazu i czas operacji są ograniczone.
 - Przekierowania dopuszczają tylko wskazane domeny GitHuba.
 - ESP-IDF sprawdza obraz; program porównuje projekt i wersję przed

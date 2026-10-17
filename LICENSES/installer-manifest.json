@@ -1,4 +1,5 @@
 {
+  "LICENSES/installer/@fontsource__lato-5.2.7/LICENSE": "9648253641ec1d1f8ba2fbe8997909f7bfc48cc38537946f6272321788465b84",
   "LICENSES/installer/@lit__context-1.1.6/LICENSE": "2503b5766520d283dd6cc9c9852bdfc59ffe16b0538d554db4e5b9b725269604",
   "LICENSES/installer/@lit__reactive-element-2.1.2/LICENSE": "45d31799d0db956cc3eb5469346abbd9b7025babc5ff29fab10d7095da992ef1",
   "LICENSES/installer/@material__web-2.5.0/LICENSE": "295cdb4364b782931c914f5ca8c47fac87c732fa7e448b788a47aa5b25728212",
@@ -28,6 +29,7 @@
   "LICENSES/installer/playwright-1.64.1/NOTICE": "6d602191187b35b9b01d2cffa01c8469c2c8d9de8a96f1bf868e0f264f51c81d",
   "LICENSES/installer/postcss-8.5.30/LICENSE": "5be1f3465bba68a626777f984878814aaf35e7ef8e9fd314d469bcf887050fb8",
   "LICENSES/installer/rolldown-1.2.14/LICENSE": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734",
+  "LICENSES/installer/sortablejs-1.15.7/LICENSE": "e94dfc31e800d169257569db270457c9f028440c9ccae41e7eb78b2db18f1298",
   "LICENSES/installer/source-map-js-1.2.2/LICENSE": "6cb0631f71c7749763fd3dd1d5bee52dd1070ec17f2edc1710079ad070bd2fbd",
   "LICENSES/installer/tinyglobby-0.2.17/LICENSE": "22c68811e174cbbfb3813d4135918df4f540959c14d872e601d9abe83d3cde8f",
   "LICENSES/installer/tslib-2.8.1/LICENSE.txt": "210b19e543130388c68654b7497e967119ce17145f66ab7d85688fbd70f08751",

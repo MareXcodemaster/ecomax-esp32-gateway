@@ -146,20 +146,22 @@
   if(get('parameter-dialog').open)updateParameter();if(get('temperature-dialog').open)updateTemperature();
  }
  function renderTiles(){
-  const container=get('mirror-tiles'),tiles=(snapshot.tiles.length?snapshot.tiles:fallbackTiles).slice().sort((a,b)=>a.seqNo_-b.seqNo_),signature=JSON.stringify(tiles);
+  if(EcoTileLayout.isDragging())return;
+  const container=get('mirror-tiles'),tiles=EcoTileLayout.order(snapshot.tiles.length?snapshot.tiles:fallbackTiles),signature=JSON.stringify(tiles);
   if(container.dataset.signature!==signature){container.replaceChildren();for(const tile of tiles){const key=tile.memberName_;if(!key)continue;const article=make('article','eco-tile');article.dataset.member=key;
    const heading=make('div','tile-title',labels[key]||currentName(key));article.append(heading);const body=make('div','tile-body');
    if(tile.setMemberName_){body.append(reading('set',true),reading('actual',false));const id=targetIdForTile(key,snapshot);if(id&&!key.startsWith('ecoSter')){body.querySelector('[data-reading=set] small').textContent='temp. ustawiona [\u00b0C]';body.querySelector('[data-reading=set] .tile-value').parentElement.append(make('small','tile-target-now',''));}const button=icon(id?'pencil':'info',id?'Zmie\u0144 temperatur\u0119 ustawion\u0105: '+labels[key]:'Szczeg\u00f3\u0142y: '+(labels[key]||key));button.classList.add('tile-action');button.onclick=()=>id?openTemperature(targetIdForTile(key,snapshot)):openCurrent(key);article.append(button);}
    else if(key.startsWith('temp'))body.append(reading('actual',false));
    else{const graphic=make('div','tile-symbol'),i=make('i');i.dataset.lucide=({mode:'power',boilerPower:'flame',lambdaLevel:'activity',fanPower:'fan',fuelLevel:'wheat'})[key]||'gauge';graphic.append(i);body.append(graphic,make('div',key==='mode'||key==='lambdaLevel'?'tile-mode':'tile-value'));}
    article.append(body);container.append(article);
-  }container.dataset.signature=signature;icons();}
+  }container.dataset.signature=signature;EcoTileLayout.decorate();icons();}
   const curr=isFresh?snapshot.curr:{};
   for(const [i,tile]of tiles.entries()){const el=container.children[i];if(!el)continue;const key=tile.memberName_;el.dataset.stale=String(!isFresh);const actual=el.querySelector('[data-reading=actual] .tile-value');
    if(actual)actual.textContent=num(curr[key]);const set=el.querySelector('[data-reading=set] .tile-value');if(set){const id=targetIdForTile(key,snapshot),target=id?snapshot.targets?.[id]:null;set.textContent=num(id&&!key.startsWith('ecoSter')?(isFresh&&snapshot.targets_fresh?target?.before:null):curr[tile.setMemberName_]);const active=el.querySelector('.tile-target-now');if(active)active.textContent='Cel teraz: '+degrees(curr[tile.setMemberName_]);const button=el.querySelector('.tile-action');if(button&&id){button.disabled=!isFresh||!snapshot.targets_fresh||!target||target.write_ready===false||actionBusy||snapshot.busy;button.title=target?.write_ready===false?target.write_error||'Zapis zablokowany':'Zmie\u0144 temperatur\u0119 ustawion\u0105: '+labels[key];}}
    if(!actual){const value=el.querySelector('.tile-value,.tile-mode');value.textContent=key==='mode'?(isFresh?EcoSettings.boilerModeLabel(curr.mode,snapshot.write_transport):'---'):key==='lambdaLevel'?(isFresh?(curr.lambdaStatus===0?'STOP':num(curr[key]/10)):'---'):num(curr[key],0)+' %';}
   }
  }
+ function updatePelletTile(){EcoPellet.decorateLevelTile(get('mirror-tiles').querySelector('[data-member="fuelLevel"]'),snapshot.curr?.fuelLevel,isFresh);}
  function reading(kind,set){const row=make('div','tile-reading '+(set?'set':''));row.dataset.reading=kind;const graphic=make('div','tile-symbol'),i=make('i');i.dataset.lucide=set?'thermometer-sun':'thermometer';graphic.append(i);const content=make('div');content.append(make('div','tile-value','---'),make('small','',set?'temp. zadana [\u00b0C]':'temp. aktualna [\u00b0C]'));row.append(graphic,content);return row;}
  function openCurrent(key){parameterSelection={key};updateCurrent(key);get('parameter-dialog').showModal();}
  function updateCurrent(key){get('parameter-name').textContent=labels[key]||currentName(key);details('parameter-values',[['Temperatura aktualna',degrees(isFresh?snapshot.curr[key]:null)],['Temperatura zadana',degrees(isFresh?snapshot.curr[{mixerTemp1:'mixerSetTemp1',ecoSterTemp1:'ecoSterSetTemp1'}[key]]:null)],['Dost\u0119p','Tylko odczyt']]);get('parameter-description').textContent='';get('parameter-raw').textContent='';}
@@ -228,7 +230,8 @@
   get('temperature-form').onsubmit=async event=>{event.preventDefault();if(!tempId)return;const id=tempId,button=event.submitter;button.disabled=true;try{await saveTemperature(id,Number(get('temperature-value').value),()=>get('temperature-dialog').close());tempId=null;}catch(error){if(get('temperature-dialog').open)get('temperature-error').textContent=error.message;else notice(error.message,true);}finally{if(get('temperature-dialog').open)updateTemperature();}};
   EcoSettings.init();
   EcoPellet.init();
+  EcoTileLayout.init();
  }
- function render(view,data,fresh){snapshot=data;isFresh=fresh;EcoSettings.render(data,fresh);updateDialogs();switch(view){case'pellet':EcoPellet.render(data.pellet,fresh);break;case'live':renderTiles();break;case'user':case'service':renderTree(view);break;case'schema':renderSchema();break;case'schedule':renderSchedule();break;case'alarms':renderAlarms();break;case'history':renderHistory();break;case'settings':renderSettings();break;case'espwifi':renderEspWifi();break;case'tests':for(const form of document.querySelectorAll('.write-form')){const input=form.querySelector('input[type=number]'),target=data.targets?.[form.dataset.writeId];input.value=input.dataset.dirty==='true'?input.dataset.draft:isFresh&&data.targets_fresh&&target?target.before:'';}break;}}
+ function render(view,data,fresh){snapshot=data;isFresh=fresh;EcoSettings.render(data,fresh);updateDialogs();switch(view){case'pellet':EcoPellet.render(data.pellet,fresh);break;case'live':renderTiles();updatePelletTile();break;case'user':case'service':renderTree(view);break;case'schema':renderSchema();break;case'schedule':renderSchedule();break;case'alarms':renderAlarms();break;case'history':renderHistory();break;case'settings':renderSettings();break;case'espwifi':renderEspWifi();break;case'tests':for(const form of document.querySelectorAll('.write-form')){const input=form.querySelector('input[type=number]'),target=data.targets?.[form.dataset.writeId];input.value=input.dataset.dirty==='true'?input.dataset.draft:isFresh&&data.targets_fresh&&target?target.before:'';}break;}}
  root.EcoMirror={init,render,openTemperature,ticketMatches,decodeSchedule,clock};
 })(globalThis);

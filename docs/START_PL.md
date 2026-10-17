@@ -4,7 +4,7 @@
 
 **Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
 
-**Oprogramowanie: 0.7.0-beta.4. Instrukcja: wydanie 4, 17.10.2026.**
+**Oprogramowanie: 0.7.0-beta.5. Instrukcja: wydanie 5, 17.10.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -293,18 +293,18 @@ Histereza to jeszcze inny parametr. Więcej: [instrukcja panelu](PANEL.md).
 
 ## 11. Aktualizacja bez komputera
 
-### Z GitHuba, tylko stabilne wydania
+### Z GitHuba, stabilne i beta
 
 Otwórz **Ustawienia urządzenia → Aktualizacje ESP z GitHuba**.
-ESP może sprawdzać stabilne wydania raz na dobę; możesz wyłączyć tę opcję
+ESP moze sprawdzac nowe wydania raz na dobe; mozesz wylaczyc te opcje
 albo nacisnąć **Sprawdź teraz**. Sprawdzanie nie instaluje programu.
 
-![Ekran aktualizatora: kanał stabilny i informacja o braku wydania](images/04-aktualizacje.png)
+![Ekran aktualizatora: wybor kanalu stabilnego i beta](images/04-aktualizacje.png)
 
-*Zrzut demonstracyjny własnego panelu, bez danych instalacji. Wydania beta
-nie są propozycjami aktualizacji. Nie pokazano fikcyjnej wersji stabilnej.*
+*Zrzut demonstracyjny wlasnego panelu, bez danych instalacji. Beta jest
+wyraznie oznaczona jako wydanie testowe. Mozesz wybrac tylko stabilne.*
 
-Gdy będzie dostępna nowsza zgodna stabilna wersja, pojawi się numer i przycisk
+Gdy bedzie dostepna nowsza zgodna wersja w wybranym kanale, pojawi sie numer i przycisk
 **Zaktualizuj**. Dopiero Twoje naciśnięcie i potwierdzenie restartu rozpoczynają
 instalację. Możesz ją pominąć. Nie ma obowiązku aktualizacji.
 

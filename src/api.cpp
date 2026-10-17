@@ -392,13 +392,13 @@ static esp_err_t update_status(httpd_req_t *req) {
 static esp_err_t update_command(httpd_req_t *req) {
     if(!authorize(req,true))return ESP_OK;
     if(!strcmp(req->uri,"/api/updates/check")){
-        auto result=updates::check();return message(req,result==ESP_OK?"202 Accepted":"409 Conflict",result==ESP_OK?"Sprawdzanie stabilnych wydan GitHub.":"Trwa inna operacja aktualizatora.");
+        auto result=updates::check();return message(req,result==ESP_OK?"202 Accepted":"409 Conflict",result==ESP_OK?"Sprawdzanie wydan GitHub.":"Trwa inna operacja aktualizatora.");
     }
     auto *body=request_json(req);if(!body)return ESP_OK;
     esp_err_t result=ESP_ERR_INVALID_ARG;
     if(!strcmp(req->uri,"/api/updates/config")){
-        auto *automatic=cJSON_GetObjectItemCaseSensitive(body,"automatic");
-        if(cJSON_IsBool(automatic))result=updates::automatic(cJSON_IsTrue(automatic));
+        auto *automatic=cJSON_GetObjectItemCaseSensitive(body,"automatic"),*beta=cJSON_GetObjectItemCaseSensitive(body,"include_beta");
+        if(cJSON_IsBool(automatic)&&cJSON_IsBool(beta))result=updates::configure(cJSON_IsTrue(automatic),cJSON_IsTrue(beta));
     }else{
         auto *version=cJSON_GetObjectItemCaseSensitive(body,"version"),*confirm=cJSON_GetObjectItemCaseSensitive(body,"confirm");
         if(cJSON_IsString(version)&&cJSON_IsTrue(confirm))result=updates::install(version->valuestring);

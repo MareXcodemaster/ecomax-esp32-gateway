@@ -7,7 +7,7 @@ Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 **[Prosta instalacja w 7 krokach](docs/SZYBKI_START.md)** ·
 **[Pobierz firmware i instrukcje](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases)**
 
-**Wersja 0.7.0-beta.4. Projekt niezalezny, nieoficjalny. Nie jest produktem
+**Wersja 0.7.0-beta.5. Projekt niezalezny, nieoficjalny. Nie jest produktem
 PLUM ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
 
@@ -98,9 +98,9 @@ i wersje wymagaja weryfikacji; nie omijaj blokad zapisu.
 | Harmonogramy | Tydzien pn-nd, kratki po 30 minut, opisy dzialania i edycja |
 | Alarmy | Licznik powiadomien i odczytywana historia, nie obejscie alarmow |
 | Historia | 3 dni w flash, probki minutowe; dokladniejszy krotki bufor RAM |
-| Pellet | Dane sterownika, jesli wystepuja, i oddzielne obliczenia ESP |
+| Pellet | Graficzny poziom i procent zglaszany przez sterownik, jesli dostepny |
 | Polaczenia | RS485, HTTP do lokalnego ecoNET, tryb hybrydowy |
-| OTA | Opcjonalne stabilne aktualizacje z GitHuba i reczne OTA |
+| OTA | Opcjonalne stabilne i beta z GitHuba, zawsze z recznym potwierdzeniem |
 
 Szczegoly: [instrukcja panelu](docs/PANEL.md),
 [bezpieczenstwo](SECURITY.md), [budowanie](docs/BUDOWANIE.md).
@@ -112,7 +112,8 @@ Do codziennego dzialania w domu nie potrzebujesz konta w chmurze.
 Sprawdzanie nowych wersji na GitHubie jest opcjonalne; mozesz je wylaczyc.
 
 Aktualizacje **nie sa wymagane** i nie instaluja sie samoczynnie. Kanal jest
-ograniczony do stabilnych wydan; bety sa pomijane. Szczegoly i ograniczenia
+modyfikowalny: **Stabilne i beta** albo **Tylko stabilne**. Beta jest
+wyraznie oznaczona. Szczegoly i ograniczenia
 migracji: [AKTUALIZACJE.md](docs/AKTUALIZACJE.md).
 
 Nie wystawiaj panelu bezposrednio do Internetu. HTTP nie zapewnia szyfrowania;

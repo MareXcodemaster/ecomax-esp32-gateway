@@ -6,7 +6,7 @@ void init();
 void start();
 cJSON *snapshot();
 esp_err_t check();
-esp_err_t automatic(bool enabled);
+esp_err_t configure(bool enabled,bool include_beta);
 esp_err_t install(const char *version);
 bool installing();
 bool reserve_flash();

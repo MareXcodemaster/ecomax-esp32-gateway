@@ -26,7 +26,7 @@ namespace updates {
 using update_manifest::Candidate;
 static SemaphoreHandle_t mutex;
 static std::atomic<bool> flash_busy{false},check_pending{false},install_pending{false},worker_ready{false};
-static bool enabled=true,working=false,available=false;
+static bool enabled=true,include_beta=true,working=false,available=false;
 static uint64_t checked=0; static size_t received=0;
 static char phase[32]="starting",error[160]{},requested[32]{};
 static Candidate candidate;
@@ -54,7 +54,7 @@ struct Stream {
         close();location[0]=0;
         esp_http_client_config_t config{};config.url=url;config.timeout_ms=15000;
         config.crt_bundle_attach=esp_crt_bundle_attach;config.disable_auto_redirect=true;
-        config.event_handler=event;config.user_data=this;config.user_agent="ecoMAX-WiFi-stable-updater";
+        config.event_handler=event;config.user_data=this;config.user_agent="ecoMAX-WiFi-updater";
         config.buffer_size=2048;config.buffer_size_tx=1024;
         client=esp_http_client_init(&config);if(!client)return -1;
         esp_http_client_set_header(client,"Connection","close");
@@ -64,11 +64,11 @@ struct Stream {
         return esp_http_client_get_status_code(client);
     }
 };
-static int latest(Candidate &value){
-    Stream stream;int code=stream.open("https://api.github.com/repos/MareXcodemaster/ecomax-esp32-gateway/releases/latest");
+static int latest(Candidate &value,bool beta){
+    Stream stream;int code=stream.open(beta?"https://api.github.com/repos/MareXcodemaster/ecomax-esp32-gateway/releases?per_page=5":"https://api.github.com/repos/MareXcodemaster/ecomax-esp32-gateway/releases/latest");
     if(code==404){value={};return 404;}
     if(code!=200)return code;
-    constexpr size_t limit=65536;
+    constexpr size_t limit=196608;
     auto *body=static_cast<char *>(heap_caps_malloc(limit+1,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT));
     if(!body)return -1;
     size_t used=0;bool ok=true;uint64_t deadline=millis()+30000;
@@ -78,17 +78,19 @@ static int latest(Candidate &value){
     }
     if(used==limit||millis()>=deadline||!esp_http_client_is_complete_data_received(stream.client))ok=false;
     body[used]=0;auto *root=ok?cJSON_ParseWithLength(body,used+1):nullptr;
-    ok=root&&update_manifest::parse(root,value);cJSON_Delete(root);heap_caps_free(body);
-    return ok?200:-2;
+    bool valid=root&&(beta?cJSON_IsArray(root):cJSON_IsObject(root));
+    ok=valid&&(beta?update_manifest::select(root,value,true):update_manifest::parse(root,value));cJSON_Delete(root);heap_caps_free(body);
+    return ok?200:valid&&beta?404:-2;
 }
 static bool refresh(){
-    Candidate value;status("checking");int code=latest(value);
+    xSemaphoreTake(mutex,portMAX_DELAY);bool beta=include_beta;xSemaphoreGive(mutex);
+    Candidate value;status("checking");int code=latest(value,beta);
     xSemaphoreTake(mutex,portMAX_DELAY);
     available=false;candidate={};checked=static_cast<uint64_t>(time(nullptr));
     if(code==200){candidate=value;available=update_manifest::newer(value.version,board::version);}
     xSemaphoreGive(mutex);
-    if(code==404){status("no_stable_release");return true;}
-    if(code!=200){status("error",code==403||code==429?"Limit zapytan GitHub. Sprobuj pozniej.":code==-2?"Nieprawidlowe metadane stabilnego wydania.":"Nie mozna sprawdzic GitHuba przez HTTPS. Kociol dziala niezaleznie.");return false;}
+    if(code==404){status("no_release");return true;}
+    if(code!=200){status("error",code==403||code==429?"Limit zapytan GitHub. Sprobuj pozniej.":code==-2?"Nieprawidlowe metadane wydania.":"Nie mozna sprawdzic GitHuba przez HTTPS. Kociol dziala niezaleznie.");return false;}
     status(available?"available":"up_to_date");return true;
 }
 static bool download(const Candidate &value){
@@ -135,13 +137,19 @@ esp_err_t check(){
     if(busy)return ESP_ERR_INVALID_STATE;
     check_pending.store(true);return ESP_OK;
 }
-esp_err_t automatic(bool value){
+esp_err_t configure(bool value,bool beta){
     if(!mutex)return ESP_ERR_INVALID_STATE;
+    xSemaphoreTake(mutex,portMAX_DELAY);
+    if(working||installing()){xSemaphoreGive(mutex);return ESP_ERR_INVALID_STATE;}
     nvs_handle_t handle;auto result=nvs_open("lazar_s0",NVS_READWRITE,&handle);
-    if(result!=ESP_OK)return result;
-    result=nvs_set_u8(handle,"update_auto",value?1:0);if(result==ESP_OK)result=nvs_commit(handle);nvs_close(handle);
-    if(result!=ESP_OK)return result;
-    xSemaphoreTake(mutex,portMAX_DELAY);enabled=value;xSemaphoreGive(mutex);return ESP_OK;
+    if(result==ESP_OK){
+        result=nvs_set_u8(handle,"update_auto",value?1:0);
+        if(result==ESP_OK)result=nvs_set_u8(handle,"update_beta",beta?1:0);
+        if(result==ESP_OK)result=nvs_commit(handle);
+        nvs_close(handle);
+    }
+    if(result==ESP_OK){enabled=value;if(include_beta!=beta){include_beta=beta;candidate={};available=false;check_pending.store(true);}}
+    xSemaphoreGive(mutex);return result;
 }
 esp_err_t install(const char *version){
     if(!mutex||!worker_ready.load()||!board::github_ota||!version||panel::is_busy()||time(nullptr)<1704067200)return ESP_ERR_INVALID_STATE;
@@ -151,10 +159,11 @@ esp_err_t install(const char *version){
     xSemaphoreGive(mutex);return valid?ESP_OK:ESP_ERR_INVALID_STATE;
 }
 cJSON *snapshot(){
-    auto *out=cJSON_CreateObject();cJSON_AddStringToObject(out,"current",board::version);cJSON_AddStringToObject(out,"channel","stable");
+    auto *out=cJSON_CreateObject();cJSON_AddStringToObject(out,"current",board::version);
     cJSON_AddBoolToObject(out,"install_supported",board::github_ota);
     if(!mutex){cJSON_AddStringToObject(out,"phase","error");cJSON_AddStringToObject(out,"error","Aktualizator niedostepny: brak pamieci.");return out;}
     xSemaphoreTake(mutex,portMAX_DELAY);
+    cJSON_AddStringToObject(out,"channel",include_beta?"all":"stable");cJSON_AddBoolToObject(out,"beta",candidate.beta);
     cJSON_AddBoolToObject(out,"automatic",enabled);cJSON_AddBoolToObject(out,"available",available);
     cJSON_AddBoolToObject(out,"busy",working||check_pending.load()||!worker_ready.load());cJSON_AddStringToObject(out,"phase",phase);
     cJSON_AddStringToObject(out,"error",error);cJSON_AddStringToObject(out,"version",candidate.version);
@@ -194,7 +203,7 @@ static void task(void *){
 }
 void init(){
     mutex=xSemaphoreCreateMutex();if(!mutex){state::log("Optional GitHub updater unavailable: memory");return;}
-    nvs_handle_t handle;if(nvs_open("lazar_s0",NVS_READONLY,&handle)==ESP_OK){uint8_t value;if(nvs_get_u8(handle,"update_auto",&value)==ESP_OK)enabled=value!=0;nvs_close(handle);}
+    nvs_handle_t handle;if(nvs_open("lazar_s0",NVS_READONLY,&handle)==ESP_OK){uint8_t value;if(nvs_get_u8(handle,"update_auto",&value)==ESP_OK)enabled=value!=0;if(nvs_get_u8(handle,"update_beta",&value)==ESP_OK)include_beta=value!=0;nvs_close(handle);}
 }
 void start(){
     if(!mutex)return;

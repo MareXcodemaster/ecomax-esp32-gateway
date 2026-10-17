@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0-beta.5 - 2026-10-17
+
+- Zmienna kolejnosc kafelkow: mysz, dotyk i klawiatura, lokalny zapis ukladu.
+- Graficzny poziom pelletu i procent; usuniete liczniki ESP i formularz wazony.
+- Aktualizator pokazuje takze BETA, z wyborem kanalu i recznym potwierdzeniem.
+- Porownywanie numerow beta, walidacja metadanych, digest i TLS zachowane.
+- Fioletowy naglowek i lokalna czcionka Lato; osiem aktualnych zdjec panelu.
+- Brak zmian w protokole i nastawach kotla.
+
 ## 0.7.0-beta.4 - 2026-10-17
 
 - Wyszukaj sieci: lista Wi-Fi 2,4 GHz w instalatorze USB i konfiguracji

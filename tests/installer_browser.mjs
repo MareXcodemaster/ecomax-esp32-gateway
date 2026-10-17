@@ -162,7 +162,7 @@ try {
     await page.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});
     await page.evaluate(()=>{
       window.csrf='example';window.serverReachable=true;window.updateRequests=[];
-      window.updateState={current:'0.7.0-beta.3',version:'0.7.0',available:true,install_supported:true,automatic:true,phase:'available',busy:false};
+      window.updateState={current:'0.7.0-beta.4',version:'0.7.0-beta.5',channel:'all',beta:true,available:true,install_supported:true,automatic:true,phase:'available',busy:false};
       window.request=async(url,payload)=>{
         window.updateRequests.push({url,payload});
         if(url==='/api/updates/config')window.updateState.automatic=payload.automatic;
@@ -173,10 +173,11 @@ try {
     });
     assert.equal(await page.evaluate(()=>window.updateRequests.filter(r=>r.payload).length),0);
     assert.equal(await page.locator('#update-install').isEnabled(),true);
+    assert.match(await page.locator('#update-latest').textContent(),/BETA/);
     await page.locator('#update-auto').uncheck();
     await page.waitForFunction(()=>window.updateState.automatic===false);
     await page.screenshot({path:`test-results/updates-${width}.png`,fullPage:true});
-    page.once('dialog',dialog=>dialog.accept());
+    page.once('dialog',dialog=>{assert.match(dialog.message(),/BETA/);return dialog.accept();});
     await page.locator('#update-install').click();
     await page.waitForFunction(()=>window.updateState.phase==='downloading');
     await page.evaluate(async()=>{await EcoUpdates.load();await EcoUpdates.load();});
@@ -185,7 +186,7 @@ try {
     assert.equal(await page.locator('#update-progress').isVisible(),true);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     assert.deepEqual(errors,[]);await page.close();
-    console.log(`PASS stable updater ${width}px: no unattended install, opt-out, explicit confirmation, one POST, progress and layout`);
+    console.log(`PASS beta updater ${width}px: beta label and warning, no unattended install, opt-out, explicit confirmation, one POST, progress and layout`);
   }
 } finally {
   await browser.close();

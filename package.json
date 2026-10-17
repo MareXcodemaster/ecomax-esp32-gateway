@@ -1,6 +1,6 @@
 {
   "name": "ecomax-esp32-gateway-installer",
-  "version": "0.7.0-beta.4",
+  "version": "0.7.0-beta.5",
   "private": true,
   "type": "commonjs",
   "packageManager": "pnpm@11.25.0",
@@ -16,8 +16,10 @@
     "lucide": "0.468.0"
   },
   "devDependencies": {
+    "@fontsource/lato": "5.2.7",
     "marked": "18.1.1",
     "playwright": "1.64.1",
+    "sortablejs": "1.15.7",
     "vite": "8.3.4"
   }
 }

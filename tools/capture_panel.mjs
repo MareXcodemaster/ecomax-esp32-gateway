@@ -44,6 +44,7 @@ const state = {
   schedule_status: { fresh: true, read_epoch: now },
   thermostat_schedule_status: { fresh: true, read_epoch: now },
   schedule_write_indices: { cwuTZ: 0, thermostat1TZ: 1 },
+  pellet: { fresh: true, level_percent: 68 },
 };
 const columns = ['time', 'native', 'mode', 'co', 'coSet', 'cwu', 'cwuSet', 'room', 'roomSet'];
 const rows = Array.from({ length: 433 }, (_, i) => {
@@ -82,7 +83,7 @@ const browser = await chromium.launch({ headless: true });
 const output = 'docs/images/panel';
 await mkdir(output, { recursive: true });
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1080 } });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 1080 },hasTouch:true });
   page.on('pageerror', error => errors.push(error.message));
   await page.route('**/*', async route => {
     if (!route.request().url().startsWith(origin + '/')) { external.push(route.request().url()); await route.abort(); }
@@ -104,6 +105,31 @@ try {
     await page.screenshot({ path: `${output}/${name}.png` });
   };
   await screenshot('01-odczyty');
+  const originalOrder=await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member));
+  await page.locator('#tile-layout-edit').click();
+  const start=await page.locator('.tile-grip').first().boundingBox(),end=await page.locator('.eco-tile').nth(2).boundingBox();
+  await page.mouse.move(start.x+start.width/2,start.y+start.height/2);await page.mouse.down();
+  await page.mouse.move(end.x+end.width*.75,end.y+end.height/2,{steps:20});await page.mouse.up();
+  await page.waitForFunction(()=>!!localStorage.getItem('piec.tile-order.v1'));
+  const customOrder=await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member));
+  assert.notDeepEqual(customOrder,originalOrder,'mouse drag changes ordering');
+  await screenshot('08-uklad-kafelkow');
+  await page.reload();await page.locator('.eco-tile').first().waitFor();
+  assert.deepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),customOrder,'order survives reload and fresh data');
+  await page.locator('#tile-layout-edit').click();await page.locator('#tile-layout-reset').click();
+  assert.deepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),originalOrder);
+  await page.locator('#tile-layout-edit').click();
+  await page.evaluate(() => notice('DEMO - dane przykladowe, nie odczyt prawdziwego kotla.'));
+  await page.locator('[data-view="pellet"]').click();
+  assert.equal(await page.locator('#pellet-level').textContent(),'68 %');
+  assert.equal(await page.locator('#pellet-hopper .pellet-fill').count(),1);
+  await screenshot('07-pellet');
+  for(const value of [0,100,null,101]){
+    await page.evaluate(value=>EcoPellet.render({fresh:true,level_percent:value},true),value);
+    assert.equal(await page.locator('#pellet-level').textContent(),value===null||value>100?'Brak odczytu':value+' %');
+  }
+  await page.evaluate(()=>EcoPellet.render({fresh:true,level_percent:68},false));
+  assert.equal(await page.locator('#pellet-hopper').getAttribute('data-available'),'false');
   await page.locator('[data-view="schedule"]').click();
   assert.equal(await page.locator('.week-cell').count(), 336);
   assert.equal(await page.locator('.week-cell:not(:disabled)').count(), 336);
@@ -127,9 +153,22 @@ try {
   await page.locator('#temperature-cancel').click();
   await page.setViewportSize({ width: 390, height: 844 });
   await screenshot('06-telefon');
+  await page.locator('#tile-layout-edit').click();
+  const touch=await page.context().newCDPSession(page);
+  const from=await page.locator('.tile-grip').first().boundingBox(),to=await page.locator('.eco-tile').nth(1).boundingBox();
+  const x=from.x+from.width/2,y=from.y+from.height/2,tx=to.x+to.width*.75,ty=to.y+to.height/2;
+  await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+  await new Promise(resolve=>setTimeout(resolve,250));
+  for(let step=1;step<=12;step++)await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+(tx-x)*step/12,y:y+(ty-y)*step/12}]});
+  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  assert.notDeepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),originalOrder,'touch drag changes order');
+  await page.locator('#tile-layout-reset').click();
+  const first=page.locator('.tile-grip').first();await first.focus();await page.keyboard.press('ArrowRight');
+  assert.notDeepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),originalOrder,'keyboard sorting works on a narrow viewport');
+  await page.locator('#tile-layout-reset').click();
   assert.deepEqual(external, [], 'no private device or external network accessed');
-  assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock']]);
-  console.log('PASS six panel screenshots: real UI, synthetic data, no device access or boiler writes, charts nonblank, desktop/mobile fit.');
+  assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock']]);
+  console.log('PASS eight panel screenshots: ordering persisted/reset, pellet empty/full/missing/stale, no device access or boiler writes, charts nonblank, desktop/mobile fit.');
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

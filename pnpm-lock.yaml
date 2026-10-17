@@ -15,17 +15,26 @@ importers:
         specifier: 0.468.0
         version: 0.468.0
     devDependencies:
+      '@fontsource/lato':
+        specifier: 5.2.7
+        version: 5.2.7
       marked:
         specifier: 18.1.1
         version: 18.1.1
       playwright:
         specifier: 1.64.1
         version: 1.64.1
+      sortablejs:
+        specifier: 1.15.7
+        version: 1.15.7
       vite:
         specifier: 8.3.4
         version: 8.3.4
 
 packages:
+
+  '@fontsource/lato@5.2.7':
+    resolution: {integrity: sha512-k5mum1ADbDW5cTw1Ett1eQVWeoZ6gq0ct6SFBibEhB4LRxhniChJZTBgd6ph5yBxLkN1fcnsnmicBNA4S/3nbw==}
 
   '@lit-labs/ssr-dom-shim@1.6.0':
     resolution: {integrity: sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ==}
@@ -299,6 +308,9 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
+  sortablejs@1.15.7:
+    resolution: {integrity: sha512-Kk8wLQPlS+yi1ZEf48a4+fzHa4yxjC30M/Sr2AnQu+f/MPwvvX9XjZ6OWejiz8crBsLwSq8GHqaxaET7u6ux0A==}
+
   source-map-js@1.2.2:
     resolution: {integrity: sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==}
     engines: {node: '>=0.10.0'}
@@ -354,6 +366,8 @@ packages:
         optional: true
 
 snapshots:
+
+  '@fontsource/lato@5.2.7': {}
 
   '@lit-labs/ssr-dom-shim@1.6.0': {}
 
@@ -561,6 +575,8 @@ snapshots:
       '@rolldown/binding-openharmony-arm64': 1.2.14
       '@rolldown/binding-win32-arm64-msvc': 1.2.14
       '@rolldown/binding-win32-x64-msvc': 1.2.14
+
+  sortablejs@1.15.7: {}
 
   source-map-js@1.2.2: {}
 

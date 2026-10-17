@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const source=fs.readFileSync(path.join(__dirname,'../src/panel_web/updates.js'),'utf8');
-const {stableOffer}=require('../src/panel_web/updates.js');
+const {stableOffer,releaseOffer}=require('../src/panel_web/updates.js');
 function ui(state,postError=false,confirmation=true){
  const elements={},requests=[],reloads=[];
  const ctx={document:{getElementById:id=>elements[id]??=( {textContent:'',hidden:false,disabled:false,checked:true} )},
@@ -16,6 +16,17 @@ test('only an actual stable version can produce an offer',()=>{
  assert.equal(stableOffer(stable()),true);
  for(const version of ['0.7.0-beta.4','v0.7.0','0.7','01.7.0','','<script>'])assert.equal(stableOffer({...stable(),version}),false);
  assert.equal(stableOffer({...stable(),available:false}),false);
+});
+test('beta is an explicitly labelled opt-in channel offer, installed only after confirmation',async()=>{
+ const state={...stable(),channel:'all',version:'0.7.0-beta.5',beta:true};
+ assert.equal(releaseOffer(state),true);assert.equal(releaseOffer({...state,channel:'stable'}),false);
+ assert.equal(releaseOffer({...state,beta:false}),false);
+ for(const version of ['0.7.0-beta.05','0.7.0-beta','0.7.0-unknown.1','<beta>'])assert.equal(releaseOffer({...state,version}),false);
+ const view=ui(state);await view.ctx.EcoUpdates.load();
+ assert.match(view.elements['update-latest'].textContent,/BETA/);assert.match(view.elements['update-status'].textContent,/testowe/);
+ assert.equal(view.requests.filter(r=>r.payload).length,0);
+ await view.elements['update-install'].onclick();
+ assert.equal(view.requests.filter(r=>r.url==='/api/updates/install').length,1);
 });
 test('opening updater and refreshing never installs anything',async()=>{
  const view=ui({...stable(),available:false,version:'',phase:'no_stable_release'});await view.ctx.EcoUpdates.load();

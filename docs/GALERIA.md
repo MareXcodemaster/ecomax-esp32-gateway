@@ -1,6 +1,6 @@
 # Jak Wyglada Panel ecoMAX Wi-Fi
 
-Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.4**, uruchomionego
+Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.5**, uruchomionego
 lokalnie z **danymi przykladowymi (DEMO)**. Nie jest to potwierdzenie
 obslugi kazdej nastawy w dowolnym kotle.
 Kliknij zdjecie, aby je powiekszyc w GitHubie.
@@ -40,7 +40,20 @@ wysylano polecenia do zadnego kotla.
 
 ![Okno ustawiania temperatury CWU, bez wykonania zapisu](images/panel/05-nastawa.png)
 
-## Telefon
+## Poziom Pelletu
+
+Graficzny zasobnik z procentami z kotla. Brak danych nie oznacza 0%.
+
+![Graficzny poziom pelletu, dane DEMO](images/panel/07-pellet.png)
+
+## Wlasna Kolejnosc Kafelkow
+
+Przycisk edycji ukladu, przeciaganie myszka lub dotykiem i przywracanie
+domyslnej kolejnosci. Kazda przegladarka zapamietuje wlasny uklad.
+
+![Zmiana ukladu kafelkow, dane DEMO](images/panel/08-uklad-kafelkow.png)
+
+## Panel Na Telefonie
 
 Ten sam panel na ekranie telefonu; menu boczne jest zwijane.
 

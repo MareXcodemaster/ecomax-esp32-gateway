@@ -7,6 +7,12 @@ components that are not linked in this particular build.
 
 ## Firmware Dependencies
 
+- **SortableJS 1.15.7**, MIT: touch and mouse tile reordering, bundled locally.
+  https://github.com/SortableJS/Sortable/tree/1.15.7
+- **Lato**, packaged by @fontsource/lato 5.2.7, SIL Open Font License 1.1.
+  Latin and Latin-ext subsets are bundled locally; full notices are included
+  in `LICENSES/installer`. https://github.com/fontsource/fontsource
+
 - **ESP-IDF 5.5.0**, supplied by PlatformIO Espressif32 6.12.0. Espressif
   code is generally Apache-2.0; bundled FreeRTOS, lwIP, mbedTLS, radio blobs
   and other components retain their individual license/notice files.

@@ -2,6 +2,17 @@
 
 ## Codzienna Obsluga
 
+Kolejnosc kafelkow w Danych biezacych mozesz zmienic przyciskiem
+**Edytuj uklad** (symbol siatki). Przeciagnij uchwyt wybranego kafelka
+myszka lub przytrzymaj go palcem. Uchwyt obsluguje tez strzalki klawiatury.
+Przycisk powrotu przywraca domyslny uklad. Kolejnosc zapisuje sie tylko
+w tej przegladarce, osobno na kazdym telefonie/tablecie. Usuniecie danych
+przegladarki usuwa wlasny uklad; nie zmienia to zadnych nastaw kotla.
+
+Zakladka Pellet pokazuje graficzny poziom i procent podawany przez kociol.
+Brak aktualnego odczytu jest oznaczony znakiem zapytania, nie zerem.
+To nie jest niezalezny czujnik ani pomiar masy pelletu.
+
 Panel otwierasz z telefonu/tabletu w tej samej sieci co ESP. Po zalogowaniu
 wybierasz transport odczytu/zapisu. Brak aktualnego odczytu ma blokowac
 edycje, a nie pokazywac zapamietana wartosc jako aktualna.

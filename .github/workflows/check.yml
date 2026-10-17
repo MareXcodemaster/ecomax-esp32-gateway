@@ -43,6 +43,8 @@ jobs:
           pnpm test:browser
       - name: Check final website and images
         run: python tools/audit_release.py
+      - name: Panel mouse, touch, layout persistence and pellet browser tests
+        run: node tools/capture_panel.mjs
       - name: Wi-Fi scan phone configuration browser tests
         run: node tests/wifi_scan_browser.mjs
       - uses: actions/upload-artifact@v4
