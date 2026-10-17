@@ -42,6 +42,8 @@
   const sorter=new Sortable(container,{animation:120,handle:'.tile-grip',disabled:true,delay:180,delayOnTouchOnly:true,touchStartThreshold:4,ghostClass:'tile-ghost',onStart:()=>{dragging=true;},onEnd:()=>{dragging=false;persist();}});
   toggle.onclick=()=>{
    editing=!editing;container.classList.toggle('editing-layout',editing);toggle.setAttribute('aria-pressed',String(editing));reset.hidden=!editing;sorter.option('disabled',!editing);
+   document.getElementById('tile-layout-edit-label').textContent=editing?'Gotowe':'Kafelki';
+   toggle.title=editing?'Zako\u0144cz edycj\u0119 kafelk\u00f3w':'Edytuj uk\u0142ad kafelk\u00f3w';toggle.setAttribute('aria-label',toggle.title);
    for(const handle of container.querySelectorAll('.tile-grip'))handle.hidden=!editing;
    document.getElementById('tile-layout-status').textContent='';
   };

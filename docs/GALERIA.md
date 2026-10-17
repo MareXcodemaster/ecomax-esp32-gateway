@@ -1,6 +1,6 @@
 # Jak Wyglada Panel ecoMAX Wi-Fi
 
-Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.6**, uruchomionego
+Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.7**, uruchomionego
 lokalnie z **danymi przykladowymi (DEMO)**. Nie jest to potwierdzenie
 obslugi kazdej nastawy w dowolnym kotle.
 Kliknij zdjecie, aby je powiekszyc w GitHubie.
@@ -59,7 +59,14 @@ Ten sam panel na ekranie telefonu; menu boczne jest zwijane.
 
 ![Panel w widoku telefonu, dane przykladowe](images/panel/06-telefon.png)
 
-## Instalacja
+## Narzedzia Panelu
+
+Podpisane przyciski Kafelki i Odswiez oraz menu z nazwami pozostalych funkcji.
+Wyloguj jest ostatnia pozycja, oddzielona od narzedzi.
+
+![Nazwane narzedzia i Wyloguj na koncu listy](images/panel/09-narzedzia.png)
+
+## Instalacja I Sprzet
 
 Oba modele **Waveshare ESP32-S3-RS485-CAN** i **ESP32-S3-RS485-CAN-U**
 (antena zewnetrzna) uzywaja tego samego firmware, 16 MB flash / 8 MB PSRAM.

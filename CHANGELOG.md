@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0-beta.7 - 2026-10-17
+
+- Podpisane szybkie akcje Kafelki i Odswiez oraz rozwijane Narzedzia.
+- Nazwy funkcji zamiast szeregu anonimowych ikon; Wyloguj na koncu listy.
+- Obsluga Escape, klawiatury, zamykania poza menu i ekranow od 320 px.
+- Dziewiaty zrzut w galerii i instrukcja uporzadkowanego paska.
+- Bez zmian komunikacji, nastaw kotla, logowania i zachowania wylogowania.
+
 ## 0.7.0-beta.6 - 2026-10-17
 
 - Przywrocona zielona kolorystyka panelu zgodnie z wyborem uzytkownika.

@@ -64,6 +64,7 @@ const server = createServer(async (req, res) => {
     const data = url.pathname === '/api/session' ? { csrf: state.csrf }
       : url.pathname === '/api/state' ? state
       : url.pathname === '/api/panel/clock' ? { ok: true }
+      : url.pathname === '/api/logout' ? { ok: true }
       : url.pathname === '/api/history' ? history
       : url.pathname === '/api/updates' ? { current: version, phase: 'no_stable_release', automatic: true, available: false, install_supported: true }
       : null;
@@ -107,7 +108,23 @@ try {
     assert.deepEqual(errors, []);
     await page.screenshot({ path: `${output}/${name}.png` });
   };
+  const tools=page.locator('#panel-tools'),summary=tools.locator('summary');
+  const resetLayout=async()=>{await summary.click();await page.locator('#tile-layout-reset').click();assert.equal(await tools.getAttribute('open'),null,'action closes the tools menu');};
   await screenshot('01-odczyty');
+  const beforeMenu=requests.filter(([method])=>method!=='GET').length;
+  await summary.click();
+  assert.equal(await tools.locator('.tools-list > :last-child').getAttribute('id'),'esp-logout');
+  assert.equal(await page.locator('#esp-logout').innerText(),'Wyloguj');
+  assert.equal(await page.locator('#scan').innerText(),'Sprawd\u017a API i katalog');
+  await screenshot('09-narzedzia');
+  await page.keyboard.press('Escape');assert.equal(await tools.getAttribute('open'),null);
+  assert.equal(await summary.evaluate(el=>document.activeElement===el),true,'Escape restores summary focus');
+  await summary.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'scan');
+  await page.keyboard.press('End');assert.equal(await page.evaluate(()=>document.activeElement.id),'esp-logout');
+  await page.keyboard.press('ArrowDown');assert.equal(await page.evaluate(()=>document.activeElement.id),'scan');
+  await page.keyboard.press('Escape');
+  await summary.click();await page.locator('#read-time').click();assert.equal(await tools.getAttribute('open'),null,'outside click closes menu');
+  assert.equal(requests.filter(([method])=>method!=='GET').length,beforeMenu,'opening and navigating the menu never sends commands');
   const aligned=await page.locator('[data-member="fuelLevel"]').evaluate(tile=>{
     const gauge=tile.querySelector('.pellet-gauge').getBoundingClientRect(),value=tile.querySelector('.tile-value').getBoundingClientRect();
     return Math.abs(gauge.x+gauge.width/2-value.x-value.width/2)<1&&gauge.bottom<=value.top;
@@ -124,7 +141,7 @@ try {
   await screenshot('08-uklad-kafelkow');
   await page.reload();await page.locator('.eco-tile').first().waitFor();
   assert.deepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),customOrder,'order survives reload and fresh data');
-  await page.locator('#tile-layout-edit').click();await page.locator('#tile-layout-reset').click();
+  await page.locator('#tile-layout-edit').click();await resetLayout();
   assert.deepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),originalOrder);
   await page.locator('#tile-layout-edit').click();
   await page.evaluate(() => notice('DEMO - dane przykladowe, nie odczyt prawdziwego kotla.'));
@@ -161,6 +178,13 @@ try {
   await page.locator('#temperature-cancel').click();
   await page.setViewportSize({ width: 390, height: 844 });
   await screenshot('06-telefon');
+  for(const width of [320,390]){
+    await page.setViewportSize({width,height:844});await summary.click();
+    const menuBox=await tools.locator('.tools-list').boundingBox();
+    assert.ok(menuBox.x>=0&&menuBox.x+menuBox.width<=width&&menuBox.y+menuBox.height<=844,'tools menu fits phone viewport '+JSON.stringify({width,menuBox}));
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'named toolbar fits phone');
+    await page.keyboard.press('Escape');
+  }
   assert.equal(await page.locator('[data-member="fuelLevel"]').evaluate(tile=>{
     const gauge=tile.querySelector('.pellet-gauge').getBoundingClientRect(),value=tile.querySelector('.tile-value').getBoundingClientRect();
     return Math.abs(gauge.x+gauge.width/2-value.x-value.width/2)<1&&gauge.bottom<=value.top;
@@ -174,13 +198,16 @@ try {
   for(let step=1;step<=12;step++)await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+(tx-x)*step/12,y:y+(ty-y)*step/12}]});
   await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   assert.notDeepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),originalOrder,'touch drag changes order');
-  await page.locator('#tile-layout-reset').click();
+  await resetLayout();
   const first=page.locator('.tile-grip').first();await first.focus();await page.keyboard.press('ArrowRight');
   assert.notDeepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),originalOrder,'keyboard sorting works on a narrow viewport');
-  await page.locator('#tile-layout-reset').click();
+  await resetLayout();
   assert.deepEqual(external, [], 'no private device or external network accessed');
-  assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock']]);
-  console.log('PASS eight panel screenshots: ordering persisted/reset, pellet empty/full/missing/stale, no device access or boiler writes, charts nonblank, desktop/mobile fit.');
+  await summary.click();await page.locator('#esp-logout').click();
+  await page.locator('#esp-login').waitFor({state:'visible'});
+  assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
+  assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
+  console.log('PASS nine panel screenshots: named tools, logout last, keyboard/Escape/outside close, no implicit commands, ordering persisted/reset, pellet empty/full/missing/stale, charts nonblank, 320/390/1280px fit.');
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

@@ -2,6 +2,13 @@
 
 ## Codzienna Obsluga
 
+Gorny pasek: **Kafelki** wlacza edycje ukladu (przycisk zmienia sie na
+**Gotowe**), **Odswiez** pobiera aktualne dane. **Narzedzia** rozwija liste:
+sprawdzenie API i katalogu, raport JSON, diagnostyka/OTA i przywrocenie
+ukladu podczas jego edycji. **Wyloguj** jest na koncu listy.
+Menu mozna zamknac kliknieciem poza nim lub Escape; obsluguje tez Tab
+i strzalki klawiatury. Samo otwarcie menu niczego nie wysyla do kotla.
+
 Kolejnosc kafelkow w Danych biezacych mozesz zmienic przyciskiem
 **Edytuj uklad** (symbol siatki). Przeciagnij uchwyt wybranego kafelka
 myszka lub przytrzymaj go palcem. Uchwyt obsluguje tez strzalki klawiatury.

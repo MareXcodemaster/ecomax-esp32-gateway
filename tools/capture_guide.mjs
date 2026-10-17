@@ -50,7 +50,7 @@ try {
   await panel.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});
   await panel.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});
   await panel.evaluate(()=>{
-    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.6',version:'0.7.0-beta.6',channel:'all',beta:true,phase:'up_to_date',automatic:true,available:false,install_supported:true});
+    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.7',version:'0.7.0-beta.7',channel:'all',beta:true,phase:'up_to_date',automatic:true,available:false,install_supported:true});
     EcoUpdates.init();lucide.createIcons();return EcoUpdates.load();
   });
   await panel.locator('.update-panel').screenshot({path:'docs/images/04-aktualizacje.png'});
