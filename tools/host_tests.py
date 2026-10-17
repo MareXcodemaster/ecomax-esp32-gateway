@@ -28,6 +28,7 @@ def main():
                    '-I' + str(ROOT / 'src'), '-I' + str(ROOT / 'tests/host'),
                    '-I' + str(cjson), '-I' + str(generated), str(ROOT / 'src/protocol.cpp'),
                    str(ROOT / 'src/device_access.cpp'), str(ROOT / 'tests/host/access.cpp'),
+                   str(ROOT / 'tests/host/diagnostics.cpp'),
                    str(ROOT / 'tests/host/main.cpp'), '-x', 'c++', str(cjson / 'cJSON.c'), '-o', str(executable)]
         if os.name != 'nt':
             command += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer']

@@ -10,6 +10,7 @@
 #include <cassert>
 #include <cstdio>
 void access_tests();
+void diagnostics_tests();
 
 int main() {
     assert(update_manifest::newer("0.7.0","0.7.0-beta.3"));
@@ -86,6 +87,7 @@ int main() {
     assert(identity_guard::decide("", "bad input", true) == Action::reject);
     assert(identity_guard::decide("", "", true) == Action::reject);
     protocol::init();
+    diagnostics_tests();
     for (const auto* frame : {protocol_fixtures::frame_213, protocol_fixtures::frame_8,
                             protocol_fixtures::frame_177, protocol_fixtures::frame_178, protocol_fixtures::frame_212}) {
         const size_t length = frame[1] | (frame[2] << 8);

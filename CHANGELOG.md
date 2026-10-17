@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0-beta.14 - 2026-10-17
+
+- Diagnostyka RS485: nazwy i opisy typow 10, 106, 107, 137, 185, 192, 234 i 235.
+- Czytelny podglad czasu, modelu i temperatur z ramki ecoSTER, identyfikacji kotla oraz wersji i dat kompilacji modulow.
+- Osobne oznaczenie Czesciowo rozpoznane: brakujace znaczenie pol pozostaje jawne, surowe dane sa zachowane w szczegolach.
+- Otwarty podglad odswieza sie wraz z tabela, bez nowych zapytan RS485; zamkniecie zatrzymuje pobieranie podgladu.
+- Testy granic, dat, wersji struktur i blednych ramek oraz widoku telefonu i komputera. Bez zmian schematu, tla i polecen zapisu.
+
 ## 0.7.0-beta.13 - 2026-10-17
 
 - Widoczny przycisk Wroc do panelu w naglowku diagnostyki, dostepny rowniez po przewinieciu strony.

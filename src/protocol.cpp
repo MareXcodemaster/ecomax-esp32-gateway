@@ -29,7 +29,7 @@ struct Schema {
     uint16_t version = 0; bool bound = false, recorded = false;
 };
 struct Outcome { const char *state = "reference_only"; unsigned fields = 0; };
-struct Counts { uint64_t decoded = 0, failed = 0; const char *state = "not_seen"; unsigned fields = 0; };
+struct Counts { uint64_t decoded = 0, partial = 0, failed = 0; const char *state = "not_seen"; unsigned fields = 0; };
 static Schema schema;
 static Counts counts[256];
 static uint16_t latest_version = 0; static bool version_seen = false;
@@ -52,12 +52,153 @@ const char *extra_name(unsigned type) {
         case 223: return "THERMOSTAT_STRUCTURE_REPLY"; default: return nullptr;
     }
 }
-const char *name(unsigned type) { auto *value = reference_name(type); return value ? value : extra_name(type); }
-const char *origin(unsigned type) { return reference_name(type) ? "PyPlumIO_033c15781" : extra_name(type) ? "ecoNET_reference_gist" : "not_documented"; }
+const char *observed_name(unsigned type) {
+    switch(type) {
+        case 10: return "OBSERVED_EMPTY_QUERY";
+        case 106: return "OBSERVED_ECOISM_EXCHANGE";
+        case 107: return "OBSERVED_ECOISM_CONTROLLER_INFO";
+        case 137: return "PANEL_TIME_AND_THERMOSTAT_DATA";
+        case 234: return "OBSERVED_ECOISM_EXCHANGE_REPLY";
+        case 235: return "OBSERVED_ECOISM_DATA_REPLY";
+        default: return nullptr;
+    }
+}
+const char *label(unsigned type) {
+    switch(type) {
+        case 10: return "Krotkie zapytanie bez danych";
+        case 106: return "Panel do modulu ecoISM";
+        case 107: return "Informacje kotla dla ecoISM";
+        case 137: return "Czas i dane panelu / termostatu";
+        case 185: return "Identyfikacja kotla";
+        case 192: return "Wersje oprogramowania modulow";
+        case 234: return "Odpowiedz ecoISM do panelu";
+        case 235: return "Dane zwrotne modulu ecoISM";
+        default: return nullptr;
+    }
+}
+const char *note(unsigned type) {
+    switch(type) {
+        case 10: return "Ramka nie zawiera danych. W obserwowanym ruchu po niej panel wysyla czas. Dokladna funkcja zapytania nie jest potwierdzona.";
+        case 106: case 234: return "Wymiana panelu z ecoISM (0x59), modulem lacznosci radiowej termostatu. Odpowiedz powtarza piec bajtow zapytania; ich znaczenie i pozostale pola nie sa potwierdzone.";
+        case 107: return "Kociol przekazuje do ecoISM model i wersje oprogramowania. Pozostale pola pozostaja nieopisane.";
+        case 137: return "Czas urzadzenia oraz, w wariancie ecoSTER, nazwa termostatu i temperatury. Nie wszystkie pola i warianty ramki maja potwierdzone znaczenie.";
+        case 185: return "Model, identyfikator UID i identyfikatory grafik kotla. To nie jest komunikat alarmowy.";
+        case 192: return "Lista modulow z wersjami oprogramowania, wersjami struktur i datami kompilacji, jesli sa przeslane.";
+        case 235: return "Odpowiedz modulu ecoISM (0x59). Znaczenie poszczegolnych wartosci nie jest potwierdzone; nie sa traktowane jako temperatury ani nastawy.";
+        default: return nullptr;
+    }
+}
+const char *name(unsigned type) { auto *value = reference_name(type); if(value)return value; value=extra_name(type); return value?value:observed_name(type); }
+const char *origin(unsigned type) { return reference_name(type) ? "PyPlumIO_033c15781" : extra_name(type) ? "ecoNET_reference_gist" : type==137 ? "econetanalyze_ecoster" : observed_name(type) ? "observed_bus_traffic" : "not_documented"; }
 void number(cJSON *out, const char *key, double value) { if (out) cJSON_AddNumberToObject(out, key, value); }
 void boolean(cJSON *out, const char *key, bool value) { if (out) cJSON_AddBoolToObject(out, key, value); }
 cJSON *object(cJSON *array) { if (!array) return nullptr; auto *out = cJSON_CreateObject(); cJSON_AddItemToArray(array, out); return out; }
 cJSON *array(cJSON *out, const char *key) { return out ? cJSON_AddArrayToObject(out, key) : nullptr; }
+void text(cJSON *out,const char *key,const char *value) { if(out)cJSON_AddStringToObject(out,key,value); }
+const char *device(unsigned address) {
+    switch(address) {
+        case 0: return "Wszystkie urzadzenia"; case 0x45: return "Sterownik kotla";
+        case 0x50: return "Panel kotla"; case 0x51: return "ecoSTER 1";
+        case 0x57: return "ecoSTER 2"; case 0x58: return "ecoSTER 3";
+        case 0x59: return "ecoISM / modul radiowy"; case 0x56: return "ecoNET / bramka";
+        case 0x04: return "Modul lambda"; case 0x52: return "Modul B"; case 0x53: return "Modul C";
+        default: return "Nieopisane urzadzenie";
+    }
+}
+void hex(cJSON *out,const char *key,const uint8_t *data,size_t size) {
+    if(!out)return;
+    char value[2001]; if(size>1000)return;
+    for(size_t i=0;i<size;++i)snprintf(value+i*2,3,"%02X",data[i]);
+    value[size*2]=0; text(out,key,value);
+}
+bool ascii(cJSON *out,const char *key,const uint8_t *data,size_t size) {
+    if(!data||!size||size>63)return false;
+    char value[64];
+    for(size_t i=0;i<size;++i) { if(data[i]<32||data[i]>126)return false; value[i]=data[i]; }
+    value[size]=0; text(out,key,value); return true;
+}
+void unknown(cJSON *out,const uint8_t *payload,size_t offset,size_t size) {
+    auto *items=out?cJSON_GetObjectItemCaseSensitive(out,"unknown_fields"):nullptr;
+    if(!items)items=array(out,"unknown_fields");
+    auto *entry=object(items);
+    number(entry,"payload_offset",offset); number(entry,"length",size); hex(entry,"hex",payload+offset,size);
+}
+bool valid_date(unsigned year,unsigned month,unsigned day,unsigned hour,unsigned minute,unsigned second) {
+    const unsigned days[]={31,28,31,30,31,30,31,31,30,31,30,31};
+    bool leap=year%4==0&&(year%100!=0||year%400==0);
+    return year>=2000&&year<=9999&&month>=1&&month<=12&&day>=1&&day<=days[month-1]+(month==2&&leap?1:0)&&hour<24&&minute<60&&second<60;
+}
+bool panel_time(Reader &r,unsigned source,cJSON *out,unsigned &fields) {
+    auto *marker=r.take(4); if(!marker||memcmp(marker,"TIME",4))return false;
+    unsigned hour=r.u8(),minute=r.u8(),second=r.u8(),year=r.u16(),month=r.u8(),day=r.u8(),weekday=r.u8();
+    if(!r.ok||!valid_date(year,month,day,hour,minute,second)||weekday>7)return false;
+    char value[24]; snprintf(value,sizeof(value),"%04u-%02u-%02u %02u:%02u:%02u",year,month,day,hour,minute,second);
+    text(out,"device_time",value); number(out,"weekday_raw",weekday); fields=2;
+    if(source==0x51||source==0x57||source==0x58) {
+        r.take(4); uint32_t target_bits=r.u32(),current_bits=r.u32(); float target,current;
+        memcpy(&target,&target_bits,4); memcpy(&current,&current_bits,4);
+        if(!r.ok||!std::isfinite(target)||!std::isfinite(current))return false;
+        number(out,"target_temperature",target); number(out,"room_temperature",current); fields+=2;
+        r.take(8); size_t start=r.at;
+        while(r.ok&&r.at<r.size&&r.data[r.at])r.take(1);
+        if(!r.ok||r.at==r.size||!ascii(out,"model",r.data+start,r.at-start))return false;
+        r.take(1); ++fields;
+        unknown(out,r.data,12,4); unknown(out,r.data,24,8);
+    }
+    if(r.at<r.size)unknown(out,r.data,r.at,r.size-r.at);
+    r.at=r.size; return true;
+}
+bool product_info(Reader &r,cJSON *out) {
+    unsigned type=r.u8(),id=r.u16(),size=r.u8();
+    if(!r.ok||!size||size>16)return false;
+    auto *uid=r.take(size); if(!uid)return false;
+    uint8_t bytes[18]{}; memcpy(bytes,uid,size); uint16_t crc=0xa3a3;
+    for(unsigned i=0;i<size;++i) { crc^=bytes[i]; for(unsigned bit=0;bit<8;++bit)crc=crc&1?(crc>>1)^0xa001:crc>>1; }
+    bytes[size]=crc; bytes[size+1]=crc>>8;
+    const char alphabet[]="0123456789ABCDEFGHIJKLMNZPQRSTUV"; char encoded[30]{}; unsigned count=0;
+    for(int group=((size+2)*8+4)/5-1;group>=0;--group) {
+        unsigned value=0; for(unsigned bit=0;bit<5;++bit) { unsigned pos=group*5+bit; if(pos<(size+2)*8)value|=((bytes[pos/8]>>(pos%8))&1)<<bit; }
+        if(value||count)encoded[count++]=alphabet[value];
+    }
+    text(out,"uid",encoded); number(out,"product_type",type); number(out,"product_id",id);
+    number(out,"logo_id",r.u16()); number(out,"image_id",r.u16()); unsigned model_size=r.u8();
+    return ascii(out,"model",r.take(model_size),model_size)&&r.done();
+}
+bool module_versions(Reader &r,cJSON *out,unsigned &fields) {
+    auto *items=array(out,"modules");
+    while(r.ok&&r.at<r.size) {
+        if(fields>=16)return false;
+        unsigned version=0;
+        if(r.size-r.at>=2&&r.data[r.at]==255&&r.data[r.at+1]==255) { r.take(2); version=r.u8(); }
+        constexpr unsigned sizes[]={31,31,32,33,32,12};
+        if(!r.ok||version>5)return false;
+        auto *p=r.take(sizes[version]); if(!p)return false;
+        unsigned address=p[sizes[version]-1],hardware_at=version==3?6:5;
+        unsigned software_at=version==3?8:(version==0||version==1)?6:7;
+        unsigned hw=p[hardware_at];
+        if(version>=2&&p[hardware_at+1])hw=p[hardware_at+1];
+        unsigned minor=(hw>>4)*10+(hw&15);
+        auto *entry=object(items); number(entry,"address",address); text(entry,"device",device(address));
+        number(entry,"structure_version",version); number(entry,"device_id_raw",p[0]|(p[1]<<8));
+        hex(entry,"processor_signature",p+2,version==3?4:3);
+        char value[24];
+        if(version==5) {
+            // PyPlumIO v5 carries three uint16 software components, not legacy HW/SW/BW.
+            snprintf(value,sizeof(value),"%u.%u.%u",p[5]|(p[6]<<8),p[7]|(p[8]<<8),p[9]|(p[10]<<8));
+        } else {
+            hex(entry,"hardware_bytes",p+hardware_at,version>=2?2:1);
+            snprintf(value,sizeof(value),"%u.%u.%u",p[software_at+1],minor,p[software_at]);
+            number(entry,"bootloader_raw",p[software_at+2]|(p[software_at+3]<<8));
+        }
+        text(entry,"software",value);
+        if(version!=5) {
+            unsigned date_at=version==3?12:(version==0||version==1)?10:11;
+            if(!ascii(entry,"build_date",p+date_at,20))return false;
+        }
+        ++fields;
+    }
+    return fields>0&&r.done();
+}
 
 void alert_date(cJSON *out,const char *key,uint32_t seconds) {
     // Controller dates use twelve 31-day months, not Unix seconds.
@@ -178,6 +319,37 @@ Outcome decode(const uint8_t *raw, size_t length, const Schema &context, cJSON *
             number(out, "schema_version", version); boolean(out, "recorded_schema", context.recorded);
             break;
         }
+        case 10:
+            if(raw[4]!=69||r.size)return {"payload_mismatch"};
+            number(out,"payload_bytes",0); return {"partial",0};
+        case 106: case 234: {
+            bool request=type==106;
+            if(raw[4]!=(request?0x50:0x59)||raw[3]!=(request?0x59:0x50)||r.size!=(request?5U:14U))return {"payload_mismatch"};
+            hex(out,"repeated_bytes",r.take(5),5);
+            if(r.at<r.size)unknown(out,r.data,r.at,r.size-r.at);
+            return {"partial",1};
+        }
+        case 107: {
+            if(raw[4]!=69||raw[3]!=0x59||r.u8()!=1)return {"payload_mismatch"};
+            unsigned major=r.u8(),minor=r.u8(),patch=r.u8(),model_size=r.u8();
+            if(!ascii(out,"model",r.take(model_size),model_size))return {"payload_mismatch"};
+            char value[24]; snprintf(value,sizeof(value),"%u.%u.%u",major,minor,patch); text(out,"software_observed",value);
+            unknown(out,r.data,0,1);
+            if(r.at<r.size)unknown(out,r.data,r.at,r.size-r.at);
+            return {"partial",2};
+        }
+        case 137:
+            if(!panel_time(r,raw[4],out,fields))return {"payload_mismatch"};
+            return {"partial",fields};
+        case 185:
+            if(!product_info(r,out))return {"payload_mismatch"};
+            fields=6; break;
+        case 192:
+            if(!module_versions(r,out,fields))return {"payload_mismatch"};
+            break;
+        case 235:
+            if(raw[4]!=0x59||!r.size)return {"payload_mismatch"};
+            unknown(out,r.data,0,r.size); return {"partial",0};
         case 53: {
             plum::Sensors sensors;
             if (!plum::decode_sensors(raw+8, length-10, sensors)) return {"payload_mismatch"};
@@ -389,6 +561,7 @@ void receive(const uint8_t *raw, size_t length) {
     auto context = context_copy(); auto result = decode(raw, length, context, nullptr);
     Lock lock; auto &entry = counts[raw[7]]; entry.state = result.state; entry.fields = result.fields;
     if (!strcmp(result.state, "decoded")) ++entry.decoded;
+    if (!strcmp(result.state, "partial")) ++entry.partial;
     if (!strcmp(result.state, "payload_mismatch")) ++entry.failed;
     if (raw[4] != 69) return;
     if (raw[7] == 8 || raw[7] == 53) {
@@ -404,16 +577,24 @@ void add_stats(cJSON *item, unsigned type) {
     Counts entry; { Lock lock; entry = counts[type]; }
     if (auto *value = name(type)) cJSON_AddStringToObject(item, "name", value); else cJSON_AddNullToObject(item, "name");
     cJSON_AddStringToObject(item, "name_source", origin(type));
+    if(auto *value=label(type))text(item,"label",value);
+    if(auto *value=note(type))text(item,"description",value);
     cJSON_AddStringToObject(item, "decode_state", entry.state);
     cJSON_AddBoolToObject(item, "decoded", !strcmp(entry.state, "decoded"));
-    number(item, "decoded_frames", entry.decoded); number(item, "decode_errors", entry.failed); number(item, "field_count", entry.fields);
+    number(item, "decoded_frames", entry.decoded); number(item,"partial_frames",entry.partial);
+    number(item, "decode_errors", entry.failed); number(item, "field_count", entry.fields);
 }
 cJSON *describe(const uint8_t *raw, size_t length) {
     auto *root = cJSON_CreateObject(); auto *data = cJSON_CreateObject(); if (!root || !data) { cJSON_Delete(root); cJSON_Delete(data); return nullptr; }
     auto context = context_copy(); auto result = decode(raw, length, context, data);
     cJSON_AddStringToObject(root, "state", result.state);
     number(root, "field_count", result.fields);
-    if (!strcmp(result.state, "decoded")) cJSON_AddItemToObject(root, "data", data); else cJSON_Delete(data);
+    if(length>=10) {
+        if(auto *value=label(raw[7]))text(root,"label",value);
+        if(auto *value=note(raw[7]))text(root,"description",value);
+        text(root,"source_name",device(raw[4])); text(root,"destination_name",device(raw[3]));
+    }
+    if (!strcmp(result.state, "decoded")||!strcmp(result.state,"partial")) cJSON_AddItemToObject(root, "data", data); else cJSON_Delete(data);
     return root;
 }
 bool self_test() {

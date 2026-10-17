@@ -50,6 +50,14 @@ Otwarcie okna nie zapisuje niczego; skan wymaga nacisniecia Wyszukaj sieci.
 **Narzedzia > Ustawienia ESP Wi-Fi** pokazuje SSID, IP, sygnal i formularz
 zmiany nazwy `piec.local`. Nie jest to strona sieci modulu ecoNET.
 
+## Odczyt Ramek RS485
+
+W **Narzedzia > Diagnostyka/OTA > RS485** tabela pokazuje nazwy i stan
+rozpoznania odebranych ramek. **Dane** otwiera odswiezany podglad temperatur,
+czasu, identyfikacji lub wersji modulow. **Czesciowo rozpoznane** oznacza,
+ze nie wszystkie pola maja potwierdzone znaczenie; nie oznacza alarmu kotla.
+Szczegoly HEX pozostaja dostepne. [Opis ramek i ograniczen](DIAGNOSTYKA.md).
+
 ## Schemat
 
 Graficzny podglad kotla, mieszacza 1, pokoju i CWU pokazuje temperatury

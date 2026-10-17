@@ -49,6 +49,8 @@ jobs:
         run: node tests/wifi_scan_browser.mjs
       - name: Diagnostics return navigation browser tests
         run: node tests/diagnostics_navigation.mjs
+      - name: Read-only frame inspector browser tests
+        run: node tests/diagnostics_frames.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: ecomax-esp32-gateway-public-beta
