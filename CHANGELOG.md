@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0-beta.6 - 2026-10-17
+
+- Przywrocona zielona kolorystyka panelu zgodnie z wyborem uzytkownika.
+- Zasobnik pelletu wysrodkowany dokladnie nad procentem w kafelku.
+- Test geometrii kafelka na komputerze i telefonie.
+- Przycisk edycji ukladu w glownym pasku, mniej pustych wierszy nad kafelkami.
+- Pozostale funkcje wersji beta.5 bez zmian.
+
 ## 0.7.0-beta.5 - 2026-10-17
 
 - Zmienna kolejnosc kafelkow: mysz, dotyk i klawiatura, lokalny zapis ukladu.

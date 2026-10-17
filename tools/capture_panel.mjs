@@ -99,12 +99,20 @@ try {
     return !el.closest('.tile-symbol') && label.bottom <= actual.top + 1;
   }));
   assert.deepEqual(targetLabels, [true, true, true], 'target labels stay with the setpoint and do not overlap measured temperature');
+  assert.equal(await page.locator('#tile-layout-edit').evaluate(el=>!!el.closest('.page-toolbar')),true,'layout action does not occupy its own row');
+  assert.equal(await page.locator('header').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(23, 107, 103)','green header restored');
+  assert.ok((await page.locator('.eco-tile').first().boundingBox()).y<460,'desktop tiles begin without excessive blank toolbar rows');
   const screenshot = async name => {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'panel fits viewport');
     assert.deepEqual(errors, []);
     await page.screenshot({ path: `${output}/${name}.png` });
   };
   await screenshot('01-odczyty');
+  const aligned=await page.locator('[data-member="fuelLevel"]').evaluate(tile=>{
+    const gauge=tile.querySelector('.pellet-gauge').getBoundingClientRect(),value=tile.querySelector('.tile-value').getBoundingClientRect();
+    return Math.abs(gauge.x+gauge.width/2-value.x-value.width/2)<1&&gauge.bottom<=value.top;
+  });
+  assert.equal(aligned,true,'pellet graphic and percent are centered on the same axis');
   const originalOrder=await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member));
   await page.locator('#tile-layout-edit').click();
   const start=await page.locator('.tile-grip').first().boundingBox(),end=await page.locator('.eco-tile').nth(2).boundingBox();
@@ -153,6 +161,10 @@ try {
   await page.locator('#temperature-cancel').click();
   await page.setViewportSize({ width: 390, height: 844 });
   await screenshot('06-telefon');
+  assert.equal(await page.locator('[data-member="fuelLevel"]').evaluate(tile=>{
+    const gauge=tile.querySelector('.pellet-gauge').getBoundingClientRect(),value=tile.querySelector('.tile-value').getBoundingClientRect();
+    return Math.abs(gauge.x+gauge.width/2-value.x-value.width/2)<1&&gauge.bottom<=value.top;
+  }),true,'mobile pellet graphic is centered above its percent');
   await page.locator('#tile-layout-edit').click();
   const touch=await page.context().newCDPSession(page);
   const from=await page.locator('.tile-grip').first().boundingBox(),to=await page.locator('.eco-tile').nth(1).boundingBox();
