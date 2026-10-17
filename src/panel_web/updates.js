@@ -50,12 +50,13 @@
    try{await request('/api/updates/check',{});}catch(error){operationError=error.message;}
    finally{saving=false;await load();}
   };
-  $('update-auto').onchange=async()=>{
+  const configure=async()=>{
    if(saving)return;const value=$('update-auto').checked;saving=true;operationError='';
    try{await request('/api/updates/config',{automatic:value,include_beta:$('update-channel').value==='all'});}
    catch(error){operationError=error.message;}
    finally{saving=false;await load();}
   };
+  $('update-auto').onchange=configure;$('update-channel').onchange=configure;
   $('update-install').onclick=async()=>{
    if(saving||!metadataReachable||!releaseOffer(data)||!data.install_supported)return;
    const version=data.version;

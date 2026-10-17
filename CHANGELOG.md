@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-beta.11 - 2026-10-17
+
+- Aktualizator przeglada kolejne strony wydan GitHuba, zamiast tylko pierwszych pieciu pozycji.
+- Wybiera najwyzsza zgodna wersje niezaleznie od kolejnosci listy; niepelny odczyt nie pokazuje Aktualne.
+- Limity stron, pamieci i czasu; zachowane TLS, SHA-256, kontrola projektu oraz brak samoczynnej instalacji.
+- Zmiana kanalu Stabilne i beta / Tylko stabilne zapisuje sie od razu, bez przelaczania automatycznych sprawdzen.
+
 ## 0.7.0-beta.10 - 2026-10-17
 
 - Graficzny schemat kotla, mieszacza i CWU z aktualnymi temperaturami i stanem pomp.

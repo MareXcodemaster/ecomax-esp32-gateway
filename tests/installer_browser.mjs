@@ -186,7 +186,7 @@ try {
       window.updateState={current:'0.7.0-beta.4',version:'0.7.0-beta.5',channel:'all',beta:true,available:true,install_supported:true,automatic:true,phase:'available',busy:false};
       window.request=async(url,payload)=>{
         window.updateRequests.push({url,payload});
-        if(url==='/api/updates/config')window.updateState.automatic=payload.automatic;
+        if(url==='/api/updates/config'){window.updateState.automatic=payload.automatic;window.updateState.channel=payload.include_beta?'all':'stable';}
         if(url==='/api/updates/install')window.updateState={...window.updateState,busy:true,phase:'downloading',received:1024,size:200000};
         return window.updateState;
       };
@@ -195,6 +195,13 @@ try {
     assert.equal(await page.evaluate(()=>window.updateRequests.filter(r=>r.payload).length),0);
     assert.equal(await page.locator('#update-install').isEnabled(),true);
     assert.match(await page.locator('#update-latest').textContent(),/BETA/);
+    await page.locator('#update-channel').selectOption('stable');
+    await page.waitForFunction(()=>window.updateState.channel==='stable');
+    assert.equal(await page.locator('#update-install').isVisible(),false);
+    assert.equal(await page.evaluate(()=>window.updateRequests.filter(r=>r.url==='/api/updates/config').length),1);
+    await page.locator('#update-channel').selectOption('all');
+    await page.waitForFunction(()=>window.updateState.channel==='all');
+    assert.equal(await page.locator('#update-install').isVisible(),true);
     await page.locator('#update-auto').uncheck();
     await page.waitForFunction(()=>window.updateState.automatic===false);
     await page.screenshot({path:`test-results/updates-${width}.png`,fullPage:true});

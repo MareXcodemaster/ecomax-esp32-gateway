@@ -10,8 +10,14 @@ w **Ustawienia urządzenia → Aktualizacje ESP z GitHuba**.
   **Tylko stabilne**. Wybor jest zapamietywany w ESP.
 - Beta ma oznaczenie **BETA** przy numerze i ostrzezenie przy instalacji.
   To wydanie testowe, ktore moze zawierac bledy.
-- Szkice wydan sa zawsze pomijane. W kanale laczonym sprawdzane jest
-  piec ostatnio opublikowanych wydan; wybierana jest najwyzsza zgodna wersja.
+- Szkice wydan sa zawsze pomijane. Od beta.11 w kanale laczonym odczytywane
+  sa kolejne strony listy, a nie tylko pierwszych piec pozycji. Wybierana
+  jest najwyzsza zgodna wersja, niezaleznie od kolejnosci na GitHubie.
+  Limit to 10 stron po 5 wydan i ograniczony czas; niepelna lista oznacza
+  blad sprawdzania, nie komunikat Aktualne. Starsze bety przegladaja tylko
+  pierwsza strone i moga nie zobaczyc wydania umieszczonego dalej.
+- Od beta.11 sam wybor kanalu zapisuje ustawienie; nie trzeba przelaczac
+  opcji automatycznego sprawdzania.
 - Automatyczne sprawdzanie raz na dobę jest domyślnie włączone.
   Możesz je wyłączyć; ustawienie jest zapamiętywane.
 - Po błędzie kolejna automatyczna próba sprawdzenia jest opóźniona do godziny.

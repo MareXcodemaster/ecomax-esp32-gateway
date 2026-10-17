@@ -96,4 +96,19 @@ inline bool select(const cJSON *root,Candidate &out,bool include_beta){
     cJSON_ArrayForEach(item,root){Candidate next;if(parse(item,next,include_beta)&&(!found||newer(next.version,out.version))){out=next;found=true;}}
     return found;
 }
+struct ReleasePages {
+    static constexpr unsigned page_size=5,max_pages=10;
+    Candidate best{};
+    unsigned page=1;
+    bool found=false,complete=false;
+    bool can_request() const { return !complete&&page<=max_pages; }
+    bool append(const cJSON *root) {
+        if(!can_request()||!cJSON_IsArray(root)||cJSON_GetArraySize(root)>static_cast<int>(page_size))return false;
+        Candidate next;
+        if(select(root,next,true)&&(!found||newer(next.version,best.version))){best=next;found=true;}
+        complete=cJSON_GetArraySize(root)<static_cast<int>(page_size);
+        ++page;
+        return true;
+    }
+};
 }

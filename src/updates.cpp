@@ -64,8 +64,8 @@ struct Stream {
         return esp_http_client_get_status_code(client);
     }
 };
-static int latest(Candidate &value,bool beta){
-    Stream stream;int code=stream.open(beta?"https://api.github.com/repos/MareXcodemaster/ecomax-esp32-gateway/releases?per_page=5":"https://api.github.com/repos/MareXcodemaster/ecomax-esp32-gateway/releases/latest");
+static int release_page(const char *url,Candidate &value,update_manifest::ReleasePages *pages){
+    Stream stream;int code=stream.open(url);
     if(code==404){value={};return 404;}
     if(code!=200)return code;
     constexpr size_t limit=196608;
@@ -78,9 +78,23 @@ static int latest(Candidate &value,bool beta){
     }
     if(used==limit||millis()>=deadline||!esp_http_client_is_complete_data_received(stream.client))ok=false;
     body[used]=0;auto *root=ok?cJSON_ParseWithLength(body,used+1):nullptr;
-    bool valid=root&&(beta?cJSON_IsArray(root):cJSON_IsObject(root));
-    ok=valid&&(beta?update_manifest::select(root,value,true):update_manifest::parse(root,value));cJSON_Delete(root);heap_caps_free(body);
-    return ok?200:valid&&beta?404:-2;
+    bool valid=root&&(pages?cJSON_IsArray(root):cJSON_IsObject(root));
+    ok=valid&&(pages?pages->append(root):update_manifest::parse(root,value));cJSON_Delete(root);heap_caps_free(body);
+    return ok?200:-2;
+}
+static int latest(Candidate &value,bool beta){
+    if(!beta)return release_page("https://api.github.com/repos/MareXcodemaster/ecomax-esp32-gateway/releases/latest",value,nullptr);
+    update_manifest::ReleasePages pages;
+    const uint64_t deadline=millis()+90000;
+    while(pages.can_request()){
+        if(millis()>=deadline)return -3;
+        char url[160];snprintf(url,sizeof(url),"https://api.github.com/repos/MareXcodemaster/ecomax-esp32-gateway/releases?per_page=%u&page=%u",pages.page_size,pages.page);
+        int code=release_page(url,value,&pages);if(code!=200)return code;
+    }
+    // GitHub's first page is not a guaranteed semantic-version ordering.
+    if(!pages.complete)return -3;
+    if(!pages.found)return 404;
+    value=pages.best;return 200;
 }
 static bool refresh(){
     xSemaphoreTake(mutex,portMAX_DELAY);bool beta=include_beta;xSemaphoreGive(mutex);
@@ -90,7 +104,7 @@ static bool refresh(){
     if(code==200){candidate=value;available=update_manifest::newer(value.version,board::release_version);}
     xSemaphoreGive(mutex);
     if(code==404){status("no_release");return true;}
-    if(code!=200){status("error",code==403||code==429?"Limit zapytan GitHub. Sprobuj pozniej.":code==-2?"Nieprawidlowe metadane wydania.":"Nie mozna sprawdzic GitHuba przez HTTPS. Kociol dziala niezaleznie.");return false;}
+    if(code!=200){status("error",code==403||code==429?"Limit zapytan GitHub. Sprobuj pozniej.":code==-2?"Nieprawidlowe metadane wydania.":code==-3?"Nie odczytano calej listy wydan w limicie. Nie potwierdzono aktualnosci.":"Nie mozna sprawdzic GitHuba przez HTTPS. Kociol dziala niezaleznie.");return false;}
     status(available?"available":"up_to_date");return true;
 }
 static bool download(const Candidate &value){

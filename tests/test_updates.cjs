@@ -52,6 +52,21 @@ test('opening updater and refreshing never installs anything',async()=>{
  assert.equal(view.requests.filter(r=>r.payload).length,0);
  assert.match(view.elements['update-status'].textContent,/beta/);
 });
+test('changing release channel saves once without toggling automatic checks',async()=>{
+ const view=ui({...stable(),channel:'stable'});await view.ctx.EcoUpdates.load();
+ view.elements['update-channel'].value='all';view.elements['update-auto'].checked=false;
+ await view.elements['update-channel'].onchange();
+ const writes=view.requests.filter(r=>r.payload);
+ assert.equal(writes.length,1);assert.equal(writes[0].url,'/api/updates/config');
+ assert.equal(JSON.stringify(writes[0].payload),JSON.stringify({automatic:false,include_beta:true}));
+});
+test('failed channel save never retries a POST',async()=>{
+ const view=ui({...stable(),channel:'stable'},true);await view.ctx.EcoUpdates.load();
+ view.elements['update-channel'].value='all';await view.elements['update-channel'].onchange();
+ await view.ctx.EcoUpdates.load();
+ assert.equal(view.requests.filter(r=>r.url==='/api/updates/config').length,1);
+ assert.match(view.elements['update-status'].textContent,/Lost response/);
+});
 test('installation needs a stable offer, supported edition and confirmation',async()=>{
  for(const [state,confirm]of [[{...stable(),install_supported:false},true],[{...stable(),version:'0.8.0-beta.1'},true],[stable(),false]]){
   const view=ui(state,false,confirm);await view.ctx.EcoUpdates.load();await view.elements['update-install'].onclick();
