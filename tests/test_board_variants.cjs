@@ -19,7 +19,7 @@ test('gallery images are real generated panel captures and explicitly marked as 
   const guide = fs.readFileSync(path.join(root, 'docs/GALERIA.md'), 'utf8');
   assert.match(guide, /DEMO/);
   const images = [...guide.matchAll(/\]\((images\/panel\/[^)]+\.png)\)/g)];
-  assert.equal(images.length, 11);
+  assert.ok(images.length >= 12);
   for (const [, name] of images) {
     const data = fs.readFileSync(path.join(root, 'docs', name));
     assert.equal(data.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');

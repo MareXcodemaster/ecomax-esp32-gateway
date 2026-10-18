@@ -81,7 +81,7 @@ const server = createServer(async (req, res) => {
 await new Promise(done => server.listen(0, '127.0.0.1', done));
 const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({ headless: true });
-const output = 'docs/images/panel';
+const output = `docs/images/panel/${version}`;
 await mkdir(output, { recursive: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 1080 },hasTouch:true });
@@ -114,6 +114,11 @@ try {
   assert.equal(await page.locator('#panel-tools #connect-open').count(),1);
   assert.equal(await page.locator('[data-view="pellet"] svg.lucide-cylinder').count(),1,'pellet navigation uses a cylindrical pellet symbol');
   await page.locator('#update-open-label').getByText('Aktualne',{exact:true}).waitFor();
+  await page.locator('#wifi-signal').getByText('100%',{exact:true}).waitFor();
+  assert.equal(await page.locator('.wifi-bars span').count(),5);
+  assert.equal(await page.locator('.wifi-bars .active').count(),5);
+  assert.match(await page.locator('#wifi-signal').getAttribute('title'),/-49 dBm/);
+  assert.equal(await page.locator('#local-diagnostics').getAttribute('open'),null);
   const resetLayout=async()=>{await summary.click();await page.locator('#tile-layout-reset').click();assert.equal(await tools.getAttribute('open'),null,'action closes the tools menu');};
   await screenshot('01-odczyty');
   const beforeMenu=requests.filter(([method])=>method!=='GET').length;
@@ -183,6 +188,10 @@ try {
     return [[b.x,b.y],[b.x+b.width,b.y+b.height]].some(([x,y])=>{const p=new DOMPoint(x,y).matrixTransform(matrix);return p.x<0||p.y<0||p.x>841.66||p.y>437.104;});
   }).map(node=>node.textContent)),[],'schematic text fits drawing');
   await screenshot('10-schemat');
+  await page.locator('#update-open').click();
+  await page.locator('#update-current').getByText(version,{exact:true}).waitFor();
+  await screenshot('12-aktualizacje');
+  await page.locator('[data-view="schema"]').click();
   await page.evaluate(()=>EcoHeatingSchema.render(state,false));
   assert.equal(await page.locator('#lbSchema_tempCO').textContent(),'---');
   assert.equal(await page.locator('#schema_pumpMixerA').getAttribute('data-state'),'unknown');
@@ -217,6 +226,8 @@ try {
   assert.notDeepEqual(customOrder,originalOrder,'mouse drag changes ordering');
   await screenshot('08-uklad-kafelkow');
   await page.reload();await page.locator('.eco-tile').first().waitFor();
+  await page.evaluate(()=>EcoUpdates.load());
+  await page.locator('#update-open-label').getByText('Aktualne',{exact:true}).waitFor();
   assert.deepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),customOrder,'order survives reload and fresh data');
   await page.locator('#tile-layout-edit').click();await resetLayout();
   assert.deepEqual(await page.locator('.eco-tile').evaluateAll(els=>els.map(el=>el.dataset.member)),originalOrder);
@@ -318,7 +329,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log('PASS eleven panel screenshots: direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.');
+  console.log(`PASS twelve panel screenshots for ${version}: five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

@@ -2,6 +2,7 @@ import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { mkdir,readFile } from 'node:fs/promises';
 
+const version = JSON.parse(await readFile('package.json','utf8')).version;
 const server = await createServer({ configFile: 'installer/vite.config.js', server: { host: '127.0.0.1', port: 0 } });
 await server.listen();
 const browser = await chromium.launch({ headless: true });
@@ -49,10 +50,10 @@ try {
   for(const name of ['style.css','updates.css'])await panel.addStyleTag({content:await readFile('src/panel_web/'+name,'utf8')});
   await panel.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});
   await panel.addScriptTag({content:await readFile('src/panel_web/lucide.js','utf8')});
-  await panel.evaluate(()=>{
-    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:'0.7.0-beta.12',current_release:'0.7.0-beta.12',version:'0.7.0-beta.12',channel:'all',beta:true,phase:'up_to_date',checked:Date.now()/1000,automatic:true,available:false,install_supported:true});
+  await panel.evaluate(version=>{
+    window.csrf='example';window.serverReachable=true;window.request=async()=>({current:version,current_release:version,version,channel:'all',beta:true,phase:'up_to_date',checked:Date.now()/1000,automatic:true,available:false,install_supported:true});
     EcoUpdates.init();lucide.createIcons();return EcoUpdates.load();
-  });
+  },version);
   await panel.locator('.update-panel').screenshot({path:'docs/images/04-aktualizacje.png'});
   console.log('Created four documentation screenshots with simulated data, no physical device or private network accessed.');
 } finally { await browser.close(); await server.close(); }

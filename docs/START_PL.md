@@ -228,7 +228,7 @@ Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz pon
 `piec.local` lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
 Zmiana nie wymaga diagnostyki ani kasowania pamięci.
 
-![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/11-zmiana-wifi.png)
+![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.16/11-zmiana-wifi.png)
 
 **Montaż i zasięg:** moduł można umieścić na szynie DIN 35 mm w odpowiedniej
 szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
