@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0-beta.17 - 2026-10-18
+
+- Panel odpytuje ESP co 2 sekundy takze w karcie przegladarki dzialajacej w tle.
+  Usunieto programowe zatrzymywanie odczytow zalezne od widocznosci strony.
+- Powrot do karty lub okna wywoluje dodatkowy odczyt; nie resetuje ESP.
+  Nie nakladaja sie rownolegle zapytania i pozostaje automatyczne wznowienie po bledzie odczytu.
+- System telefonu lub przegladarka nadal moze usypiac aplikacje i ograniczac zegary w tle.
+  ESP niezaleznie komunikuje sie z kotlem, takze bez otwartego panelu.
+- Bez zmian nastaw kotla, schematu, tla, konfiguracji Wi-Fi i regul zapisu.
+
 ## 0.7.0-beta.16 - 2026-10-18
 
 - Zwykle nastawy sa zapisywane jedna operacja po aktualnym odczycie kotla.

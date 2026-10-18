@@ -20,9 +20,23 @@ test('ambiguous save response and ordinary conflicts are never retried',async()=
   await assert.rejects(ctx.run('/api/write/save',{id:'1281',value:42,confirm:true}));assert.equal(posts,1);
  }
 });
-test('hidden tabs do not poll; a visible tab recovers automatically',async()=>{
+test('visible and hidden tabs keep polling without a visibility pause',async()=>{
  let calls=0;const ctx=context(async()=>{calls++;return {fresh:true};});Object.assign(ctx,{document:{hidden:true},pollBusy:false});
- await ctx.poll();assert.equal(calls,0);ctx.document.hidden=false;await ctx.poll();assert.equal(calls,1);
+ await ctx.poll();assert.equal(calls,1);ctx.document.hidden=false;await ctx.poll();assert.equal(calls,2);
+ ctx.document.hidden=true;await ctx.poll();assert.equal(calls,3);assert.equal(ctx.serverReachable,true);
+ assert.doesNotMatch(app,/if\(document\.hidden\|\|/);
+ assert.match(app,/document\.addEventListener\('visibilitychange',poll\)/);
+ assert.match(app,/setInterval\(poll,2000\)/);
+});
+
+test('background polling does not overlap requests and recovers after a read failure',async()=>{
+ let finish,calls=0;const ctx=context(()=>{calls++;return new Promise(resolve=>{finish=resolve;});});
+ Object.assign(ctx,{document:{hidden:true},pollBusy:false});
+ const pending=ctx.poll();await ctx.poll();assert.equal(calls,1);finish({fresh:true});await pending;
+ assert.equal(ctx.pollBusy,false);
+ ctx.request=async()=>{throw Error('temporary outage');};await ctx.poll();
+ assert.equal(ctx.serverReachable,false);assert.equal(ctx.pollBusy,false);
+ ctx.request=async()=>({fresh:true});await ctx.poll();assert.equal(ctx.serverReachable,true);
 });
 test('five bars and percentage use ESP RSSI, never boiler or ecoNET status',()=>{
  for(const [rssi,percent,bars]of [[-105,0,0],[-100,0,0],[-90,20,1],[-80,40,2],[-70,60,3],[-60,80,4],[-50,100,5],[-30,100,5]]){

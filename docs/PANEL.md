@@ -34,6 +34,13 @@ Panel otwierasz z telefonu/tabletu w tej samej sieci co ESP. Po zalogowaniu
 wybierasz transport odczytu/zapisu. Brak aktualnego odczytu ma blokowac
 edycje, a nie pokazywac zapamietana wartosc jako aktualna.
 
+Od beta.17 panel odpytuje ESP co 2 sekundy rowniez w karcie dzialajacej
+w tle. Powrot do strony dodatkowo pobiera aktualny stan, bez resetowania ESP.
+Przegladarka lub system telefonu moze ograniczac prace w tle albo usypiac
+cala aplikacje; panel nie omija tych ograniczen. ESP samodzielnie odczytuje
+kociol takze wtedy, gdy strona jest zamknieta. Podczas zapisu nie naklada
+odczytow na trwajaca operacje; po jej zakonczeniu odswiezanie wraca.
+
 Zapis to przygotowanie polecenia, jedna wysylka i kontrola odpowiedzi/odczytu.
 Samo ACK nie dowodzi, ze zadana wartosc zostala zastosowana. Niepotwierdzone
 polecenie nie jest automatycznie powtarzane ani automatycznie cofane.

@@ -72,7 +72,7 @@ function renderCapabilities(){
  for(const [label,read,write]of rows){const row=document.createElement('tr');cell(row,label);cell(row,read);cell(row,write);body.append(row);}
  text('alarms-json',JSON.stringify({alarms:state.alarms,names:state.alarm_names},null,2));text('schedules-json',JSON.stringify(state.schedules,null,2));
 }
-async function poll(){if(document.hidden||pollBusy||actionBusy)return;pollBusy=true;const epoch=actionEpoch;try{const wasOffline=!serverReachable;if(!csrf)csrf=(await request('/api/session')).csrf;const next=await request('/api/state');if(actionBusy||epoch!==actionEpoch)return;state=next;if(typeof next.csrf==='string')csrf=next.csrf;serverReachable=true;if(wasOffline&&noticeKind==='connection')notice('');render();}catch(error){if(!actionBusy&&epoch===actionEpoch){serverReachable=false;render();}}finally{pollBusy=false;}}
+async function poll(){if(pollBusy||actionBusy)return;pollBusy=true;const epoch=actionEpoch;try{const wasOffline=!serverReachable;if(!csrf)csrf=(await request('/api/session')).csrf;const next=await request('/api/state');if(actionBusy||epoch!==actionEpoch)return;state=next;if(typeof next.csrf==='string')csrf=next.csrf;serverReachable=true;if(wasOffline&&noticeKind==='connection')notice('');render();}catch(error){if(!actionBusy&&epoch===actionEpoch){serverReachable=false;render();}}finally{pollBusy=false;}}
 async function run(path,payload={}){
  if(actionBusy)throw new Error('Trwa operacja.');
  const fast=state?.write_transport==='rs485'&&path.startsWith('/api/write/');actionBusy=true;actionEpoch++;notice('');render();
@@ -132,7 +132,7 @@ for(const [id,path] of [['refresh','/api/refresh'],['scan','/api/scan']])$(id).o
 $('export').onclick=async()=>{try{const report=await request('/api/export');const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='econet-test-'+new Date().toISOString().slice(0,19).replaceAll(':','-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){notice(error.message,true);}};
 for(const form of document.querySelectorAll('.write-form'))form.onsubmit=async event=>{event.preventDefault();try{await saveTemperature(form.dataset.writeId,Number($('write-value-'+form.dataset.writeId).value));}catch(error){notice(error.message,true);}};
 window.addEventListener('resize',()=>{if(view==='history')drawChart();});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
+document.addEventListener('visibilitychange',poll);
 window.addEventListener('focus',poll);
 if(window.EcoMirror)EcoMirror.init();
 if(window.EcoNetwork)EcoNetwork.init();
