@@ -235,9 +235,13 @@ static esp_err_t panel_command(httpd_req_t *req) {
         if(ok) panel::set_clock(time->valuedouble);
         cJSON_Delete(payload); return message(req,ok?"200 OK":"400 Bad Request",ok?"OK":"Invalid clock");
     }
-    const char *kind=!strcmp(req->uri,"/api/rs485/probe")?"rs_probe":!strcmp(req->uri,"/api/transport")?"transport":!strcmp(req->uri,"/api/connect")?"connect":!strcmp(req->uri,"/api/scan")?"scan":!strcmp(req->uri,"/api/refresh")?"refresh":!strcmp(req->uri,"/api/control/prepare")?"control_prepare":!strcmp(req->uri,"/api/control/execute")?"control_execute":!strcmp(req->uri,"/api/write/prepare")?"prepare":"execute";
+    const char *kind=!strcmp(req->uri,"/api/write/save")?"save":!strcmp(req->uri,"/api/rs485/probe")?"rs_probe":!strcmp(req->uri,"/api/transport")?"transport":!strcmp(req->uri,"/api/connect")?"connect":!strcmp(req->uri,"/api/scan")?"scan":!strcmp(req->uri,"/api/refresh")?"refresh":!strcmp(req->uri,"/api/control/prepare")?"control_prepare":!strcmp(req->uri,"/api/control/execute")?"control_execute":!strcmp(req->uri,"/api/write/prepare")?"prepare":"execute";
     int slot=cookie_session(req); std::string error;
     auto *response=panel::submit(kind,payload,slot>=0?sessions[slot].digest:"basic",error); cJSON_Delete(payload);
+    if(!response&&error=="Trwa operacja. Poczekaj na zakonczenie") {
+        auto *reply=cJSON_CreateObject();cJSON_AddStringToObject(reply,"error",error.c_str());cJSON_AddBoolToObject(reply,"busy",true);
+        httpd_resp_set_status(req,"409 Conflict");return json(req,reply);
+    }
     return response?json(req,response):message(req,"409 Conflict",error.c_str());
 }
 static esp_err_t login(httpd_req_t *req) {
@@ -508,7 +512,7 @@ void start() {
     esp_timer_create_args_t timer{}; timer.callback = [](void *) { esp_restart(); }; timer.name = "ota_reboot";
     ESP_ERROR_CHECK(esp_timer_create(&timer, &reboot_timer));
     httpd_config_t config = HTTPD_DEFAULT_CONFIG(); config.stack_size = 16384;
-    config.max_uri_handlers = 54; config.max_open_sockets = 8; config.lru_purge_enable = true;
+    config.max_uri_handlers = 56; config.max_open_sockets = 8; config.lru_purge_enable = true;
     config.uri_match_fn=httpd_uri_match_wildcard;
     config.recv_wait_timeout = 5; config.send_wait_timeout = 12;
     ESP_ERROR_CHECK(httpd_start(&server, &config));
@@ -534,7 +538,7 @@ void start() {
     add("/api/job",HTTP_GET,panel_job);
     add("/api/history",HTTP_GET,history_state);
     add("/api/pellet", HTTP_GET, pellet_state); add("/api/pellet/calibration", HTTP_POST, pellet_configure);
-    for(auto uri:{"/api/connect","/api/scan","/api/refresh","/api/write/prepare","/api/write/execute","/api/control/prepare","/api/control/execute","/api/panel/clock","/api/transport","/api/rs485/probe"}) add(uri,HTTP_POST,panel_command);
+    for(auto uri:{"/api/connect","/api/scan","/api/refresh","/api/write/prepare","/api/write/execute","/api/write/save","/api/control/prepare","/api/control/execute","/api/panel/clock","/api/transport","/api/rs485/probe"}) add(uri,HTTP_POST,panel_command);
     add("/*",HTTP_GET,panel_asset);
     ESP_ERROR_CHECK(httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, missing));
     configASSERT(xTaskCreate(push_task, "status_push", 3072, nullptr, 3, nullptr) == pdPASS);

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0-beta.16 - 2026-10-18
+
+- Zwykle nastawy sa zapisywane jedna operacja po aktualnym odczycie kotla.
+  Stara wartosc w formularzu nie blokuje zapisu po zmianie z innego urzadzenia.
+  Limity, uprawnienia, identyfikacja i potwierdzenie odczytem pozostaja aktywne.
+- Wynik zakonczonej operacji pozostaje dostepny, gdy drugi klient zaczyna kolejna.
+  Panel czeka na jawnie zajete ESP, ale nie ponawia zapisu po utracie odpowiedzi.
+- Piec kresek i szacowany procent sygnalu ESP na gornej belce; dBm w podpowiedzi.
+- Wi-Fi zeruje licznik kolejnych prob po uzyskaniu IP, szybciej wznawia polaczenie
+  i obsluguje utrate adresu IP bez restartu ESP. Ukryte karty nie odpytuja panelu.
+- Brak zmian schematu, tla, nastaw kotla i danych zapisanych w NVS.
+
 ## 0.7.0-beta.15 - 2026-10-17
 
 - Zwijana sekcja Diagnostyka lokalna w lewym menu; domyslnie zamknieta.

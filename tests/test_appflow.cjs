@@ -10,23 +10,24 @@ const target={id:'1287',before:43,min:40,max:65,step:1};
 function context(overrides={}){
  return {csrf:'csrf',state:{targets:{'1287':target},targets_fresh:true,write_transport:'econet'},actionBusy:false,
   actionEpoch:0,pollBusy:false,savingTemperature:false,serverReachable:true,fresh:()=>true,render:()=>{},notice:()=>{},noticeKind:'connection',
-  setTimeout:fn=>fn(),poll:async()=>{},EcoMirror:{ticketMatches},...overrides};
+  setTimeout:fn=>fn(),document:{hidden:false},poll:async()=>{},EcoMirror:{ticketMatches},...overrides};
 }
-test('one Save performs preparation and one dispatch without a second dialog',async()=>{
+test('one Save submits one atomic operation without a second dialog',async()=>{
  const calls=[],prepared={...target,transport:'econet',expires:Date.now()/1000+60,token:'t'};
  const ctx=context();vm.runInNewContext(flow,ctx);
  ctx.run=async(path,payload)=>{calls.push({path,payload});return path.endsWith('prepare')?prepared:{state:'verified',message:'OK'};};
  let closed=0;await ctx.saveTemperature('1287',44,()=>{closed++;});
- assert.equal(calls.length,2);assert.equal(calls[0].path,'/api/write/prepare');assert.equal(calls[1].path,'/api/write/execute');
- assert.equal(calls[1].payload.token,'t');assert.equal(calls[1].payload.confirm,true);assert.equal(closed,1);
+ assert.equal(calls.length,1);assert.equal(calls[0].path,'/api/write/save');
+ assert.equal(calls[0].payload.value,44);assert.equal(calls[0].payload.confirm,true);assert.equal(closed,1);
+ assert.equal('before' in calls[0].payload,false);
  assert.equal(ctx.savingTemperature,false);
 });
-test('changed baseline or disconnected preparation never dispatches',async()=>{
- for(const failed of [false,true]){
-  const calls=[],ctx=context();vm.runInNewContext(flow,ctx);
-  ctx.run=async path=>{calls.push(path);if(failed)throw Error('offline');return {...target,before:45,transport:'econet',expires:Date.now()/1000+60};};
-  await assert.rejects(ctx.saveTemperature('1287',44));assert.equal(calls.length,1);assert.equal(ctx.savingTemperature,false);
- }
+test('external baseline changes do not block an absolute Save, but offline errors remain real',async()=>{
+ const ctx=context();vm.runInNewContext(flow,ctx);ctx.state.targets['1287']={...target,before:45};
+ ctx.run=async(path,payload)=>{assert.equal(path,'/api/write/save');assert.equal(payload.value,44);return {state:'verified'};};
+ await ctx.saveTemperature('1287',44);assert.equal(ctx.savingTemperature,false);
+ ctx.run=async()=>{throw Error('offline');};await assert.rejects(ctx.saveTemperature('1287',44));
+ assert.equal(ctx.savingTemperature,false);
 });
 test('RS485 room Save keeps the native route and sends one command',async()=>{
  const id='STER_TEMP_DAY_1',room={id,before:22.8,min:10,max:35,step:0.1,legacy:true,
@@ -35,8 +36,8 @@ test('RS485 room Save keeps the native route and sends one command',async()=>{
  const ctx=context({state:{targets:{[id]:room},targets_fresh:true,write_transport:'rs485'}});vm.runInNewContext(flow,ctx);
  ctx.run=async(path,payload)=>{calls.push({path,payload});return path.endsWith('prepare')?prepared:{state:'verified'};};
  await ctx.saveTemperature(id,22.9);
- assert.deepEqual(JSON.parse(JSON.stringify(calls[0].payload)),{id,value:22.9,before:22.8});
- assert.equal(calls.length,2);assert.equal(calls[1].path,'/api/write/execute');
+ assert.deepEqual(JSON.parse(JSON.stringify(calls[0].payload)),{id,value:22.9,confirm:true});
+ assert.equal(calls.length,1);assert.equal(calls[0].path,'/api/write/save');
 });
 test('RS485 room ticket rejects a changed raw mode or parameter layout',()=>{
  const id='STER_TEMP_DAY_1',room={id,before:22.8,min:10,max:35,step:0.1,legacy:true,
@@ -60,8 +61,8 @@ test('inactive Party Save changes the stored target through RS485, not the activ
  const ctx=context({state:snapshot});vm.runInNewContext(flow,ctx);
  ctx.run=async(path,payload)=>{calls.push({path,payload});return path.endsWith('prepare')?ticket:{state:'verified'};};
  await ctx.saveTemperature(id,23.2);
- assert.equal(calls.length,2);assert.equal(calls[0].payload.id,id);assert.equal(calls[0].payload.value,23.2);
- assert.equal(calls[1].path,'/api/write/execute');
+ assert.equal(calls.length,1);assert.equal(calls[0].payload.id,id);assert.equal(calls[0].payload.value,23.2);
+ assert.equal(calls[0].path,'/api/write/save');
  assert.equal(calls.some(call=>call.path.includes('/control')||call.payload.id==='STER_MODE_1'),false);
 });
 

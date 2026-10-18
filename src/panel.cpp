@@ -1012,11 +1012,13 @@ J *prepare_generic(const J *payload,const std::string &owner) {
     copy(v,"value",requested); text(v,"kind",schedule?"schedule":"parameter"); text(v,"transport",selected_mode); text(v,"token",random_token()); number(v,"expires",epoch()+60);
     cJSON_Delete(ticket); ticket=cJSON_Duplicate(v,true); ticket_owner=owner; ticket_deadline=now()+60000; ticket_revision=revision; return v;
 }
-J *execute_generic(const J *t,const J *payload) {
+J *execute_generic(const J *t,const J *payload,const J *prepared_now=nullptr) {
     if(selected_mode!=str(get(t,"transport"))) { fail("Droga zapisu zmienila sie"); return nullptr; }
     bool direct=selected_mode=="rs485";
     bool schedule=!strcmp(str(get(t,"kind")),"schedule"); const char *id=str(get(t,"id")); auto started=now();
-    phase("Sprawdzanie aktualnej nastawy przed wyslaniem","preflight"); J *p=nullptr; if(!inspect_generic(id,p)) return nullptr; Owned current{p};
+    phase("Sprawdzanie aktualnej nastawy przed wyslaniem","preflight"); J *p=nullptr;
+    if(prepared_now)p=cJSON_Duplicate(prepared_now,true); else if(!inspect_generic(id,p))return nullptr;
+    Owned current{p};
     for(auto key:{"before","schema","wire_key","wire_index","wire_width","wire_recipient","wire_parameter","value_kind","cached","profile_mode","profile_raw","observed_key","wire_unit","wire_mult","wire_offset"}) {
         auto *a=get(t,key), *b=get(p,key); if((a||b)&&!cJSON_Compare(a,b,true)) { fail("Nastawa, tryb lub metadane zmienily sie. Zapis anulowany"); return nullptr; }
     }
@@ -1153,13 +1155,15 @@ J *prepare(const J *payload, const std::string &owner) {
     if(!allow_same_value_audit(v,payload)){cJSON_Delete(v);return nullptr;}
     number(v,"value",round(value/d->step)*d->step); text(v,"kind","temperature"); text(v,"transport",selected_mode); text(v,"token",random_token()); number(v,"expires",epoch()+60); cJSON_Delete(ticket); ticket=cJSON_Duplicate(v,true); ticket_owner=owner; ticket_deadline=now()+60000; ticket_revision=revision; return v;
 }
-J *execute(const J *payload, const std::string &owner) {
+J *execute(const J *payload, const std::string &owner,const J *prepared_now=nullptr) {
     Owned held{ticket}; ticket=nullptr;
     if(!held.p||strcmp(str(get(payload,"token")),str(get(held.p,"token")))||now()>ticket_deadline||revision!=ticket_revision||owner!=ticket_owner||!cJSON_IsTrue(get(payload,"confirm"))) { fail("Potwierdzenie wygaslo lub jest nieprawidlowe"); return nullptr; }
-    if(!strcmp(str(get(held.p,"kind")),"parameter")||!strcmp(str(get(held.p,"kind")),"schedule")) return execute_generic(held.p,payload);
+    if(!strcmp(str(get(held.p,"kind")),"parameter")||!strcmp(str(get(held.p,"kind")),"schedule")) return execute_generic(held.p,payload,prepared_now);
     if(strcmp(str(get(held.p,"kind")),"temperature")) { fail("Nieprawidlowy rodzaj potwierdzenia"); return nullptr; }
     auto *t=held.p; std::string id=str(get(t,"id")); double value=num(get(t,"value")); auto *d=definition(id.c_str()); uint64_t started=now();
-    phase("Sprawdzanie aktualnej nastawy przed wyslaniem","preflight"); J *current=nullptr; if(!inspect(id.c_str(),current)) return nullptr; Owned check{current};
+    phase("Sprawdzanie aktualnej nastawy przed wyslaniem","preflight"); J *current=nullptr;
+    if(prepared_now)current=cJSON_Duplicate(prepared_now,true); else if(!inspect(id.c_str(),current))return nullptr;
+    Owned check{current};
     for(auto k:{"before","min","max","step"}) if(!equal(num(get(t,k)),num(get(current,k)))) { fail("Nastawa lub limity zmienily sie. Zapis anulowany"); return nullptr; }
     if(d->legacy&&!equal(num(get(t,"profile_mode")),num(get(current,"profile_mode")))) { fail("Tryb termostatu zmienil sie. Zapis anulowany"); return nullptr; }
     if(d->legacy&&selected_mode=="rs485") for(auto key:{"wire_index","parameter_count","profile_raw"}) if(!equal(num(get(t,key)),num(get(current,key)))) { fail("Mapa lub profil termostatu RS485 zmienily sie. Zapis anulowany"); return nullptr; }
@@ -1220,6 +1224,16 @@ J *execute(const J *payload, const std::string &owner) {
     { Lock lock; if(!dispatched) number(data,"write_count",num(get(data,"write_count"))-1); auto *record=item(get(data,"tests"),0); J *v; cJSON_ArrayForEach(v,result) copy(record,v->string,v); text(record,"result",status); }
     if(!journal()) { text(result,"journal_warning","Wynik odczytano, ale nie utrwalono go w NVS"); }
     return result;
+}
+J *save_setting(const J *payload,const std::string &owner) {
+    if(!cJSON_IsTrue(get(payload,"confirm"))) { fail("Brak potwierdzenia zapisu"); return nullptr; }
+    Owned args{cJSON_Duplicate(payload,true)};
+    // An absolute setpoint uses the current device value, not the browser's old baseline.
+    // Schedule edits keep their baseline guard because they replace a whole week.
+    if(strncmp(str(get(args.p,"id")),"schedule:",9))cJSON_DeleteItemFromObjectCaseSensitive(args.p,"before");
+    Owned prepared{prepare(args.p,owner)}; if(!prepared.p)return nullptr;
+    copy(args.p,"token",get(prepared.p,"token"));
+    return execute(args.p,owner,prepared.p);
 }
 bool control_observed(bool start, int mode) {
     return start?((mode>=1&&mode<=6)||mode==12||mode==23):(mode==0||mode==7);
@@ -1359,6 +1373,7 @@ void worker(void *) {
             Owned args{payload}; error_text.clear(); J *result=nullptr; bool ok=true;
             if(kind=="prepare") result=prepare(payload,owner);
             else if(kind=="execute") result=execute(payload,owner);
+            else if(kind=="save") result=save_setting(payload,owner);
             else if(kind=="control_prepare") result=prepare_control(payload,owner);
             else if(kind=="control_execute") result=execute_control(payload,owner);
             else if(kind=="transport") result=choose_transport(payload);
@@ -1470,8 +1485,13 @@ cJSON *snapshot() {
     copy(controls,"mode",direct?get(get(sensor.p,"sensors"),"state"):get(get(out,"curr"),"mode")); text(controls,"transport",direct?"rs485":"econet"); put(out,"controls",controls); return out;
 }
 bool is_busy() { return busy.load(); }
+static J *completed_jobs=nullptr;
 cJSON *job_snapshot(const char *id) {
-    Lock lock; auto *job=get(data,"job"); if(strcmp(id,str(get(job,"id"))))return nullptr;
+    Lock lock; auto *job=get(data,"job");
+    if(strcmp(id,str(get(job,"id")))) {
+        job=nullptr; J *entry; cJSON_ArrayForEach(entry,completed_jobs)if(!strcmp(id,str(get(entry,"id")))){job=entry;break;}
+        if(!job)return nullptr;
+    }
     auto *out=cJSON_CreateObject(); copy(out,"job",job); flag(out,"busy",busy); text(out,"version",board::version); return out;
 }
 cJSON *submit(const char *kind, const cJSON *payload, const char *owner, std::string &error) {
@@ -1483,12 +1503,20 @@ cJSON *submit(const char *kind, const cJSON *payload, const char *owner, std::st
             error="Wybierz rodzine odczytu; surowe polecenia nie sa przyjmowane"; return nullptr;
         }
     }
-    if(!strcmp(kind,"prepare")) {
+    if(!strcmp(kind,"prepare")||!strcmp(kind,"save")) {
         const char *id=str(get(payload,"id"));
         if(strlen(id)>80||(!generic_id(id)&&!aligned(num(get(payload,"value")),definition(id)))) { error="Nieprawidlowy parametr lub krok zapisu"; return nullptr; }
     }
     if(!strcmp(kind,"control_prepare") && strcmp(str(get(payload,"action")),"start") && strcmp(str(get(payload,"action")),"stop")) { error="Nieprawidlowe polecenie sterowania"; return nullptr; }
     if((!strcmp(kind,"execute")||!strcmp(kind,"control_execute")) && (strlen(str(get(payload,"token")))!=32 || !cJSON_IsTrue(get(payload,"confirm")))) { error="Nieprawidlowe potwierdzenie zapisu"; return nullptr; }
+    if(!strcmp(kind,"save")&&!cJSON_IsTrue(get(payload,"confirm"))) { error="Brak potwierdzenia zapisu"; return nullptr; }
+    auto *previous=get(data,"job");
+    if(previous&&strcmp(str(get(previous,"status")),"running")&&*str(get(previous,"id"))) {
+        if(!completed_jobs)completed_jobs=cJSON_CreateArray();
+        auto *history=completed_jobs;
+        cJSON_InsertItemInArray(history,0,cJSON_Duplicate(previous,true));
+        while(cJSON_GetArraySize(history)>6)cJSON_DeleteItemFromArray(history,6);
+    }
     queued_kind=kind; queued_owner=owner; queued_payload=cJSON_Duplicate(payload,true);
     auto *job=cJSON_CreateObject(); text(job,"id",random_token()); text(job,"kind",kind); text(job,"status","running"); text(job,"step",""); text(job,"started",timestamp()); put(data,"job",job); busy=true;
     auto *out=cJSON_CreateObject(); copy(out,"job",job); return out;

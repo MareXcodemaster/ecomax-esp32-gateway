@@ -53,6 +53,8 @@ jobs:
         run: node tests/diagnostics_frames.mjs
       - name: Collapsible diagnostics sidebar browser tests
         run: node tests/sidebar_diagnostics.mjs
+      - name: Multi-client setpoint and Wi-Fi signal browser tests
+        run: node tests/live_save_browser.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: ecomax-esp32-gateway-public-beta

@@ -40,6 +40,21 @@ polecenie nie jest automatycznie powtarzane ani automatycznie cofane.
 Zmiany wykonane na kotle/termostacie lub przez ecoNET moga zmieniac nastawy
 niezaleznie od otwartej strony.
 
+Od beta.16 zwykle nastawy zapisujesz jedna operacja. Zmiana wartosci na
+innym urzadzeniu nie blokuje wpisanej nowej nastawy; ESP odczytuje aktualna
+wartosc i sprawdza zakres przed wyslaniem. Ostatnie polecenie przyjete przez
+kociol wyznacza nowa nastawe, ktora pojawia sie na pozostalych panelach po
+odswiezeniu odczytu. Nie oznacza to natychmiastowej zmiany temperatury wody.
+Limity, blokady serwisowe i sprawdzanie odpowiedzi kotla pozostaja aktywne.
+Harmonogram calego tygodnia nadal wymaga zgodnej podstawy, aby nie zastapic
+niezauwazenie planu zmienionego rownolegle przez druga osobe.
+
+Piec kresek na gornej belce dotyczy Wi-Fi ESP, nie modulu ecoNET ani kotla.
+Procent jest szacunkiem na podstawie RSSI (-100 dBm to 0%, -50 dBm to 100%),
+nie pomiarem predkosci lacza. Kazda kreska odpowiada kolejnym 20 punktom
+procentowym. Podpowiedz zawiera dokladne dBm; klikniecie otwiera okno Wi-Fi.
+Brak aktualnego odczytu pokazuje --%, nie zapamietana sile jako aktualna.
+
 ## Wi-Fi Bez Diagnostyki
 
 **Narzedzia > Zmien siec Wi-Fi** otwiera formularz bez opuszczania panelu.

@@ -139,7 +139,7 @@
   temperatureDraft=reconcileDraft(temperatureDraft,target?.before,valid);const input=get('temperature-value');if(input.value!==temperatureDraft.value)input.value=temperatureDraft.value;
   if(valid){input.min=target.min;input.max=target.max;input.step=target.step;get('temperature-limits').textContent='Zakres: '+num(target.min,0)+'\u2013'+num(target.max,0)+' \u00b0C / krok: '+num(target.step)+' \u00b0C';}
   for(const option of get('temperature-profile').options)option.disabled=!snapshot.targets?.[option.value];
-  get('temperature-update').textContent=temperatureDraft.changed?'Nastawa zmieni\u0142a si\u0119 poza formularzem: '+degrees(temperatureDraft.baseline)+' \u2192 '+degrees(target.before)+'. Wpisana nowa warto\u015b\u0107 nie zosta\u0142a nadpisana.':'';
+  get('temperature-update').textContent='';
   get('temperature-form').querySelector('[type=submit]').disabled=!valid||target.write_ready===false||actionBusy||snapshot.busy||savingTemperature;
  }
  function updateDialogs(){

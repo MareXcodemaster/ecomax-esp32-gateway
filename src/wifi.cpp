@@ -10,6 +10,7 @@
 #include "mdns.h"
 #include "network_defaults.hpp"
 #include "network_name.hpp"
+#include "wifi_retry.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -24,6 +25,7 @@ struct Credentials { char ssid[33]{}, password[65]{}; };
 static Credentials saved;
 static SemaphoreHandle_t config_mutex;
 static std::atomic<bool> pending{true}, connected{false}, reconnect{false};
+static std::atomic<bool> recovered{false}, lost_ip{false};
 static std::atomic<int> reason{0};
 static esp_netif_t *sta;
 static bool mdns_ready = false, mdns_started = false;
@@ -74,7 +76,9 @@ cJSON *scan_results() {
 }
 static void event(void *, esp_event_base_t base, int32_t id, void *data) {
     if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
-        connected.store(true); reconnect.store(false); reason.store(0);
+        connected.store(true); reconnect.store(false); reason.store(0); recovered.store(true);
+    } else if (base == IP_EVENT && id == IP_EVENT_STA_LOST_IP) {
+        connected.store(false); lost_ip.store(true);
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
         connected.store(false); reconnect.store(true);
         reason.store(static_cast<wifi_event_sta_disconnected_t *>(data)->reason);
@@ -105,6 +109,11 @@ static void wifi_task(void *) {
     uint64_t next = 0;
     for (;;) {
         auto now = static_cast<uint64_t>(esp_timer_get_time() / 1000);
+        if(recovered.exchange(false)) { attempts=0; trying=false; lost_ip.store(false); }
+        if(lost_ip.exchange(false)&&!connected.load()) {
+            esp_wifi_disconnect(); trying=false; reconnect.store(true);
+            state::log("STA lost IP; reconnecting without restarting ESP");
+        }
         if (hostname_pending.exchange(false)) {
             xSemaphoreTake(config_mutex, portMAX_DELAY);
             snprintf(hostname, sizeof(hostname), "%s", saved_hostname);
@@ -119,7 +128,7 @@ static void wifi_task(void *) {
         }
         if (pending.exchange(false)) {
             xSemaphoreTake(config_mutex, portMAX_DELAY); current = saved; xSemaphoreGive(config_mutex);
-            esp_wifi_disconnect(); connected.store(false); reconnect.store(false); trying = false; attempts = 0;
+            esp_wifi_disconnect(); connected.store(false); reconnect.store(false); recovered.store(false); lost_ip.store(false); trying = false; attempts = 0;
             wifi_config_t config{};
             memcpy(config.sta.ssid, current.ssid, strlen(current.ssid));
             memcpy(config.sta.password, current.password, strlen(current.password));
@@ -156,7 +165,7 @@ static void wifi_task(void *) {
             state::log("WiFi diagnostic scan: %s, %u APs", esp_err_to_name(error), scan_total);
         }
         if (reconnect.exchange(false)) {
-            trying = false; next = now + std::min(30000U, 2000U << std::min(attempts, 4U));
+            trying = false; next = now + wifi_retry::delay(attempts);
             state::log("STA disconnected, reason=%d; reconnect in %llu ms", reason.load(), (unsigned long long)(next - now));
         }
         if (*current.ssid && !connected.load() && !trying && now >= next) {
@@ -242,6 +251,7 @@ void start() {
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, event, nullptr));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, event, nullptr));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_LOST_IP, event, nullptr));
     uint8_t mac[6]; ESP_ERROR_CHECK(esp_read_mac(mac, ESP_MAC_WIFI_STA));
     snprintf(ap_name, sizeof(ap_name), "Piec-Setup-%02X%02X", mac[4], mac[5]);
     wifi_config_t ap{};

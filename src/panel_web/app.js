@@ -33,7 +33,7 @@ function cell(row,value,cls=''){const td=document.createElement('td');td.textCon
 function notice(message,error=false,kind='operation'){if(['connection','diagnostic'].includes(kind)&&noticeKind==='operation'&&noticeError)return;noticeKind=message?kind:'';noticeError=!!message&&error;text('notice',message);$('notice').classList.toggle('error',error);$('notice').hidden=!message;}
 function diagnosticRecovered(){const job=state?.job;if(!job||!['rs_probe','refresh','scan'].includes(job.kind)||!serverReachable||!state.fresh||state.error||!state.targets_fresh||!job.finished_ms)return false;return job.error==='Brak identyfikacji kotla po RS485'?state.rs485_identity_verified_ms>job.finished_ms:!state.menu_read_error&&state.target_read_ms>job.finished_ms;}
 function renderJobNotice(){const job=state.job,recovered=diagnosticRecovered();if(job?.status==='failed'&&lastNoticeJob!==job.id){lastNoticeJob=job.id;if(!recovered)notice(job.error,true,['rs_probe','refresh','scan'].includes(job.kind)?'diagnostic':'operation');}if(noticeKind==='diagnostic'&&recovered)notice('');}
-async function request(path,payload){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);try{const response=await fetch(path,{method:payload?'POST':'GET',cache:'no-store',headers:payload?{'Content-Type':'application/json','X-Tester-Token':csrf,'X-Lazar-Request':'1'}:{},body:payload?JSON.stringify(payload):undefined,signal:controller.signal});const data=await response.json();if(!response.ok){if(response.status===401&&!$('esp-login').open)$('esp-login').showModal();const error=new Error(data.error||data.message||'HTTP '+response.status);error.status=response.status;throw error;}return data;}finally{clearTimeout(timer);}}
+async function request(path,payload){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);try{const response=await fetch(path,{method:payload?'POST':'GET',cache:'no-store',headers:payload?{'Content-Type':'application/json','X-Tester-Token':csrf,'X-Lazar-Request':'1'}:{},body:payload?JSON.stringify(payload):undefined,signal:controller.signal});const data=await response.json();if(!response.ok){if(response.status===401&&!$('esp-login').open)$('esp-login').showModal();const error=new Error(data.error||data.message||'HTTP '+response.status);error.status=response.status;error.busy=response.status===409&&data.busy===true;throw error;}return data;}finally{clearTimeout(timer);}}
 function selectView(next){view=next;for(const section of document.querySelectorAll('[data-section]'))section.hidden=section.dataset.section!==next;for(const button of document.querySelectorAll('button[data-view]')){const active=button.dataset.view===next;button.classList.toggle('active',active);button.setAttribute('aria-current',active?'page':'false');}text('view-title',titles[next]);text('screen-name',titles[next]);document.body.dataset.view=next;if(matchMedia('(max-width: 900px)').matches){document.body.classList.remove('nav-open');$('nav-toggle').setAttribute('aria-expanded','false');}render();}
 function fresh(){return !!(serverReachable&&state?.fresh);}
 function render(){if(!state)return;const f=fresh(),curr=f?state.curr:{},direct=state.write_transport==='rs485',hybrid=state.write_transport==='hybrid';text('model',state.system.controllerID||'Sterownik');text('address',direct?'piec.local / RS485':state.host);text('version',state.version);text('connection',!serverReachable?'Panel niedost\u0119pny':state.connected?(f?'Po\u0142\u0105czony':'Dane nieaktualne'):'Niepo\u0142\u0105czony');$('connection').className='status '+(f?'good':state.error||!serverReachable?'bad':'neutral');text('read-time',state.last_read_utc?'Odczyt '+timeText(state.last_read_utc)+' / '+number(state.age_seconds)+' s temu':'Brak odczytu');text('count-fields',Object.keys(state.values).length);text('count-menu',state.menu.length);text('footer-status',state.error||(!serverReachable?'Brak odpowiedzi panelu':direct?(f?'RS485 / aktualne dane':'RS485 / oczekiwanie'):state.latency_ms===null?'Brak odczytu':'HTTP '+state.latency_ms+' ms'));text('footer-source',direct?'ESP / RS485':hybrid?'RS485 pasywny / zapis ecoNET':'Lokalny ecoNET / HTTP');text('local-mark',direct?'ESP / RS485':hybrid?'RS485 + ecoNET':'ecoNET / HTTP');$('nav-econet').hidden=direct;$('nav-esp').hidden=!direct;const health=state.econet_health||{};text('econet-health','ecoNET '+(health.host||state.host)+': '+(!health.fresh?'sprawdzanie':health.api_ok?'dost\u0119pny':health.available?'odpowiada / b\u0142\u0105d API':'niedost\u0119pny'));$('econet-health').className='status '+(!health.fresh?'neutral':health.api_ok?'good':health.available?'warn':'bad');$('econet-health').title=health.checked?'Sprawdzono '+timeText(health.checked)+' / '+number(health.age_seconds)+' s temu'+(health.http_status?' / HTTP '+health.http_status:''):'';
@@ -46,6 +46,7 @@ function render(){if(!state)return;const f=fresh(),curr=f?state.curr:{},direct=s
  if(window.EcoMirror)EcoMirror.render(view,state,f);
  if(window.EcoNetwork)EcoNetwork.render(state.esp_network);
  if(window.EcoWifi)EcoWifi.render(state.esp_network);
+ if(window.EcoWifiSignal)EcoWifiSignal.render(state.esp_network,serverReachable);
  if(window.EcoAlarmBadge)EcoAlarmBadge.render(state,f);
  for(const button of document.querySelectorAll('button[data-write-id],[data-write-id] button')){const id=button.closest('[data-write-id]').dataset.writeId,target=state.targets?.[id];if(target?.write_ready===false){button.disabled=true;button.title=target.write_error||'Zapis zablokowany';button.dataset.writeBlocked='true';}else if(button.dataset.writeBlocked){button.removeAttribute('title');delete button.dataset.writeBlocked;}}
  if(view==='menu'&&!state.targets_fresh)for(const row of $('menu-rows').rows)if(row.cells.length===6)row.cells[2].textContent='---';
@@ -71,12 +72,18 @@ function renderCapabilities(){
  for(const [label,read,write]of rows){const row=document.createElement('tr');cell(row,label);cell(row,read);cell(row,write);body.append(row);}
  text('alarms-json',JSON.stringify({alarms:state.alarms,names:state.alarm_names},null,2));text('schedules-json',JSON.stringify(state.schedules,null,2));
 }
-async function poll(){if(pollBusy||actionBusy)return;pollBusy=true;const epoch=actionEpoch;try{const wasOffline=!serverReachable;if(!csrf)csrf=(await request('/api/session')).csrf;const next=await request('/api/state');if(actionBusy||epoch!==actionEpoch)return;state=next;if(typeof next.csrf==='string')csrf=next.csrf;serverReachable=true;if(wasOffline&&noticeKind==='connection')notice('');render();}catch(error){if(!actionBusy&&epoch===actionEpoch){serverReachable=false;render();notice('Ponawianie po\u0142\u0105czenia z panelem. '+error.message,true,'connection');}}finally{pollBusy=false;}}
+async function poll(){if(document.hidden||pollBusy||actionBusy)return;pollBusy=true;const epoch=actionEpoch;try{const wasOffline=!serverReachable;if(!csrf)csrf=(await request('/api/session')).csrf;const next=await request('/api/state');if(actionBusy||epoch!==actionEpoch)return;state=next;if(typeof next.csrf==='string')csrf=next.csrf;serverReachable=true;if(wasOffline&&noticeKind==='connection')notice('');render();}catch(error){if(!actionBusy&&epoch===actionEpoch){serverReachable=false;render();}}finally{pollBusy=false;}}
 async function run(path,payload={}){
  if(actionBusy)throw new Error('Trwa operacja.');
  const fast=state?.write_transport==='rs485'&&path.startsWith('/api/write/');actionBusy=true;actionEpoch++;notice('');render();
  try{
-  const response=await request(path,payload),jobId=response.job.id,deadline=Date.now()+95000;let first=true;
+  let response;const submitDeadline=Date.now()+30000;
+  for(;;){try{response=await request(path,payload);break;}catch(error){
+   // Only an explicit busy rejection guarantees that no operation was accepted.
+   if(!error.busy||path!=='/api/write/save'||Date.now()>=submitDeadline)throw error;
+   await new Promise(resolve=>setTimeout(resolve,500));
+  }}
+  const jobId=response.job.id,deadline=Date.now()+95000;let first=true;
   while(Date.now()<deadline){
    if(!fast||!first)await new Promise(resolve=>setTimeout(resolve,fast?250:1000));first=false;
    let next;try{next=await request('/api/job?id='+encodeURIComponent(jobId));}catch(error){
@@ -101,11 +108,9 @@ async function saveTemperature(id,value,beforeWrite=()=>{}){
  if(savingTemperature||actionBusy)throw new Error('Trwa zapis temperatury.');
  if(!fresh()||!state.targets_fresh||!state.targets?.[id])throw new Error('Brak aktualnego odczytu nastawy.');
  if(state.targets[id].write_ready===false)throw new Error(state.targets[id].write_error||'Zapis tej nastawy jest zablokowany');
- const expected={...state.targets[id]};savingTemperature=true;
- try{const prepared=await run('/api/write/prepare',{id,value,before:expected.before});
-  const equal=(a,b)=>typeof a==='number'&&typeof b==='number'&&Math.abs(a-b)<0.0001;
-  if(!['before','min','max','step'].every(key=>equal(expected[key],prepared[key]))||!EcoMirror.ticketMatches(state,prepared,fresh()))throw new Error('Nastawa lub po\u0142\u0105czenie zmieni\u0142y si\u0119. Sprawd\u017a aktualn\u0105 warto\u015b\u0107.');
-  beforeWrite();const result=await run('/api/write/execute',{token:prepared.token,confirm:true});notice(result.message,!['verified','unchanged'].includes(result.state));return result;
+ savingTemperature=true;
+ try{const result=await run('/api/write/save',{id,value,confirm:true});
+  beforeWrite();notice(result.message,!['verified','unchanged'].includes(result.state));return result;
  }finally{savingTemperature=false;render();}
 }
 for(const button of document.querySelectorAll('button[data-view]'))button.onclick=()=>selectView(button.dataset.view);

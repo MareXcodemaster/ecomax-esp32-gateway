@@ -43,18 +43,16 @@
   if(valid&&!draft.dirty){draft.value=t.before;draft.before=clone(t);}
   $('setting-before').textContent=(t?.cached?'Warto\u015b\u0107 z pami\u0119ci ecoNET: ':'Obecna nastawa: ')+(valid?label(t,t.before):'---');
   $('setting-cache').textContent=t?.cached?'Nieaktywny parametr: ecoNET nie udost\u0119pnia aktualnego odczytu zwrotnego. Przyj\u0119cie polecenia nie potwierdza nastawy.':'';
-  $('setting-update').textContent=valid&&draft.dirty&&!matchesTarget(draft.before,t)?'Nastawa lub tryb zmieni\u0142y si\u0119 poza formularzem. Anuluj i odczytaj ponownie.':'';
+  $('setting-update').textContent='';
   $('setting-limits').textContent=valid&&t.value_kind==='number'?'Zakres: '+fmt(t.min,t.unit)+' - '+fmt(t.max,t.unit)+' / krok '+fmt(t.step,t.unit):'';
   const input=$('setting-number');if(document.activeElement!==input)input.value=draft.value;if(valid){input.min=t.min;input.max=t.max;input.step=t.step;}
   $('setting-option').value=draft.value;$('setting-bool').checked=!!draft.value;
-  $('setting-save').disabled=!valid||!matchesTarget(draft.before,t)||!validValue(t,Number(draft.value))||actionBusy||snap.busy||saving||t.risk&&!$('setting-confirm').checked;
+  $('setting-save').disabled=!valid||!validValue(t,Number(draft.value))||actionBusy||snap.busy||saving||t.risk&&!$('setting-confirm').checked;
  }
  async function save(id,value,expected,installation=false){
   if(saving||actionBusy)throw new Error('Trwa zapis.');saving=true;
   try{
-   const prepared=await run('/api/write/prepare',{id,value,before:expected.before,confirm_installation:installation});
-   if(!matchesTarget(expected,prepared)||!EcoMirror.ticketMatches(state,prepared,fresh()))throw new Error('Nastawa zmieni\u0142a si\u0119. Sprawd\u017a aktualny odczyt.');
-   const result=await run('/api/write/execute',{token:prepared.token,confirm:true,confirm_installation:installation});
+   const result=await run('/api/write/save',{id,value,confirm:true,confirm_installation:installation});
    notice(result.message,!['verified','unchanged'].includes(result.state));return result;
   }finally{saving=false;}
  }
