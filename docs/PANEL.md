@@ -62,6 +62,52 @@ nie pomiarem predkosci lacza. Kazda kreska odpowiada kolejnym 20 punktom
 procentowym. Podpowiedz zawiera dokladne dBm; klikniecie otwiera okno Wi-Fi.
 Brak aktualnego odczytu pokazuje --%, nie zapamietana sile jako aktualna.
 
+## JSON Do Analizy Pracy Kotla
+
+Otworz **Narzedzia > Pobierz analize spalania JSON** albo przycisk
+**JSON do analizy** w Historii danych. Wybierz 1 godzine, 6 godzin,
+24 godziny lub ostatnie 3 dni i nacisnij **Pobierz JSON**.
+
+Raport zawiera wszystkie dostepne zapisane probki, bez dodatkowego
+usredniania do wykresu: temperatury zmierzone i zadane, moc, nadmuch,
+prace podajnika i pomp, stany kotla, poziom i strumien paliwa oraz tlen,
+jesli sterownik je udostepnia. Zapis flash jest minutowy, a nowszy bufor
+RAM ma nominalnie probki co 10 sekund i przejscia stanow. Nie oznacza
+to, ze dostepny jest pomiar zuzycia paliwa albo kazdy krotki impuls podajnika.
+
+Plik zawiera czas UTC, jednostki, braki jako null, przerwy jako gapBefore
+i informacje o stanie archiwum. Osobno sa aktualne nastawy z poczatku
+i konca pobierania. Nie wolno uznawac ich za nastawe obowiazujaca przez
+cale 3 dni. Zamknieta przegladarka nie zatrzymuje archiwum pomiarow ESP.
+
+Od beta.18 ESP prowadzi tez osobny, trwaly rejestr nastaw do 3 dni.
+Zapisuje dostepne nastawy temperatur oraz aktualnie odczytany katalog
+menu RS485, w tym udostepnione nastawy spalania. Nie wykonuje dodatkowych
+komend zmiany ani nie zapisuje zapamietanych wartosci jako swiezego odczytu.
+Rejestr dziala bez telefonu i zachowuje zapisane rekordy po restarcie ESP.
+Zbieranie zaczyna sie dopiero po aktualizacji; starszych ustawien nie odtworzy.
+
+W JSON sekcja **settings_history** zawiera:
+
+- **baseline**: komplet dostepnych wartosci na poczatku nowej godziny lub po restarcie;
+- **changes**: tylko zmienione wartosci, a null oznacza utrate dostepnego odczytu;
+- **observed**: potwierdzenie kolejnego odczytu, okolo co 10 minut bez zmian.
+
+Czas oznacza zaobserwowanie nastawy przez ESP, nie dokladny moment zmiany
+na kotle, termostacie czy innym panelu. Poczatkowy rekord moze poprzedzac
+wybrany zakres, aby mozna bylo odtworzyc znany stan na jego poczatku.
+Braki, opoznienia i bledy rejestru sa sygnalizowane w quality oraz warnings.
+Nastawy nieudostepnione przez sterownik nie pojawia sie w historii.
+
+Pobieranie jest odczytem, bez komend zmiany nastaw. Dane skladane sa
+z ograniczonych porcji w przegladarce. Przerwane pobieranie lub niezgodny
+format nie tworzy pliku z pozornie kompletna historia. Raport nie zawiera
+hasel, tokenow sesji, SSID, adresow sieciowych ani UID. Same pomiary
+i nastawy nadal opisuja prywatna instalacje; udostepniaj je swiadomie.
+
+Taki plik pomaga w analizie pracy, ale nie wyznacza automatycznie idealnych
+nastaw i nie zastepuje pomiaru analizatorem spalin.
+
 ## Wi-Fi Bez Diagnostyki
 
 **Narzedzia > Zmien siec Wi-Fi** otwiera formularz bez opuszczania panelu.

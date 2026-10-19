@@ -1352,6 +1352,10 @@ void sample_rs_history() {
     Owned curr{cJSON_CreateObject()}; fill_rs_curr(curr.p,sensor.p);
     panel_history::append(curr.p,true,epoch(),now());
 }
+void sample_settings_history() {
+    static uint64_t next=0;if(now()<next)return;next=now()+1000;
+    Lock lock;if(!busy&&target_ms&&now()-target_ms<20000)panel_history::append_settings(data,selected_mode=="rs485",epoch(),now());
+}
 bool rs_alarm_refresh() {
     const uint8_t query[]={0,10}; transport::Reply reply; std::string error;
     if(!transport::request_readonly(61,query,2,189,reply))error="Brak odpowiedzi historii alarmow RS485";
@@ -1391,6 +1395,7 @@ void worker(void *) {
             }
         }
         if(!busy&&selected_mode=="rs485")sample_rs_history();
+        if(!busy)sample_settings_history();
         if(!busy&&selected_mode=="rs485"&&transport::enabled()&&native_identity&&now()-native_identity_ms<30000&&now()>=next_schedule_poll) {
             auto saved_error=error_text; bool ok=rs_schedule_refresh(); schedule_failures=ok?0:std::min(schedule_failures+1,2U);
             next_schedule_poll=now()+(ok?30000:std::min(60000U,15000U<<schedule_failures)); error_text=saved_error;

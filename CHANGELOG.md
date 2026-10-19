@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0-beta.18 - 2026-10-19
+
+- Pobieranie JSON do analizy pracy kotla z Narzedzi oraz Historii danych.
+  Zakres 1/6/24/72 godziny, wszystkie dostepne zapisane probki bez redukcji do wykresu.
+- Eksport uwzglednia temperatury, nastawy temperatur, moc, nadmuch, prace podajnika
+  i pomp, stany kotla oraz dostepne dane pelletu i sondy lambda.
+- Osobny trwaly rejestr odczytanych nastaw: poczatkowy stan, zmiany i potwierdzenie
+  odczytu co 10 minut, autonomicznie bez otwartego panelu. Retencja do 3 dni.
+  Obejmuje dostepne nastawy temperatur i odczytany katalog menu RS485, takze nastawy spalania.
+  Zbieranie zaczyna sie po aktualizacji; nie odtwarza starszych ustawien.
+- Jednostki, czas UTC, jawne braki danych/przerwy i stan archiwum. Czas zmiany nastawy
+  oznacza jej zaobserwowanie przez ESP, nie dokladna chwile wydania komendy.
+- Dane pobierane sa godzinami i skladane w przegladarce. Mozliwe anulowanie;
+  bledna lub przerwana odpowiedz nie powoduje zapisania niepelnego pliku jako poprawnego.
+- Eksport analityczny nie zawiera hasel, sieci, tokenow ani UID i nie wysyla polecen do kotla.
+- Format istniejacego archiwum flash i zapisane w nim pomiary pozostaja bez zmian.
+
 ## 0.7.0-beta.17 - 2026-10-18
 
 - Panel odpytuje ESP co 2 sekundy takze w karcie przegladarki dzialajacej w tle.

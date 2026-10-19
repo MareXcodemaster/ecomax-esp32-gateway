@@ -1,4 +1,5 @@
 #include "history_store.hpp"
+#include "settings_journal.hpp"
 #include "state.hpp"
 #include "esp_partition.h"
 #include "esp_flash.h"
@@ -13,6 +14,7 @@
 #include <cmath>
 #include <atomic>
 #include <vector>
+#include <string>
 #include <algorithm>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -30,6 +32,13 @@ static_assert(sizeof(Record)==172&&sizeof(Header)==28,"Archive ABI changed");
 const esp_partition_t *partition=nullptr;
 SemaphoreHandle_t mutex=nullptr;
 QueueHandle_t queue=nullptr;
+struct SettingsEvent { char *json;uint32_t time; };
+QueueHandle_t settings_queue=nullptr;
+std::vector<uint32_t> settings_hours;
+std::atomic<uint32_t> settings_dropped{0};
+bool settings_failed=false;
+std::atomic<uint32_t> settings_failed_hour{0};
+char settings_error[128]{};
 std::vector<Hour> hours;
 bool ready=false,loading=true,restored=false,remount_verified=false;
 size_t total_bytes=0,used_bytes=0;
@@ -44,6 +53,7 @@ bool valid(const Record &r){return r.magic==record_magic&&r.crc==crc(&r,offsetof
 Header header(uint32_t hour){Header h{magic,1,sizeof(Record),history_data::fields,signature,hour,0};h.crc=crc(&h,offsetof(Header,crc));return h;}
 bool valid_header(const Header &h,uint32_t hour){auto expected=header(hour);return memcmp(&h,&expected,sizeof(h))==0;}
 void path(char (&out)[40],uint32_t hour){snprintf(out,sizeof(out),"%s/h%010lu.bin",base,static_cast<unsigned long>(hour));}
+void settings_path(char (&out)[40],uint32_t hour){snprintf(out,sizeof(out),"%s/s%010lu.bin",base,static_cast<unsigned long>(hour));}
 bool filename(const char *name,uint32_t &hour){if(strlen(name)!=15||name[0]!='h'||strcmp(name+11,".bin"))return false;for(unsigned i=1;i<11;++i)if(name[i]<'0'||name[i]>'9')return false;unsigned long value=0;int end=0;if(sscanf(name,"h%10lu.bin%n",&value,&end)!=1||end!=15||value>4102444800UL||value%3600)return false;hour=value;return true;}
 esp_err_t mount(){esp_vfs_littlefs_conf_t conf{};conf.base_path=base;conf.partition_label=label;conf.format_if_mount_failed=false;return esp_vfs_littlefs_register(&conf);}
 bool erased(){uint8_t buffer[1024];for(uint32_t at=0;at<bytes;at+=sizeof(buffer)){if(esp_partition_read(partition,at,buffer,sizeof(buffer))!=ESP_OK)return false;for(auto value:buffer)if(value!=255)return false;if(!(at%65536))vTaskDelay(1);}return true;}
@@ -63,8 +73,11 @@ bool probe(){
     file=fopen(name,"rb");if(!file)return false;ok=fread(output,sizeof(output),1,file)==1&&memcmp(input,output,sizeof(input))==0;fclose(file);unlink(name);return ok;
 }
 bool scan(){
-    hours.clear();hours.reserve(96);auto *dir=opendir(base);if(!dir)return false;
-    while(auto *entry=readdir(dir)){uint32_t hour;if(filename(entry->d_name,hour))hours.push_back({hour});if(hours.size()>96){closedir(dir);fail("Zbyt wiele plikow archiwum; bez usuwania danych");return false;}}
+    hours.clear();hours.reserve(96);settings_hours.clear();settings_hours.reserve(96);auto *dir=opendir(base);if(!dir)return false;
+    while(auto *entry=readdir(dir)){uint32_t hour;if(filename(entry->d_name,hour))hours.push_back({hour});
+        else if(entry->d_name[0]=='s'){std::string name=entry->d_name;name[0]='h';if(filename(name.c_str(),hour))settings_hours.push_back(hour);}
+        if(hours.size()>96||settings_hours.size()>96){closedir(dir);fail("Zbyt wiele plikow archiwum; bez usuwania danych");return false;}}
+    std::sort(settings_hours.begin(),settings_hours.end());
     closedir(dir);std::sort(hours.begin(),hours.end(),[](const Hour &a,const Hour &b){return a.hour<b.hour;});
     for(auto &info:hours){char name[40];path(name,info.hour);auto *file=fopen(name,"rb");if(!file)return false;Header h{};
         if(fread(&h,sizeof(h),1,file)!=1||!valid_header(h,info.hour)){
@@ -113,19 +126,54 @@ bool persist(const Sample &sample){
     if(!found->first)found->first=sample.time;
     found->last=sample.time;++found->count;last_stored=sample.time;return true;
 }
+uint32_t settings_hash(const void *data,size_t size,uint32_t seed){return esp_rom_crc32_le(seed,static_cast<const uint8_t *>(data),size);}
+bool persist_settings(const SettingsEvent &event){
+    const uint32_t hour=event.time/3600*3600,cutoff=event.time>history_data::retention_seconds?event.time-history_data::retention_seconds:0;
+    while(!settings_hours.empty()&&settings_hours.front()+3600<=cutoff){char name[40];settings_path(name,settings_hours.front());if(unlink(name))return false;settings_hours.erase(settings_hours.begin());}
+    const bool create=std::find(settings_hours.begin(),settings_hours.end(),hour)==settings_hours.end();
+    if(create&&settings_hours.size()>=74)return false;
+    char name[40];settings_path(name,hour);auto *file=fopen(name,create?"w+b":"r+b");if(!file)return false;
+    bool ok=settings_journal::append(file,event.json,event.time,settings_hash);if(fclose(file))ok=false;
+    if(create){settings_hours.push_back(hour);std::sort(settings_hours.begin(),settings_hours.end());}
+    if(ok)esp_littlefs_info(label,&total_bytes,&used_bytes);
+    return ok;
+}
 bool codec_test(){Record r{};r.magic=record_magic;r.sample.time=1700000000;r.sample.native=1;r.sample.mode=2;r.sample.values[0]=0;r.sample.values[1]=NAN;r.crc=crc(&r,offsetof(Record,crc));bool ok=valid(r);r.sample.time^=1;ok=ok&&!valid(r);auto h=header(1699999200);return ok&&valid_header(h,1699999200)&&!valid_header(h,1700002800);}
 void task(void *){
     {Lock lock;ready=codec_test()&&initialise();loading=false;if(!ready&&!*error)fail("Test formatu historii nie powiodl sie");}
-    Sample sample{};for(;;){if(xQueueReceive(queue,&sample,portMAX_DELAY)!=pdTRUE)continue;Lock lock;if(!ready){++dropped;continue;}if(!persist(sample)){ready=false;++dropped;}}
+    Sample sample{};for(;;){
+        if(xQueueReceive(queue,&sample,pdMS_TO_TICKS(1000))==pdTRUE){Lock lock;if(!ready)++dropped;else if(!persist(sample)){ready=false;++dropped;}}
+        SettingsEvent event{};if(settings_queue&&xQueueReceive(settings_queue,&event,0)==pdTRUE){
+            {Lock lock;if(!ready||!persist_settings(event)){++settings_dropped;settings_failed=true;settings_failed_hour=event.time/3600*3600;snprintf(settings_error,sizeof(settings_error),"Nie zapisano historii nastaw; pomiary pozostaja osobno");}
+                else{settings_failed=false;settings_error[0]=0;settings_failed_hour=0;}}
+            cJSON_free(event.json);
+        }
+    }
 }
 }
 void start(uint32_t schema_signature){
     signature=schema_signature;
-    mutex=xSemaphoreCreateMutex();queue=xQueueCreate(8,sizeof(Sample));
-    if(!mutex||!queue){snprintf(error,sizeof(error),"Brak pamieci archiwum");loading=false;return;}
-    if(xTaskCreate(task,"history_flash",6144,nullptr,1,nullptr)!=pdPASS){vQueueDelete(queue);queue=nullptr;loading=false;snprintf(error,sizeof(error),"Nie uruchomiono archiwum");}
+    mutex=xSemaphoreCreateMutex();queue=xQueueCreate(8,sizeof(Sample));settings_queue=xQueueCreate(4,sizeof(SettingsEvent));
+    if(!mutex||!queue){if(queue){vQueueDelete(queue);queue=nullptr;}if(settings_queue){vQueueDelete(settings_queue);settings_queue=nullptr;}snprintf(error,sizeof(error),"Brak pamieci archiwum");loading=false;return;}
+    if(xTaskCreate(task,"history_flash",6144,nullptr,1,nullptr)!=pdPASS){vQueueDelete(queue);queue=nullptr;if(settings_queue){vQueueDelete(settings_queue);settings_queue=nullptr;}loading=false;snprintf(error,sizeof(error),"Nie uruchomiono archiwum");}
 }
 bool enqueue(const Sample &sample){if(!queue)return false;if(xQueueSend(queue,&sample,0)!=pdTRUE){++dropped;return false;}return true;}
+bool enqueue_settings(char *json,uint32_t time){
+    if(!json)return false;
+    SettingsEvent event{json,time};
+    if(!settings_queue||settings_failed_hour==time/3600*3600||xQueueSend(settings_queue,&event,0)!=pdTRUE){cJSON_free(json);++settings_dropped;return false;}return true;
+}
+cJSON *settings(uint32_t from,uint32_t to){
+    auto *out=cJSON_CreateObject(),*events=cJSON_CreateArray();cJSON_AddItemToObject(out,"events",events);
+    cJSON_AddStringToObject(out,"time_semantics","observed_at; not exact command time");cJSON_AddNumberToObject(out,"heartbeat_seconds",600);
+    if(!mutex){cJSON_AddBoolToObject(out,"ready",false);return out;}
+    Lock lock;cJSON_AddBoolToObject(out,"ready",ready&&!settings_failed&&settings_queue);cJSON_AddNumberToObject(out,"dropped",settings_dropped.load());cJSON_AddNumberToObject(out,"pending",settings_queue?uxQueueMessagesWaiting(settings_queue):0);cJSON_AddStringToObject(out,"error",settings_error);
+    unsigned bad=0;const uint32_t start=from/3600*3600;
+    if(ready)for(auto hour:settings_hours){if(hour>to||hour+3600<=start)continue;char name[40];settings_path(name,hour);auto *file=fopen(name,"rb");if(!file){++bad;continue;}
+        auto result=settings_journal::scan(file,hour,events,start,to,settings_hash);fclose(file);if(!result.valid||result.partial)++bad;
+    }
+    cJSON_AddNumberToObject(out,"bad_files",bad);return out;
+}
 size_t read(uint32_t from,uint32_t to,Point *points,size_t capacity){
     if(!mutex||!points||!capacity)return 0;
     Lock lock;if(!ready)return 0;

@@ -195,7 +195,9 @@ static esp_err_t history_state(httpd_req_t *req) {
     if(!authorize(req))return ESP_OK;
     auto from=query_number(req,"from",0),to=query_number(req,"to",0);
     if((from||to)&&(!from||!to||from<1577836800||to>4102444800ULL||to<from||to-from>3*24*3600))return message(req,"400 Bad Request","Zakres historii: maksymalnie 3 dni");
-    return json(req,panel_history::snapshot(from,to));
+    auto raw=query_number(req,"raw",0);
+    if(raw>1||(raw&&(!from||!to||to-from>3600)))return message(req,"400 Bad Request","Eksport pelnych probek: maksymalnie 1 godzina na porcje");
+    return json(req,panel_history::snapshot(from,to,raw==1));
 }
 static esp_err_t pellet_state(httpd_req_t *req) {
     if (!authorize(req)) return ESP_OK;

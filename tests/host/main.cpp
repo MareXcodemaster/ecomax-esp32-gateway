@@ -12,8 +12,10 @@
 #include <cstdio>
 void access_tests();
 void diagnostics_tests();
+void settings_journal_tests();
 
 int main() {
+    settings_journal_tests();
     assert(wifi_retry::delay(0)==1000&&wifi_retry::delay(1)==1000);
     assert(wifi_retry::delay(2)==2000&&wifi_retry::delay(3)==4000);
     assert(wifi_retry::delay(4)==8000&&wifi_retry::delay(5)==15000);

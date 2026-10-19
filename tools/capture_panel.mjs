@@ -178,6 +178,9 @@ try {
   assert.equal(wifiWrites.length,3,'unknown outcome never causes a retry');assert.equal(await page.locator('#wifi-password').inputValue(),'');
   await page.locator('#wifi-password').fill('do-not-keep');await page.locator('#wifi-close').click();
   assert.equal(await page.locator('#wifi-password').inputValue(),'','closing clears password');
+  await summary.click();await page.locator('#analysis-export').click();
+  assert.equal(await page.locator('#analysis-hours').inputValue(),'72');
+  await screenshot('13-analiza-json');await page.locator('#analysis-close').click();
   await page.locator('[data-view="live"]').click();
   await page.locator('[data-view="schema"]').click();await page.locator('#schema-graphic svg').waitFor();
   assert.equal(await page.locator('#lbSchema_tempCO').textContent(),'72,5 \u00b0C');
@@ -329,7 +332,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log(`PASS twelve panel screenshots for ${version}: five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
+  console.log(`PASS thirteen panel screenshots for ${version}: JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

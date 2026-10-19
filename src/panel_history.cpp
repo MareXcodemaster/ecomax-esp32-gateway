@@ -1,4 +1,5 @@
 #include "panel_history.hpp"
+#include "settings_observation.hpp"
 #include "history_store.hpp"
 #include "state.hpp"
 #include "esp_heap_caps.h"
@@ -10,6 +11,8 @@
 #include <initializer_list>
 #include <algorithm>
 #include <ctime>
+#include <cstdio>
+#include <string>
 
 namespace panel_history {
 namespace {
@@ -38,6 +41,10 @@ unsigned head=0,count=0;
 uint64_t last_ms=0;
 uint64_t archive_ms=0;
 float previous_mode=NAN;
+cJSON *settings_previous=nullptr;
+uint32_t settings_hour=0;
+uint64_t settings_ms=0;
+std::string settings_context;
 bool previous_native=false;
 bool self_test();
 float read(const cJSON *curr,const Field &field) {
@@ -81,11 +88,31 @@ void append(const cJSON *curr,bool native,double epoch,uint64_t monotonic_ms) {
     xSemaphoreGive(mutex);
     if(save)history_store::enqueue(sample);
 }
-cJSON *snapshot(uint32_t from,uint32_t to) {
+void append_settings(const cJSON *data,bool native,double epoch,uint64_t monotonic_ms) {
+    using settings_observation::number;using settings_observation::string;
+    bool menu_fresh=false;auto *values=settings_observation::values(data,native,epoch,menu_fresh);if(!values)return;
+    const auto *system=cJSON_GetObjectItemCaseSensitive(data,"system");
+    const double target_epoch=number(data,"target_read_epoch"),menu_epoch=number(data,"menu_read_epoch");
+    std::string context=(native?"rs485|":"econet|")+std::string(string(system,"controllerID"))+"|"+string(system,"moduleASoftVer")+"|"+string(system,"modulePanelSoftVer");
+    const uint32_t hour=static_cast<uint32_t>(epoch)/3600*3600;
+    const bool baseline=!settings_previous||settings_hour!=hour||settings_context!=context||monotonic_ms<settings_ms;
+    auto *changes=settings_observation::difference(values,settings_previous,baseline);
+    const bool changed=cJSON_GetArraySize(changes)>0;
+    if(!changed&&monotonic_ms-settings_ms<600000){cJSON_Delete(changes);cJSON_Delete(values);return;}
+    auto *event=cJSON_CreateObject();cJSON_AddNumberToObject(event,"schema",1);cJSON_AddStringToObject(event,"kind",baseline?"baseline":changed?"changes":"observed");
+    cJSON_AddStringToObject(event,"transport",native?"rs485":"econet");cJSON_AddStringToObject(event,"model",string(system,"controllerID"));
+    cJSON_AddStringToObject(event,"module_a",string(system,"moduleASoftVer"));cJSON_AddStringToObject(event,"panel",string(system,"modulePanelSoftVer"));
+    cJSON_AddNumberToObject(event,"targets_observed_epoch",target_epoch);if(menu_fresh)cJSON_AddNumberToObject(event,"menu_observed_epoch",menu_epoch);
+    cJSON_AddBoolToObject(event,"menu_included",menu_fresh);cJSON_AddItemToObject(event,"values",changes);
+    char *json=cJSON_PrintUnformatted(event);cJSON_Delete(event);
+    if(history_store::enqueue_settings(json,static_cast<uint32_t>(epoch))){cJSON_Delete(settings_previous);settings_previous=values;settings_hour=hour;settings_ms=monotonic_ms;settings_context=context;}
+    else cJSON_Delete(values);
+}
+cJSON *snapshot(uint32_t from,uint32_t to,bool raw) {
     if(!samples||!mutex)return nullptr;
     if(!to)to=static_cast<uint32_t>(time(nullptr));
     if(!from)from=to>7200?to-7200:0;
-    if(to<from||to-from>history_data::retention_seconds)return nullptr;
+    if(to<from||to-from>history_data::retention_seconds||(raw&&to-from>3600))return nullptr;
     auto *copy=static_cast<Point *>(heap_caps_malloc(capacity*2*sizeof(Point),MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT));
     if(!copy)return nullptr;
     size_t size=history_store::read(from,to,copy,capacity);bool detail=false;
@@ -96,18 +123,20 @@ cJSON *snapshot(uint32_t from,uint32_t to) {
     unsigned unique=0;for(size_t i=0;i<size;++i){if(unique&&copy[unique-1].sample.time==copy[i].sample.time){copy[i].gap_before|=copy[unique-1].gap_before;copy[unique-1]=copy[i];}else copy[unique++]=copy[i];}
     const auto actual_from=unique?copy[0].sample.time:from,actual_to=unique?copy[unique-1].sample.time:to;
     auto resolution=std::max<uint32_t>(detail?10:60,history_data::step(actual_from,actual_to));
-    size=history_data::reduce(copy,unique,actual_from,actual_to,resolution,std::max<uint32_t>(90,resolution*2+5));
+    if(raw){size=unique;for(unsigned i=1;i<size;++i)copy[i].gap_before|=copy[i].sample.time-copy[i-1].sample.time>90||copy[i].sample.native!=copy[i-1].sample.native;}
+    else size=history_data::reduce(copy,unique,actual_from,actual_to,resolution,std::max<uint32_t>(90,resolution*2+5));
     auto *out=cJSON_CreateObject(),*columns=cJSON_CreateArray(),*rows=cJSON_CreateArray();
     cJSON_AddNumberToObject(out,"capacity",capacity);cJSON_AddNumberToObject(out,"interval_seconds",interval_ms/1000);
     auto *archive=history_store::status();bool persistent=cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(archive,"ready"));
     cJSON_AddItemToObject(out,"archive",archive);cJSON_AddStringToObject(out,"storage",persistent?"littlefs+ram":"ram");cJSON_AddNumberToObject(out,"schema",1);
-    cJSON_AddNumberToObject(out,"from",from);cJSON_AddNumberToObject(out,"to",to);cJSON_AddNumberToObject(out,"resolution_seconds",resolution);cJSON_AddNumberToObject(out,"gap_seconds",std::max<uint32_t>(90,resolution*2+5));
+    cJSON_AddNumberToObject(out,"from",from);cJSON_AddNumberToObject(out,"to",to);cJSON_AddNumberToObject(out,"resolution_seconds",resolution);cJSON_AddNumberToObject(out,"gap_seconds",raw?90:std::max<uint32_t>(90,resolution*2+5));
+    cJSON_AddBoolToObject(out,"export_raw",raw);
     for(auto key:{"time","native","mode"})cJSON_AddItemToArray(columns,cJSON_CreateString(key));
     for(auto &field:fields)cJSON_AddItemToArray(columns,cJSON_CreateString(field.key));
     cJSON_AddItemToArray(columns,cJSON_CreateString("gapBefore"));
     cJSON_AddItemToObject(out,"columns",columns);cJSON_AddItemToObject(out,"rows",rows);
     for(unsigned i=0;i<size;++i){const auto &sample=copy[i].sample;auto *row=cJSON_CreateArray();cJSON_AddItemToArray(rows,row);add(row,sample.time);add(row,sample.native);add(row,sample.mode);for(float value:sample.values)add(row,value);add(row,copy[i].gap_before);}
-    heap_caps_free(copy);return out;
+    heap_caps_free(copy);if(raw)cJSON_AddItemToObject(out,"settings_history",history_store::settings(from,to));return out;
 }
 namespace {
 bool self_test() {
@@ -120,6 +149,9 @@ bool self_test() {
     append(fixture,true,1700000001,2000);check(count==1);
     cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(fixture,"mode"),2);
     append(fixture,true,1700000002,3000);check(count==2);
+    auto *raw=snapshot(1700000000,1700000002,true);
+    check(raw&&cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(raw,"export_raw"))&&cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(raw,"rows"))==2);
+    cJSON_Delete(raw);check(snapshot(1700000000,1700003601,true)==nullptr);
     check(count==2&&samples[head].time==1700000000);
     check(std::isnan(samples[head].values[2]));
     clear();

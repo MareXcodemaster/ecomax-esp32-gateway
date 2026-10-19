@@ -6,7 +6,7 @@ import {resolve,sep,extname} from 'node:path';
 import {chromium} from 'playwright';
 const root=resolve('src/panel_web'),writes=[],errors=[];
 const target={name:'CWU DEMO',before:40,effective:40,min:35,max:65,step:1,measured_key:'tempCWU',write_ready:true};
-const state={version:'0.7.0-beta.17',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
+const state={version:'0.7.0-beta.18',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
  system:{controllerID:'ecoMAX DEMO'},values:{},names:{},menu:[],enums:{},units:[],structure:[],category_names:[],tiles:[],endpoints:{},versions:{},tests:[],
  curr:{mode:0,tempCWU:35,tempCWUSet:40,ecoSterMode1:2},targets:{1281:target},controls:{},econet_health:{fresh:true,api_ok:false},
  esp_network:{connected:true,rssi_dbm:-70,ssid:'DEMO',ip:'192.0.2.10',hostname:'piec'},schedules:{ecomaxSchedules:{}},pellet:{}};
