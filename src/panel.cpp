@@ -4,6 +4,7 @@
 #include "board.hpp"
 #include "boiler.hpp"
 #include "state.hpp"
+#include "device_info.hpp"
 #include "transport.hpp"
 #include "protocol.hpp"
 #include "thermostat_decoder.hpp"
@@ -1469,6 +1470,7 @@ cJSON *snapshot() {
     double http_mode=num(get(get(out,"curr"),"mode"));
     overlay(out);
     put(out,"pellet",pellet::snapshot());
+    put(out,"esp_device",device_info::snapshot());
     // The RS485 ecoNET address is emulated by ESP. Never label its network fields as real ecoNET data.
     auto *network=get(out,"econet_network"); if(!cJSON_IsObject(network)) { network=cJSON_CreateObject(); put(out,"econet_network",network); }
     bool network_fresh=econet_fresh&&econet_network_ms&&now()-econet_network_ms<65000;

@@ -62,6 +62,30 @@ nie pomiarem predkosci lacza. Kazda kreska odpowiada kolejnym 20 punktom
 procentowym. Podpowiedz zawiera dokladne dBm; klikniecie otwiera okno Wi-Fi.
 Brak aktualnego odczytu pokazuje --%, nie zapamietana sile jako aktualna.
 
+## Pamiec I Parametry ESP
+
+W **Ustawienia urzadzenia > Pamiec i parametry ESP** zobaczysz zajete
+i wolne miejsce oraz procent dla czterech osobnych pul:
+
+- **Program / aktywny slot OTA**: rozmiar uruchomionego firmware wzgledem
+  miejsca na jeden obraz aktualizacji, nie wzgledem calej pamieci flash.
+- **RAM wewnetrzna / sterta**: dynamiczna pamiec programu. Nie jest to
+  procent calej fizycznej pamieci SRAM procesora.
+- **PSRAM / sterta**: dodatkowa pamiec dynamiczna, odrebna od wewnetrznej RAM.
+- **Historia pomiarow i nastaw / flash**: zajetosc systemu plikow archiwum,
+  wraz z jego narzutem. To nie jest zajetosc calej fizycznej pamieci flash.
+
+Nizej sa model i rewizja ESP, liczba rdzeni, taktowanie CPU, fizyczna
+pojemnosc flash, wersja ESP-IDF, czas od uruchomienia i powod restartu.
+Minimalna wolna pamiec od startu oraz najwiekszy wolny blok pomagaja
+zauwazyc maly zapas RAM lub jej fragmentacje. Taktowanie nie oznacza
+procentowego obciazenia CPU; ten widok nie mierzy obciazenia procesora.
+
+Dane odswiezaja sie z panelem, bez dodatkowych zapytan do kotla.
+Brak polaczenia z kotlem nie blokuje odczytu ESP. Po utracie samego ESP
+wskazniki sa oznaczone jako nieaktualne; brak odczytu nie jest zerem.
+Otwieranie tej sekcji nie zmienia konfiguracji ani nastaw.
+
 ## JSON Do Analizy Pracy Kotla
 
 Otworz **Narzedzia > Pobierz analize spalania JSON** albo przycisk

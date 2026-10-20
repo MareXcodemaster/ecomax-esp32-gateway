@@ -48,6 +48,7 @@ function render(){if(!state)return;const f=fresh(),curr=f?state.curr:{},direct=s
  if(window.EcoWifi)EcoWifi.render(state.esp_network);
  if(window.EcoWifiSignal)EcoWifiSignal.render(state.esp_network,serverReachable);
  if(window.EcoAlarmBadge)EcoAlarmBadge.render(state,f);
+ if(window.EcoDevice&&view==='settings')EcoDevice.render(state.esp_device,serverReachable);
  for(const button of document.querySelectorAll('button[data-write-id],[data-write-id] button')){const id=button.closest('[data-write-id]').dataset.writeId,target=state.targets?.[id];if(target?.write_ready===false){button.disabled=true;button.title=target.write_error||'Zapis zablokowany';button.dataset.writeBlocked='true';}else if(button.dataset.writeBlocked){button.removeAttribute('title');delete button.dataset.writeBlocked;}}
  if(view==='menu'&&!state.targets_fresh)for(const row of $('menu-rows').rows)if(row.cells.length===6)row.cells[2].textContent='---';
  if(view==='menu'&&menuSelection!==null){const selected=state.menu.find(item=>item.index===menuSelection);if(selected){text('menu-name',selected.index+' / '+selected.name);text('menu-description',selected.description||'');text('menu-json',JSON.stringify(selected,null,2));}}

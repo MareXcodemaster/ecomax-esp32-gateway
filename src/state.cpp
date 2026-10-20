@@ -1,4 +1,5 @@
 #include "state.hpp"
+#include "device_info.hpp"
 #include "board.hpp"
 #include "boiler.hpp"
 #include "protocol.hpp"
@@ -97,6 +98,7 @@ cJSON *status() {
     auto *json = cJSON_CreateObject();
     if (!json) return nullptr;
     cJSON_AddStringToObject(json, "firmware", board::version);
+    cJSON_AddItemToObject(json,"device",device_info::snapshot());
     cJSON_AddStringToObject(json, "mode", transport::enabled()?"RS485_DIRECT":"PASSIVE_RX_ONLY");
     cJSON_AddBoolToObject(json, "tx_enabled", transport::enabled());
     cJSON_AddBoolToObject(json, "rs485_address_conflict", transport::conflict());

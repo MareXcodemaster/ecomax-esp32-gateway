@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.0-beta.19 - 2026-10-20
+
+- Ustawienia urzadzenia: rzeczywiste zajecie programu w aktywnym slocie OTA,
+  wewnetrznej sterty RAM, sterty PSRAM oraz pamieci historii we flash.
+  Wartosci zajete/wolne, procenty i osobne wskazniki dla kazdej puli.
+- Parametry ESP: model i rewizja, rdzenie i taktowanie CPU, fizyczna pojemnosc
+  flash, wersja ESP-IDF, czas od uruchomienia i przyczyna ostatniego restartu.
+  Minimalna wolna pamiec i najwieksze wolne bloki pomagaja ocenic zapas RAM.
+- Odczyt korzysta z dotychczasowego odswiezania panelu, bez nowych zapytan
+  RS485. Dziala takze bez polaczenia z kotlem; utrata ESP usuwa stare wskazania.
+- Nowe testy danych i widoku telefonu/komputera oraz aktualna galeria DEMO.
+  Bez zmian nastaw kotla, konfiguracji Wi-Fi i formatu archiwum pomiarow.
+
 ## 0.7.0-beta.18 - 2026-10-19
 
 - Pobieranie JSON do analizy pracy kotla z Narzedzi oraz Historii danych.

@@ -7,6 +7,7 @@ import { chromium } from 'playwright';
 
 const root = resolve('src/panel_web'), now = Math.floor(Date.now() / 1000);
 const version = JSON.parse(await readFile('package.json', 'utf8')).version;
+const deviceInfo = JSON.parse(await readFile('tests/fixtures/device_info.json','utf8'));
 const week = Array.from({ length: 7 }, (_, day) => {
   const slots = Array.from({ length: 48 }, (_, slot) =>
     day === 0 || day === 6 ? slot >= 14 && slot < 44 :
@@ -45,6 +46,7 @@ const state = {
   thermostat_schedule_status: { fresh: true, read_epoch: now },
   schedule_write_indices: { cwuTZ: 0, thermostat1TZ: 1 },
   pellet: { fresh: true, level_percent: 68 },
+  esp_device: deviceInfo,
 };
 const columns = ['time', 'native', 'mode', 'co', 'coSet', 'cwu', 'cwuSet', 'room', 'roomSet'];
 const rows = Array.from({ length: 433 }, (_, i) => {
@@ -122,6 +124,7 @@ try {
   const resetLayout=async()=>{await summary.click();await page.locator('#tile-layout-reset').click();assert.equal(await tools.getAttribute('open'),null,'action closes the tools menu');};
   await screenshot('01-odczyty');
   const beforeMenu=requests.filter(([method])=>method!=='GET').length;
+  state.alarm_status={count_fresh:true,pending_count:3,count_age_seconds:1};
   for(const width of [320,390,1280]){
     await page.setViewportSize({width,height:1080});
     await page.evaluate(()=>EcoAlarmBadge.render({write_transport:'rs485',alarm_status:{count_fresh:true,pending_count:3,count_age_seconds:1},alarms:[{active:false}]},true));
@@ -129,6 +132,7 @@ try {
     const style=await counter.evaluate(el=>{const s=getComputedStyle(el);return {display:s.display,color:s.backgroundColor,radius:s.borderRadius,w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height};});
     assert.equal(style.color,'rgb(198, 40, 40)');assert.equal(style.radius,'50%');assert.ok(Math.abs(style.w-22)<.01);assert.ok(Math.abs(style.w-style.h)<.01);assert.notEqual(style.display,'none');
   }
+  state.alarm_status={count_fresh:true,pending_count:0};
   await page.setViewportSize({width:1280,height:1080});
   await page.evaluate(()=>EcoAlarmBadge.render({write_transport:'rs485',alarm_status:{count_fresh:true,pending_count:0}},true));
   assert.equal(await page.locator('#alarm-count').isVisible(),false);
@@ -193,7 +197,11 @@ try {
   await screenshot('10-schemat');
   await page.locator('#update-open').click();
   await page.locator('#update-current').getByText(version,{exact:true}).waitFor();
+  await page.locator('.update-panel').scrollIntoViewIfNeeded();
   await screenshot('12-aktualizacje');
+  await page.locator('.esp-resources').evaluate(el=>el.scrollIntoView({block:'start'}));
+  assert.ok((await page.locator('.esp-resources h3').boundingBox()).y>(await page.locator('header').boundingBox()).height,'memory heading is below the fixed header');
+  await screenshot('14-pamiec-esp');
   await page.locator('[data-view="schema"]').click();
   await page.evaluate(()=>EcoHeatingSchema.render(state,false));
   assert.equal(await page.locator('#lbSchema_tempCO').textContent(),'---');
@@ -332,7 +340,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log(`PASS thirteen panel screenshots for ${version}: JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
+  console.log(`PASS fourteen panel screenshots for ${version}: memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

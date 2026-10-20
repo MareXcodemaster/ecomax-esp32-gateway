@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "chip": "ESP32-S3",
+  "chip_revision": 2,
+  "cpu_cores": 2,
+  "cpu_mhz": 240,
+  "idf_version": "v5.5.0 (DEMO)",
+  "uptime_ms": 93784000,
+  "reset_reason": 3,
+  "flash_total_bytes": 16777216,
+  "firmware": {"partition": "ota_1", "total_bytes": 3145728, "used_bytes": 1677722, "free_bytes": 1468006},
+  "internal_ram": {"total_bytes": 262144, "used_bytes": 204800, "free_bytes": 57344, "minimum_free_bytes": 32768, "largest_free_block_bytes": 28672},
+  "psram": {"total_bytes": 8388608, "used_bytes": 3145728, "free_bytes": 5242880, "minimum_free_bytes": 4500000, "largest_free_block_bytes": 4000000},
+  "history": {"ready": true, "loading": false, "total_bytes": 4194304, "used_bytes": 786432, "samples": 4320, "retention_days": 3, "error": ""}
+}

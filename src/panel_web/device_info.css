@@ -1,0 +1,16 @@
+.esp-resources{margin-top:24px;padding-top:20px;border-top:1px solid #d7e1da;scroll-margin-top:90px}
+.esp-resources h3{font-size:18px;margin:0 0 8px}
+.esp-resources h4{font-size:15px;margin:0 0 8px;line-height:1.4}
+.esp-memory-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px;margin:12px 0 20px}
+.esp-memory-item{min-width:0;min-height:116px;padding:12px 0;border-bottom:1px solid #d7e1da}
+.esp-memory-item strong,.esp-memory-item .muted{display:block;line-height:1.5;overflow-wrap:anywhere}
+.esp-memory-item meter{display:block;width:100%;height:12px;margin:10px 0;appearance:none}
+.esp-memory-item meter[hidden]{display:none}
+.esp-memory-item meter::-webkit-meter-bar{background:#e5eee9;border:0;border-radius:3px}
+.esp-memory-item meter::-webkit-meter-optimum-value{background:#176b67;border-radius:3px}
+.esp-memory-item meter::-webkit-meter-suboptimum-value{background:#ba8b22;border-radius:3px}
+.esp-memory-item meter::-webkit-meter-even-less-good-value{background:#a63131;border-radius:3px}
+.esp-memory-item meter::-moz-meter-bar{background:#176b67}
+.esp-device-values dd{overflow-wrap:anywhere}
+#esp-resources-status,#esp-history-storage-status{font-size:13px;margin:8px 0}
+@media(max-width:580px){.esp-memory-grid{grid-template-columns:minmax(0,1fr)}}
