@@ -99,7 +99,8 @@
  function tileRunning(key,curr,fresh){
   if(!fresh)return false;
   const power=curr?.[key];
-  if(key==='fanPower'&&typeof curr?.fanWorks==='boolean')return curr.fanWorks;
+  if(key==='fanPower'&&curr?.fanWorks===false)return false;
+  if(key==='fanPower'&&power==null)return curr?.fanWorks===true;
   return (key==='boilerPower'||key==='fanPower')&&typeof power==='number'&&Number.isFinite(power)&&power>0&&power<=100;
  }
  if(typeof module!=='undefined'&&module.exports)module.exports={decodeSchedule,buildTree,visibleTree,reconcileDraft,clock,targetIdForTile,writeIdForEntry,ticketMatches,isThermostatMenu,parameterReading,econetNetworkValue,scheduleHelp,advancedEntries,tileRunning};
@@ -167,6 +168,7 @@
    if(actual)actual.textContent=num(curr[key]);const set=el.querySelector('[data-reading=set] .tile-value');if(set){const id=targetIdForTile(key,snapshot),target=id?snapshot.targets?.[id]:null;set.textContent=num(id&&!key.startsWith('ecoSter')?(isFresh&&snapshot.targets_fresh?target?.before:null):curr[tile.setMemberName_]);const active=el.querySelector('.tile-target-now');if(active)active.textContent='Cel teraz: '+degrees(curr[tile.setMemberName_]);const button=el.querySelector('.tile-action');if(button&&id){button.disabled=!isFresh||!snapshot.targets_fresh||!target||target.write_ready===false||actionBusy||snapshot.busy;button.title=target?.write_ready===false?target.write_error||'Zapis zablokowany':'Zmie\u0144 temperatur\u0119 ustawion\u0105: '+labels[key];}}
    if(!actual){const value=el.querySelector('.tile-value,.tile-mode');value.textContent=key==='mode'?(isFresh?EcoSettings.boilerModeLabel(curr.mode,snapshot.write_transport):'---'):key==='lambdaLevel'?(isFresh?(curr.lambdaStatus===0?'STOP':num(curr[key]/10)):'---'):num(curr[key],0)+' %';}
   }
+  EcoTileMotion.render(container,curr.fanPower);
  }
  function updatePelletTile(){EcoPellet.decorateLevelTile(get('mirror-tiles').querySelector('[data-member="fuelLevel"]'),snapshot.curr?.fuelLevel,isFresh,snapshot.curr?.fuelCalibration);}
  function reading(kind,set){const row=make('div','tile-reading '+(set?'set':''));row.dataset.reading=kind;const graphic=make('div','tile-symbol'),i=make('i');i.dataset.lucide=set?'thermometer-sun':'thermometer';graphic.append(i);const content=make('div');content.append(make('div','tile-value','---'),make('small','',set?'temp. zadana [\u00b0C]':'temp. aktualna [\u00b0C]'));row.append(graphic,content);return row;}
@@ -230,6 +232,6 @@
   EcoPellet.init();
   EcoTileLayout.init();
  }
- function render(view,data,fresh){snapshot=data;isFresh=fresh;EcoSettings.render(data,fresh);updateDialogs();switch(view){case'pellet':EcoPellet.render(data.pellet,fresh);break;case'live':renderTiles();updatePelletTile();break;case'user':case'service':case'advanced':renderTree(view);break;case'schema':renderSchema();break;case'schedule':renderSchedule();break;case'alarms':renderAlarms();break;case'history':renderHistory();break;case'settings':renderSettings();break;case'espwifi':renderEspWifi();break;case'tests':for(const form of document.querySelectorAll('.write-form')){const input=form.querySelector('input[type=number]'),target=data.targets?.[form.dataset.writeId];input.value=input.dataset.dirty==='true'?input.dataset.draft:isFresh&&data.targets_fresh&&target?target.before:'';}break;}}
+ function render(view,data,fresh){if(view!=='live')EcoTileMotion.pause();snapshot=data;isFresh=fresh;EcoSettings.render(data,fresh);updateDialogs();switch(view){case'pellet':EcoPellet.render(data.pellet,fresh);break;case'live':renderTiles();updatePelletTile();break;case'user':case'service':case'advanced':renderTree(view);break;case'schema':renderSchema();break;case'schedule':renderSchedule();break;case'alarms':renderAlarms();break;case'history':renderHistory();break;case'settings':renderSettings();break;case'espwifi':renderEspWifi();break;case'tests':for(const form of document.querySelectorAll('.write-form')){const input=form.querySelector('input[type=number]'),target=data.targets?.[form.dataset.writeId];input.value=input.dataset.dirty==='true'?input.dataset.draft:isFresh&&data.targets_fresh&&target?target.before:'';}break;}}
  root.EcoMirror={init,render,openTemperature,ticketMatches,decodeSchedule,clock};
 })(globalThis);

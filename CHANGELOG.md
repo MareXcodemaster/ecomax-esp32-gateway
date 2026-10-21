@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0-beta.28 - 2026-10-21
+
+- Ikona mocy pokazuje kolorowy, nieregularnie zmieniajacy ksztalt plomien
+  zamiast pulsowania konturu. Symulacja 48 x 64 px dziala w przegladarce.
+- Predkosc animacji wentylatora jest proporcjonalna do odczytanej mocy:
+  25% = obrot co 3,2 s, 50% = 1,6 s, 100% = 0,8 s. To nie pomiar RPM.
+- Postoj, zerowa moc i stare dane zatrzymuja ruch. Ograniczenie ruchu
+  w systemie pozostawia statyczny plomien. Poza danymi biezacymi petla
+  plomienia jest wstrzymywana. Bez nowych zapytan do kotla.
+- Bez zmian nastaw, konfiguracji Wi-Fi ani protokolu RS485.
+
 ## 0.7.0-beta.27 - 2026-10-21
 
 - Czytelniejsze male podpisy: lokalna czcionka Inter Medium, rozmiar

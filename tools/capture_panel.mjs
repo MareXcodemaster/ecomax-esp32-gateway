@@ -135,23 +135,32 @@ try {
     assert.ok(await page.evaluate(()=>document.fonts.check('500 12px InterLocal','Temperatura aktualna \u017c\u00f3\u0142\u0107')));
   }
   await page.setViewportSize({width:1280,height:1080});
-  const animated=page.locator('[data-member="fanPower"] .tile-symbol svg'),flame=page.locator('[data-member="boilerPower"] .tile-symbol svg');
+  const animated=page.locator('[data-member="fanPower"] .tile-symbol svg'),flame=page.locator('[data-member="boilerPower"] .tile-fire');
   assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationName),'tile-fan-spin');
-  assert.equal(await flame.evaluate(el=>getComputedStyle(el).animationName),'tile-flame-pulse');
+  assert.equal(await flame.isVisible(),true);
+  assert.ok(await flame.evaluate(el=>{const data=el.getContext('2d').getImageData(0,0,el.width,el.height).data;return data.some((v,i)=>i%4===3&&v>0);}), 'fire contains nontransparent pixels');
+  const fireFrame=await flame.evaluate(el=>el.toDataURL());
   const phase=await animated.evaluate(el=>getComputedStyle(el).transform);
   await page.waitForTimeout(120);
   assert.notEqual(await animated.evaluate(el=>getComputedStyle(el).transform),phase,'fan actually rotates');
+  assert.notEqual(await flame.evaluate(el=>el.toDataURL()),fireFrame,'fire shape changes, not just its scale');
+  for(const power of [10,25,50,100]){
+    await page.evaluate(data=>EcoMirror.render('live',data,true),{...state,curr:{...state.curr,fanPower:power}});
+    assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationDuration),(80/power)+'s');
+  }
+  await page.evaluate(data=>EcoMirror.render('live',data,true),state);
   await page.emulateMedia({reducedMotion:'reduce'});
   assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationName),'none');
-  assert.equal(await flame.evaluate(el=>getComputedStyle(el).animationName),'none');
+  const stillFire=await flame.evaluate(el=>el.toDataURL());await page.waitForTimeout(120);
+  assert.equal(await flame.evaluate(el=>el.toDataURL()),stillFire,'reduced-motion fire is static');
   await page.emulateMedia({reducedMotion:'no-preference'});
   await page.evaluate(data=>EcoMirror.render('live',data,false),state);
   assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationName),'none');
-  assert.equal(await flame.evaluate(el=>getComputedStyle(el).animationName),'none');
+  assert.equal(await flame.isVisible(),false);
   const stopped={...state,curr:{...state.curr,boilerPower:0,fanPower:0,fanWorks:false}};
   await page.evaluate(data=>EcoMirror.render('live',data,true),stopped);
   assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationName),'none');
-  assert.equal(await flame.evaluate(el=>getComputedStyle(el).animationName),'none');
+  assert.equal(await flame.isVisible(),false);
   await page.evaluate(data=>EcoMirror.render('live',data,true),state);
   await page.emulateMedia({reducedMotion:'reduce'});
   const targetLabels = await page.locator('.tile-target-now').evaluateAll(elements => elements.map(el => {
