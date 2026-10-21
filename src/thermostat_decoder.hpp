@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <cmath>
 
 namespace plum {
 // PyPlumIO's 12-parameter thermostat layout, also captured on this ecoMAX.
@@ -23,6 +24,17 @@ struct ThermostatSettings {
     ThermostatValue profile;
     ThermostatValue values[8][thermostat_parameters]{};
 };
+enum class ThermostatSync { invalid, pending, ready };
+inline ThermostatSync thermostat_sync(const ThermostatSettings &settings,unsigned slot,double mode,double target,double measured) {
+    if(slot>=settings.slots||slot>=8||!std::isfinite(mode)||mode<0||mode>7||std::floor(mode)!=mode||
+       !std::isfinite(target)||!std::isfinite(measured))return ThermostatSync::invalid;
+    const auto &values=settings.values[slot];const auto &raw_mode=values[0];
+    const int active=thermostat_active_index(static_cast<unsigned>(mode));
+    if(!raw_mode.present||raw_mode.low!=0||raw_mode.high!=7||(raw_mode.value&127)>7||
+       (active>=0&&!values[active].present))return ThermostatSync::invalid;
+    if((raw_mode.value&127)!=mode||(active>=0&&std::fabs(values[active].value/10.0-target)>=0.0001))return ThermostatSync::pending;
+    return ThermostatSync::ready;
+}
 inline bool decode_thermostats(const uint8_t *data, size_t size, ThermostatSettings &out) {
     out={};
     if(!data || size<6 || data[0]!=0 || data[1]!=0 || data[2]<13 || (data[2]-1)%thermostat_parameters) return false;

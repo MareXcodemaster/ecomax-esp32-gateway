@@ -41,6 +41,16 @@ cala aplikacje; panel nie omija tych ograniczen. ESP samodzielnie odczytuje
 kociol takze wtedy, gdy strona jest zamknieta. Podczas zapisu nie naklada
 odczytow na trwajaca operacje; po jej zakonczeniu odswiezanie wraca.
 
+Od beta.20 przy chwilowej roznicy miedzy nastawa ecoSTER a ramka pomiarow
+ESP czeka do 2 sekund na zgodny odczyt i ponownie sprawdza parametry,
+zanim pozwoli wyslac zmiane. Jesli zgodnosci nadal nie ma, zmiana nie jest
+wysylana. Normalny zgodny odczyt nie ma dodatkowego oczekiwania.
+
+Stary blad samego przygotowania przestaje byc czerwonym komunikatem
+po nowym poprawnym odczycie. Nie oznacza to wykonania poprzedniej zmiany:
+zapis trzeba zlecic ponownie. Panel nie ponawia komendy automatycznie.
+Ostrzezenia po rozpoczeciu wysylki i przy nieznanym wyniku sa zachowane.
+
 Zapis to przygotowanie polecenia, jedna wysylka i kontrola odpowiedzi/odczytu.
 Samo ACK nie dowodzi, ze zadana wartosc zostala zastosowana. Niepotwierdzone
 polecenie nie jest automatycznie powtarzane ani automatycznie cofane.

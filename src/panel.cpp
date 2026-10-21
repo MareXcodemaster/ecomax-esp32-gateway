@@ -192,7 +192,7 @@ double room_mode(const J *value) {
 const char *room_modes[]={"Harmonogram","Ekonomiczny","Komfortowy","Wyjscie z domu","Wietrzenie","Party","Wakacje","Przeciwzamrozeniowy"};
 bool generic_id(const char *id) { return !strncmp(id,"rm:",3)||!strncmp(id,"legacy:",7)||!strncmp(id,"schedule:",9); }
 J *generic_target(const char *id);
-J *rs_target(const char *id);
+J *rs_target(const char *id,bool *sensor_pending=nullptr);
 J *rs_menu_temperature_target(const char *id);
 // Access is inherited from every parent section, not only the parameter row.
 bool menu_access(int wanted) {
@@ -552,7 +552,8 @@ void build_menu() {
 }
 bool rs_refresh(bool background=false);
 bool rs_inspect_temperature(const char *id,J *&out);
-J *rs_target(const char *id) {
+J *rs_target(const char *id,bool *sensor_pending) {
+    if(sensor_pending)*sensor_pending=false;
     if(definition(id)&&!definition(id)->native) { fail("Ta nastawa wymaga lokalnego ecoNET"); return nullptr; }
     auto *d=definition(id); if(!d || !transport::enabled() || !native_identity || now()-native_identity_ms>60000) { fail("Brak potwierdzonej tozsamosci RS485"); return nullptr; }
     Owned sensor{boiler::snapshot()};
@@ -565,11 +566,13 @@ J *rs_target(const char *id) {
         if(index<0) { fail("Nieznana pozycja nastawy termostatu"); return nullptr; }
         const auto &p=native_room.values[0][index], &m=native_room.values[0][0];
         double mode=room_mode(get(room,"state")),base=p.value/10.0,low=p.low/10.0,high=p.high/10.0,effective=num(get(room,"target_temp"));
-        int active_index=std::isfinite(mode)?plum::thermostat_active_index(static_cast<unsigned>(mode)):-1;
         bool active=mode==(d->position==3?1:d->position==2?2:d->position);
-        if(!room || !m.present || m.low!=0 || m.high!=7 || (m.value&127)!=mode ||
-           !p.present || low<d->low || high>d->high || !aligned(base,d) || !aligned(low,d) || !aligned(high,d) ||
-           (active_index>=0&&(!native_room.values[0][active_index].present||!equal(native_room.values[0][active_index].value/10.0,effective))) || !std::isfinite(num(get(room,"current_temp")))) { fail("Brak zgodnego odczytu nastawy i aktywnego profilu RS485"); return nullptr; }
+        const auto sync=plum::thermostat_sync(native_room,0,mode,effective,num(get(room,"current_temp")));
+        if(sync==plum::ThermostatSync::invalid || !p.present || low<d->low || high>d->high || !aligned(base,d) || !aligned(low,d) || !aligned(high,d)) { fail("Brak zgodnego odczytu nastawy i aktywnego profilu RS485"); return nullptr; }
+        if(sync==plum::ThermostatSync::pending) {
+            if(sensor_pending)*sensor_pending=true;
+            fail("Odczyty nastawy i aktywnego profilu RS485 jeszcze nie sa zgodne. Nie wyslano zmiany");return nullptr;
+        }
         auto *v=cJSON_CreateObject(); text(v,"id",id); text(v,"name",d->name); number(v,"before",base); number(v,"effective",active?effective:NAN);
         number(v,"active_target",effective); number(v,"parameter_sample_ms",native_room_ms);
         number(v,"min",low); number(v,"max",high); number(v,"step",d->step); text(v,"measured_key",d->measured); text(v,"menu_index",id);
@@ -791,9 +794,25 @@ bool rs_room_refresh() {
 bool rs_inspect_temperature(const char *id,J *&out) {
     auto *d=definition(id); if(!d) return false;
     if((!native_identity||now()-native_identity_ms>30000)&&!rs_identify()) return false;
-    if(d->legacy) { if(!rs_room_refresh()) return false; out=rs_target(id); }
+    if(d->legacy) {
+        if(!rs_room_refresh()) return false;
+        bool pending=false;out=rs_target(id,&pending);
+        if(pending) {
+            const auto deadline=now()+2000;
+            // Parameter replies can precede the matching passive sensor broadcast.
+            while(!out&&pending&&now()<deadline) {
+                vTaskDelay(pdMS_TO_TICKS(100));out=rs_target(id,&pending);
+            }
+            if(out) {
+                cJSON_Delete(out);out=nullptr;
+                if(!rs_room_refresh())return false;
+                out=rs_target(id);
+            }
+        }
+    }
     else { if(!rs_menu_catalog(true))return fail(native_menu_error.empty()?"Brak potwierdzenia katalogu RS485":native_menu_error.c_str()); if(!rs_menu_point(d->index)) return false; out=rs_menu_temperature_target(id); }
-    if(!out) return fail("Brak zgodnego odczytu nastawy RS485");
+    if(!out) { if(error_text.empty())fail("Brak zgodnego odczytu nastawy RS485");return false; }
+    error_text.clear();
     publish_selected(id,out); return true;
 }
 J *rs_temperature_readback(const char *id,const J *baseline) {
@@ -964,7 +983,7 @@ void log_result(const char *kind, const char *result, const J *details=nullptr) 
     Lock lock; auto *v=details?cJSON_Duplicate(details,true):cJSON_CreateObject(); text(v,"time",timestamp()); text(v,"kind",kind); text(v,"result",result);
     auto *tests=get(data,"tests"); cJSON_InsertItemInArray(tests,0,v); while(cJSON_GetArraySize(tests)>25) cJSON_DeleteItemFromArray(tests,25);
 }
-void phase(const char *step, const char *value, bool *ack=nullptr) { Lock lock; auto *j=get(data,"job"); text(j,"step",step); text(j,"phase",value); if(ack) flag(j,"ack_ok",*ack); }
+void phase(const char *step, const char *value, bool *ack=nullptr) { Lock lock; auto *j=get(data,"job"); text(j,"step",step); text(j,"phase",value); if(!strcmp(value,"dispatch"))flag(j,"dispatch_started",true); if(ack) flag(j,"ack_ok",*ack); }
 bool inspect_generic(const char *id,J *&v) {
     if(selected_mode=="rs485") {
         if(!strncmp(id,"schedule:",9)) {
@@ -1525,7 +1544,7 @@ cJSON *submit(const char *kind, const cJSON *payload, const char *owner, std::st
         while(cJSON_GetArraySize(history)>6)cJSON_DeleteItemFromArray(history,6);
     }
     queued_kind=kind; queued_owner=owner; queued_payload=cJSON_Duplicate(payload,true);
-    auto *job=cJSON_CreateObject(); text(job,"id",random_token()); text(job,"kind",kind); text(job,"status","running"); text(job,"step",""); text(job,"started",timestamp()); put(data,"job",job); busy=true;
+    auto *job=cJSON_CreateObject(); text(job,"id",random_token()); text(job,"kind",kind); text(job,"status","running"); text(job,"step",""); text(job,"started",timestamp()); flag(job,"dispatch_started",false);if(get(payload,"id"))copy(job,"setting_id",get(payload,"id"));put(data,"job",job); busy=true;
     auto *out=cJSON_CreateObject(); copy(out,"job",job); return out;
 }
 bool self_test() {

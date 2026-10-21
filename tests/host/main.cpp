@@ -16,6 +16,24 @@ void settings_journal_tests();
 
 int main() {
     settings_journal_tests();
+    {
+        plum::ThermostatSettings settings;settings.slots=3;
+        settings.values[0][0]={2,0,7,true};settings.values[0][9]={219,100,350,true};
+        using Sync=plum::ThermostatSync;
+        assert(plum::thermostat_sync(settings,0,2,21.8999996185,21.5)==Sync::ready);
+        assert(plum::thermostat_sync(settings,0,2,22,21.5)==Sync::pending);
+        assert(plum::thermostat_sync(settings,0,1,21.9,21.5)==Sync::invalid);
+        settings.values[0][10]={263,100,350,true};
+        assert(plum::thermostat_sync(settings,0,1,26.3,21.5)==Sync::pending);
+        settings.values[0][0].value=130;
+        assert(plum::thermostat_sync(settings,0,2,21.9,21.5)==Sync::ready);
+        for(double mode:{static_cast<double>(NAN),8.0,2.5})assert(plum::thermostat_sync(settings,0,mode,21.9,21.5)==Sync::invalid);
+        assert(plum::thermostat_sync(settings,0,2,NAN,21.5)==Sync::invalid);
+        assert(plum::thermostat_sync(settings,0,2,21.9,NAN)==Sync::invalid);
+        assert(plum::thermostat_sync(settings,3,2,21.9,21.5)==Sync::invalid);
+        settings.values[0][0].low=1;assert(plum::thermostat_sync(settings,0,2,21.9,21.5)==Sync::invalid);
+        puts("PASS thermostat preflight: matching values, delayed sensor, changed mode, missing data and invalid layout");
+    }
     assert(wifi_retry::delay(0)==1000&&wifi_retry::delay(1)==1000);
     assert(wifi_retry::delay(2)==2000&&wifi_retry::delay(3)==4000);
     assert(wifi_retry::delay(4)==8000&&wifi_retry::delay(5)==15000);

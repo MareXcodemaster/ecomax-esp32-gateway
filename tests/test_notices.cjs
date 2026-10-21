@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const source=fs.readFileSync(require.resolve('../src/panel_web/app.js'),'utf8');
-const flow=source.slice(source.indexOf('function notice('),source.indexOf('async function request('));
+const flow=source.slice(source.indexOf('function preflightReadFailure('),source.indexOf('async function request('));
 function context(){
  const element={hidden:true,textContent:'',classList:{toggle:()=>{}}};
  const ctx={noticeKind:'',noticeError:false,lastNoticeJob:null,serverReachable:true,
@@ -42,4 +42,24 @@ test('another reader diagnostic cannot replace an unverified write warning',()=>
  const {ctx,element}=context();ctx.notice('Zmiana niepotwierdzona',true);ctx.renderJobNotice();
  assert.equal(element.textContent,'Zmiana niepotwierdzona');assert.equal(ctx.noticeKind,'operation');
  ctx.state.rs485_identity_verified_ms=120;ctx.renderJobNotice();assert.equal(element.hidden,false);
+});
+
+test('old read-only preparation failure is not resurrected after a complete read recovery',()=>{
+ const {ctx,element}=context();Object.assign(ctx.state,{write_transport:'rs485',target_read_ms:120,targets:{STER_TEMP_DAY_1:{before:21.9}},target_errors:{},job:{id:'old',kind:'prepare',status:'failed',finished_ms:100,error:'Brak zgodnego odczytu nastawy RS485'}});
+ ctx.renderJobNotice();assert.equal(element.hidden,true);
+});
+
+test('preflight failure recovers only after the selected parameter is readable again',()=>{
+ const {ctx,element}=context();Object.assign(ctx.state,{write_transport:'rs485',targets:{},target_errors:{},job:{id:'new',kind:'save',dispatch_started:false,setting_id:'STER_TEMP_DAY_1',status:'failed',finished_ms:100,error:'Brak zgodnego odczytu nastawy RS485'}});
+ ctx.renderJobNotice();assert.equal(ctx.noticeKind,'preflight');assert.equal(element.hidden,false);
+ ctx.state.target_read_ms=120;ctx.renderJobNotice();assert.equal(ctx.noticeError,true);
+ ctx.state.targets.STER_TEMP_DAY_1={write_ready:false};ctx.renderJobNotice();assert.equal(ctx.noticeError,true);
+ ctx.state.targets.STER_TEMP_DAY_1={write_ready:true};ctx.renderJobNotice();assert.equal(ctx.noticeError,false);assert.match(element.textContent,/Poprzedniej zmiany nie wyslano/);
+});
+
+test('recovery cannot hide a dispatched, unknown, unsupported or offline command outcome',()=>{
+ for(const change of [c=>{c.state.job.dispatch_started=true;},c=>{delete c.state.job.dispatch_started;},c=>{c.state.job.kind='control_execute';},c=>{c.state.job.error='Niezweryfikowany model';},c=>{c.serverReachable=false;},c=>{c.state.fresh=false;},c=>{c.state.target_read_ms=90;},c=>{delete c.state.target_read_ms;}]){
+  const {ctx,element}=context();Object.assign(ctx.state,{write_transport:'rs485',target_read_ms:120,targets:{x:{before:22}},job:{id:'write',kind:'save',dispatch_started:false,setting_id:'x',status:'failed',finished_ms:100,error:'Brak zgodnego odczytu nastawy RS485'}});change(ctx);
+  ctx.renderJobNotice();assert.equal(element.hidden,false);assert.equal(ctx.noticeError,true);
+ }
 });

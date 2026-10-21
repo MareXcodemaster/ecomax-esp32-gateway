@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0-beta.20 - 2026-10-21
+
+- Odczyt ecoSTER przed zapisem rozroznia nieprawidlowe dane od opoznionej
+  zgodnej ramki czujnikow. Przy samym opoznieniu czeka do 2 sekund,
+  a przed dalszym krokiem ponownie odczytuje parametry termostatu.
+  Normalny, zgodny odczyt nie ma dodatkowego oczekiwania.
+- Znikanie starego bledu przygotowania nastawy dopiero po nowym, pelnym
+  odczycie. Panel nie odtwarza go przy ponownym otwarciu strony, jezeli
+  polaczenie i nastawa sa juz aktualne. Nieudany zapis nie jest ponawiany.
+- Osobne oznaczenie rozpoczecia wysylki. Ostrzezenia po probie wyslania,
+  przy nieznanym wyniku, niezgodnym modelu i braku lacznosci pozostaja widoczne.
+- Zachowanie pierwotnej przyczyny bledu RS485 zamiast ogolnego komunikatu.
+  Testy opoznionych danych, brakow, zmiany trybu i odzyskania odczytu.
+
 ## 0.7.0-beta.19 - 2026-10-20
 
 - Ustawienia urzadzenia: rzeczywiste zajecie programu w aktywnym slocie OTA,
