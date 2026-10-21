@@ -211,7 +211,22 @@ try {
   state.menu=advancedDemo.map(([index,name,value])=>({index,name,advanced:true,in_structure:true,locked:false,metadata:{value},write_id:'rm:'+index,write_enabled:true}));
   for(const item of state.menu)state.targets[item.write_id]={name:item.name,before:0,min:0,max:1,step:1,value_kind:'enum',options:[{value:0,label:String(item.metadata.value)}],risk:true,advanced:true};
   await page.evaluate(()=>poll());await page.locator('#main-nav [data-view="service"]').click();
-  await page.locator('[data-section="service"] [data-view="advanced"]').click();
+  const serviceWrites=requests.filter(([method])=>method==='POST').length;
+  for(const width of [320,390,1280]){
+    await page.setViewportSize({width,height:1080});
+    await page.locator('.parameter-actions').scrollIntoViewIfNeeded();
+    const tree=await page.locator('#service-tree').boundingBox(),bar=await page.locator('.parameter-actions').boundingBox();
+    assert.ok(bar.y>=tree.y+tree.height,'advanced toolbar follows service settings');
+    const overflow=await page.evaluate(()=>[...document.querySelectorAll('main *')].filter(el=>{const r=el.getBoundingClientRect();return r.width&&r.right>innerWidth+1}).slice(0,8).map(el=>[el.tagName,el.id,el.className,el.getBoundingClientRect().right]));
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'service toolbar fits viewport: '+JSON.stringify(overflow));
+    assert.match(await page.locator('#advanced-code-note').textContent(),/8888.*nie hasło logowania do ESP/);
+    await page.locator('.parameter-actions [data-view="advanced"]').click();
+    assert.equal(await page.locator('#advanced-tree .parameter-row').count(),9);
+    await page.locator('[data-section="advanced"] [data-view="service"]').click();
+  }
+  assert.equal(requests.filter(([method])=>method==='POST').length,serviceWrites,'navigation never submits a setting');
+  await screenshot('17-menu-zaawansowane');
+  await page.locator('[data-section="service"] .parameter-search [data-view="advanced"]').click();
   assert.equal(await page.locator('#advanced-tree .parameter-row').count(),9);
   await screenshot('15-zaawansowane');
   state.menu=[];
@@ -357,7 +372,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log(`PASS sixteen panel screenshots for ${version}: fuel calibration, advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
+  console.log(`PASS seventeen panel screenshots for ${version}: advanced footer navigation/code label, fuel calibration, advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

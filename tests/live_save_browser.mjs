@@ -6,7 +6,7 @@ import {resolve,sep,extname} from 'node:path';
 import {chromium} from 'playwright';
 const root=resolve('src/panel_web'),writes=[],points=[],errors=[];
 const target={name:'CWU DEMO',before:40,effective:40,min:35,max:65,step:1,measured_key:'tempCWU',write_ready:true};
-const state={version:'0.7.0-beta.22',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
+const state={version:'0.7.0-beta.23',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
  system:{controllerID:'ecoMAX DEMO'},values:{},names:{},menu:[],enums:{},units:[],structure:[],category_names:[],tiles:[],endpoints:{},versions:{},tests:[],
  curr:{mode:0,tempCWU:35,tempCWUSet:40,ecoSterMode1:2},targets:{1281:target},controls:{},econet_health:{fresh:true,api_ok:false},
  esp_network:{connected:true,rssi_dbm:-70,ssid:'DEMO',ip:'192.0.2.10',hostname:'piec'},schedules:{ecomaxSchedules:{}},pellet:{}};
@@ -73,7 +73,7 @@ try{
   const advanced={id:'rm:158',name:'Blokada kot\u0142a od termostatu',before:1,min:0,max:1,step:1,options:[{value:0,label:'Nie'},{value:1,label:'Tak'}],value_kind:'enum',risk:true,advanced:true,generic:true};
   state.targets['rm:158']=advanced;state.menu=[{index:158,name:advanced.name,advanced:true,in_structure:true,locked:false,write_enabled:true,write_id:advanced.id,metadata:{value:1},enum_text:'Tak'}];
   await page.evaluate(()=>poll());await page.evaluate(()=>selectView('service'));
-  await page.locator('[data-section=service] [data-view=advanced]').click();
+  await page.locator('[data-section=service] .parameter-actions [data-view=advanced]').click();
   assert.equal(await page.locator('[data-section=advanced]').isVisible(),true);
   await page.getByRole('button',{name:'Zmie\u0144: '+advanced.name,exact:true}).click();
   assert.equal(await page.locator('#setting-save').isDisabled(),true);

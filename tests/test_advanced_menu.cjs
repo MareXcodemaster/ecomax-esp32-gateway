@@ -4,6 +4,17 @@ const fs=require('node:fs');
 const {advancedEntries,visibleTree}=require('../src/panel_web/mirror.js');
 const {matchesTarget}=require('../src/panel_web/settings.js');
 
+test('service footer links to advanced menu and identifies the physical panel code without a new ESP password',()=>{
+ const html=fs.readFileSync('src/panel_web/index.html','utf8');
+ const service=html.slice(html.indexOf('<section data-section="service"'),html.indexOf('<section data-section="advanced"'));
+ assert.equal((service.match(/data-view="advanced"/g)||[]).length,2);
+ assert.ok(service.indexOf('class="parameter-actions"')>service.indexOf('id="service-tree"'));
+ assert.match(service,/role="toolbar"/);
+ assert.match(service,/aria-describedby="advanced-code-note"/);
+ assert.match(service,/Ustawienia zaawansowane &#183; 8888/);
+ assert.match(service,/nie has&#322;o logowania do ESP/);
+});
+
 test('advanced view contains only backend-approved, present, unlocked rows',()=>{
  const rows=[{index:158,advanced:true,in_structure:true,locked:false},
   {index:6,in_structure:true},{index:45,advanced:true,in_structure:false},

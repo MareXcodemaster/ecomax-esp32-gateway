@@ -1,6 +1,6 @@
 # ecoMAX Wi-Fi: Prosta Instrukcja Instalacji
 
-**Wersja programu 0.7.0-beta.22. Instrukcja 14, 21.10.2026.**
+**Wersja programu 0.7.0-beta.23. Instrukcja 15, 21.10.2026.**
 Nie musisz programowac ani wpisywac komend. Komputer jest potrzebny
 tylko przy pierwszym wgraniu; pozniej korzystasz z telefonu.
 

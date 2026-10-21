@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0-beta.23 - 2026-10-21
+
+- Dolna belka Parametrow serwisowych z przyciskiem Ustawienia zaawansowane
+  i oznaczeniem menu 8888. U gory pozostaje kompaktowy skrot z tarcza.
+- Opis odroznia kod fizycznego menu kotla od hasla logowania do ESP.
+  Nie dodano nowego hasla ani zadnej zmiany nastaw czy komend RS485.
+- Test obu drog nawigacji, dopasowania belki na telefonie i braku zapisu
+  przy samym otwieraniu menu; nowy zrzut ekranu i aktualne instrukcje.
+
 ## 0.7.0-beta.22 - 2026-10-21
 
 - Poprawka interpretacji poziomu paliwa na ecoMAX860P-LZ TOUCH,
