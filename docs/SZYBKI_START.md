@@ -1,6 +1,6 @@
 # ecoMAX Wi-Fi: Prosta Instrukcja Instalacji
 
-**Wersja programu 0.7.0-beta.25. Instrukcja 17, 21.10.2026.**
+**Wersja programu 0.7.0-beta.26. Instrukcja 18, 21.10.2026.**
 Nie musisz programowac ani wpisywac komend. Komputer jest potrzebny
 tylko przy pierwszym wgraniu; pozniej korzystasz z telefonu.
 
@@ -124,6 +124,8 @@ Samo dzialajace Wi-Fi nie oznacza jeszcze polaczenia z regulatorem.
 Nie zmieniaj parametrow serwisowych, ktorych znaczenia nie znasz.
 
 Gotowe: komputer nie jest juz potrzebny. ESP pamieta Wi-Fi po restarcie.
+Odswiezenie strony zachowuje wybrana zakladke. Jej adres mozna zapisac
+w zakladkach przegladarki; dzialaja tez przyciski Wstecz i Dalej.
 Nie wystawiaj panelu bezposrednio do Internetu.
 
 ## Gdy Cos Nie Dziala

@@ -110,6 +110,14 @@ try {
   await page.locator('.eco-tile .tile-value').first().waitFor();
   await page.evaluate(() => notice('DEMO - dane przykladowe, nie odczyt prawdziwego kotla.'));
   await page.evaluate(() => document.fonts.ready);
+  const brand=page.locator('#nav-esp .nav-device-icon');
+  assert.equal(await brand.getAttribute('src'),'/assets/favicon.svg');
+  assert.equal(await brand.evaluate(async img=>{await img.decode();return img.complete&&img.naturalWidth>0}),true,'sidebar artwork loaded');
+  for(const width of [320,390,1280]){
+    await page.setViewportSize({width,height:1080});
+    const geometry=await brand.evaluate(img=>{const icon=img.getBoundingClientRect(),label=img.nextElementSibling.getBoundingClientRect(),parent=img.parentElement.getBoundingClientRect();return {width:icon.width,height:icon.height,gap:label.left-icon.right,alignment:Math.abs((label.top+label.height/2)-(icon.top+icon.height/2)),fits:icon.left>=parent.left&&label.right<=parent.right+1}});
+    assert.equal(geometry.width,32);assert.equal(geometry.height,32);assert.ok(geometry.gap>=8);assert.ok(geometry.alignment<1);assert.ok(geometry.fits);
+  }
   const targetLabels = await page.locator('.tile-target-now').evaluateAll(elements => elements.map(el => {
     const actual = el.closest('.tile-body').querySelector('[data-reading="actual"]').getBoundingClientRect();
     const label = el.getBoundingClientRect();

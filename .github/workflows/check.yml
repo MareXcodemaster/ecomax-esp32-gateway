@@ -55,6 +55,8 @@ jobs:
         run: node tests/sidebar_diagnostics.mjs
       - name: Multi-client setpoint and Wi-Fi signal browser tests
         run: node tests/live_save_browser.mjs
+      - name: View refresh and browser history navigation tests
+        run: node tests/navigation_browser.mjs
       - name: Read-only analysis JSON download and cancellation browser tests
         run: node tests/analysis_export_browser.mjs
       - name: ESP memory, hardware parameters and stale state browser tests

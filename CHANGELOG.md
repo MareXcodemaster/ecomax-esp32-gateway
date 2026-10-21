@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0-beta.26 - 2026-10-21
+
+- Wybrana zakladka jest zapisana w adresie strony i wraca po odswiezeniu,
+  logowaniu oraz ponownym wczytaniu panelu. Dzialaja przyciski Wstecz/Dalej.
+  Przywrocenie widoku nie ponawia polecen do kotla; kazda karta ma wlasny adres.
+- Zielona ikona z bialym plomieniem obok napisu ESP32 w menu bocznym,
+  taka sama jak favicona. Zastepuje dotychczasowy maly symbol procesora.
+- Staly rozmiar 32 px i wyrownanie z napisem na komputerze i telefonie.
+  Oznaczenie ecoNET w jego trybie pozostaje bez zmian.
+- Bez zmian nastaw kotla, komunikacji RS485 i konfiguracji urzadzenia.
+
 ## 0.7.0-beta.25 - 2026-10-21
 
 - Lokalna favicona: bialy plomien na zielonym tle panelu, bez logo producenta.

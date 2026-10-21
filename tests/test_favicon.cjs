@@ -2,6 +2,14 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 
+test('ESP sidebar brand shares the green flame artwork without changing ecoNET branding',()=>{
+ const html=fs.readFileSync('src/panel_web/index.html','utf8');
+ const esp=html.match(/<div id="nav-esp"[\s\S]*?<\/div>/)[0];
+ assert.match(esp,/<img class="nav-device-icon" src="\/assets\/favicon.svg" width="32" height="32" alt="" aria-hidden="true">/);
+ assert.match(esp,/<strong>ESP32<\/strong>/);assert.doesNotMatch(esp,/data-lucide="cpu"/);
+ assert.match(html,/<div id="nav-econet"[^>]*><i data-lucide="router"><\/i><strong>ecoNET<\/strong>/);
+});
+
 for(const file of ['src/panel_web/index.html','src/web/index.html']){
  test(file+': local SVG, ICO and touch icon are shared without credentials',()=>{
   const html=fs.readFileSync(file,'utf8');

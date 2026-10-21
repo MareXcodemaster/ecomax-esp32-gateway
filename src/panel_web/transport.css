@@ -5,6 +5,7 @@
 #transport-dialog .check{align-items:flex-start}
 .esp-brand{display:flex;align-items:center;gap:9px;color:#34676a;height:50px}
 .esp-brand svg{width:35px;height:35px}
+#nav-esp .nav-device-icon{width:32px;height:32px;max-height:none;flex:none;object-fit:contain}
 .esp-brand strong{font-size:22px}
 #econet-health{overflow-wrap:anywhere}
 .boiler-controls{display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px;padding:0 0 18px;margin-bottom:20px;border-bottom:1px solid #ddd}
