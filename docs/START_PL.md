@@ -4,7 +4,7 @@
 
 **Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
 
-**Oprogramowanie: 0.7.0-beta.20. Instrukcja: wydanie 19, 21.10.2026.**
+**Oprogramowanie: 0.7.0-beta.21. Instrukcja: wydanie 20, 21.10.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -228,7 +228,7 @@ Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz pon
 `piec.local` lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
 Zmiana nie wymaga diagnostyki ani kasowania pamięci.
 
-![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.20/11-zmiana-wifi.png)
+![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.21/11-zmiana-wifi.png)
 
 **Montaż i zasięg:** moduł można umieścić na szynie DIN 35 mm w odpowiedniej
 szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
@@ -292,6 +292,42 @@ połączenia otwiera dane modułu ecoNET. Dla ecoNET podaj jego **lokalny
 adres, lokalny login i lokalne hasło**. To nie są dane konta ecoNET24.
 
 ## 9. Sprawdź, czy instalacja działa
+
+### Ustawienia zaawansowane
+
+Otworz **Parametry serwisowe > Ustawienia zaawansowane**.
+Dla rozpoznanego ecoMAX860P-LZ TOUCH / modulu A 8.41.38.L0 sa to:
+blokada kotla od termostatu, praca na czas, funkcja histerezy,
+detekcja obrotow wentylatora, tryb czujnika podajnika, kondensacja,
+tryb KOMINIARZ, sterowanie pogodowe kotla i pompa ciepla.
+
+Odczyt i kodowanie sa zgodne z katalogiem tej wersji regulatora.
+Nie wykonano probnych zmian wszystkich tych nastaw na pracujacym kotle.
+Edycja wymaga zalogowania do ESP i osobnego potwierdzenia zmiany.
+To nie jest sprawdzanie kodu serwisowego fizycznego ekranu.
+Limity i blokady regulatora pozostaja sprawdzane. Nie zmieniaj konfiguracji
+czujnikow ani zabezpieczen bez znajomosci swojej instalacji.
+
+### Punkty poziomu pelletu
+
+W zakladce **Pellet** sa czynnosci **Poziom paliwa 100%** i **0%**.
+Ta obsluga jest ograniczona do rozpoznanej wersji modulu A 8.41.38.L0
+i panelu 8.30.28. Przed wysylka ESP sprawdza model i konfiguracje kotla.
+Polecenia oraz ich odpowiedzi zaobserwowano na fizycznym panelu;
+nie przeprowadzono jeszcze niezaleznej proby wysylki obu punktow z ESP.
+
+- **100%** potwierdzaj przy rzeczywiscie pelnym zasobniku.
+- **0%** potwierdzaj dopiero przy rzeczywiscie pustym zasobniku.
+- Nie naciskaj obu po kolei przy tej samej ilosci pelletu.
+  To zafalszuje kalibracje. Ponowne 100% nie odtwarza poprzednich danych.
+- Odpowiedz ACK oznacza przyjecie polecenia, nie dowod poprawnosci
+  calej kalibracji ani pomiaru kilogramow pelletu.
+- Przy nieznanym wyniku sprawdz ekran kotla. ESP nie ponawia polecenia.
+
+**Kasowanie alarmow/licznikow i Cisza nocna nie sa jeszcze obslugiwane.**
+Nie zastapiono ich usuwaniem wpisow tylko z przegladarki.
+
+### Pierwsza kontrola
 
 1. Sprawdź, czy panel pokazuje połączenie, model regulatora i świeże odczyty.
 2. Poczekaj na identyfikację i katalog. Przy pierwszym uruchomieniu może

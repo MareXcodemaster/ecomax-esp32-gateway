@@ -1,6 +1,6 @@
 # Jak Wyglada Panel ecoMAX Wi-Fi
 
-Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.20**, uruchomionego
+Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.21**, uruchomionego
 lokalnie z **danymi przykladowymi (DEMO)**. Nie jest to potwierdzenie
 obslugi kazdej nastawy w dowolnym kotle.
 Aktualizacja zdjec: **21.10.2026**. Kliknij zdjecie, aby je powiekszyc w GitHubie.
@@ -11,7 +11,7 @@ Stan kotla, temperatury zmierzone i zadane, pokoj, mieszacz oraz poziom
 paliwa, jezeli regulator udostepnia te dane. Na gornej belce widac
 pieciokreskowy wskaznik i szacowany procent sygnalu Wi-Fi ESP.
 
-![Panel glowny ecoMAX Wi-Fi, dane przykladowe](images/panel/0.7.0-beta.20/01-odczyty.png)
+![Panel glowny ecoMAX Wi-Fi, dane przykladowe](images/panel/0.7.0-beta.21/01-odczyty.png)
 
 ## Schemat Instalacji
 
@@ -19,34 +19,34 @@ Kociol, mieszacz 1, grzejniki, pokoj i zbiornik CWU. Biezace temperatury
 oraz stan pomp; brak odczytu pokazuje kreski. Jest to grafika pogladowa,
 nie dokumentacja polaczen hydraulicznych konkretnego domu.
 
-![Schemat instalacji z temperaturami, przykladowe dane DEMO](images/panel/0.7.0-beta.20/10-schemat.png)
+![Schemat instalacji z temperaturami, przykladowe dane DEMO](images/panel/0.7.0-beta.21/10-schemat.png)
 
 ## Zmiana Sieci Wi-Fi
 
 **Narzedzia > Zmien siec Wi-Fi**: wyszukiwanie sieci, wybor i haslo.
 **Narzedzia > Ustawienia ESP Wi-Fi**: status polaczenia, IP i nazwa .local.
 
-![Bezposrednia zmiana sieci Wi-Fi z panelu](images/panel/0.7.0-beta.20/11-zmiana-wifi.png)
+![Bezposrednia zmiana sieci Wi-Fi z panelu](images/panel/0.7.0-beta.21/11-zmiana-wifi.png)
 
 ## Harmonogram Tygodniowy
 
 Dni od poniedzialku do niedzieli, godziny 00-24 i kratki po 30 minut.
 Przy wybranym harmonogramie widac opis jego dzialania.
 
-![Harmonogram CWU, przykladowy tydzien](images/panel/0.7.0-beta.20/02-harmonogram.png)
+![Harmonogram CWU, przykladowy tydzien](images/panel/0.7.0-beta.21/02-harmonogram.png)
 
 ## Historia Temperatur
 
 Wykresy temperatur i nastaw, wybor zakresu do 3 dni, stany pracy i CSV.
 Pokazane przebiegi sa wygenerowanym przykladem.
 
-![Wykresy temperatur CO i CWU z przykladowych danych](images/panel/0.7.0-beta.20/03-historia.png)
+![Wykresy temperatur CO i CWU z przykladowych danych](images/panel/0.7.0-beta.21/03-historia.png)
 
 ## Rozpalanie I Stany Kotla
 
 Osobny widok stanow: m.in. rozpalanie, stabilizacja, praca i wygaszanie.
 
-![Historia stanow kotla, dane DEMO](images/panel/0.7.0-beta.20/04-stany-kotla.png)
+![Historia stanow kotla, dane DEMO](images/panel/0.7.0-beta.21/04-stany-kotla.png)
 
 ## Zmiana Nastawy
 
@@ -54,33 +54,33 @@ Przykladowe okno zadanej temperatury CWU: wartosc zmierzona, obecna
 nastawa, dopuszczalny zakres i zapis. Podczas robienia zdjecia nie
 wysylano polecenia do zadnego kotla.
 
-![Okno ustawiania temperatury CWU, bez wykonania zapisu](images/panel/0.7.0-beta.20/05-nastawa.png)
+![Okno ustawiania temperatury CWU, bez wykonania zapisu](images/panel/0.7.0-beta.21/05-nastawa.png)
 
 ## Poziom Pelletu
 
 Graficzny zasobnik z procentami z kotla. Brak danych nie oznacza 0%.
 
-![Graficzny poziom pelletu, dane DEMO](images/panel/0.7.0-beta.20/07-pellet.png)
+![Graficzny poziom pelletu, dane DEMO](images/panel/0.7.0-beta.21/07-pellet.png)
 
 ## Wlasna Kolejnosc Kafelkow
 
 Przycisk edycji ukladu, przeciaganie myszka lub dotykiem i przywracanie
 domyslnej kolejnosci. Kazda przegladarka zapamietuje wlasny uklad.
 
-![Zmiana ukladu kafelkow, dane DEMO](images/panel/0.7.0-beta.20/08-uklad-kafelkow.png)
+![Zmiana ukladu kafelkow, dane DEMO](images/panel/0.7.0-beta.21/08-uklad-kafelkow.png)
 
 ## Panel Na Telefonie
 
 Ten sam panel na ekranie telefonu; menu boczne jest zwijane.
 
-![Panel w widoku telefonu, dane przykladowe](images/panel/0.7.0-beta.20/06-telefon.png)
+![Panel w widoku telefonu, dane przykladowe](images/panel/0.7.0-beta.21/06-telefon.png)
 
 ## Narzedzia Panelu
 
 Podpisane przyciski Kafelki i Odswiez oraz menu z nazwami pozostalych funkcji.
 Wyloguj jest ostatnia pozycja, oddzielona od narzedzi.
 
-![Nazwane narzedzia i Wyloguj na koncu listy](images/panel/0.7.0-beta.20/09-narzedzia.png)
+![Nazwane narzedzia i Wyloguj na koncu listy](images/panel/0.7.0-beta.21/09-narzedzia.png)
 
 ## Aktualizacje ESP
 
@@ -88,14 +88,14 @@ Obecna i najnowsza wersja, wybor kanalow stabilnych lub beta oraz
 sprawdzanie aktualizacji. Gdy ESP ma najnowsza wersje, belka pokazuje
 **Aktualne**. Instalacja nowszego wydania wymaga potwierdzenia.
 
-![Aktualizacje ESP z GitHuba: aktualna wersja beta.20, dane DEMO](images/panel/0.7.0-beta.20/12-aktualizacje.png)
+![Aktualizacje ESP z GitHuba: aktualna wersja beta.20, dane DEMO](images/panel/0.7.0-beta.21/12-aktualizacje.png)
 
 ## JSON Do Analizy Pracy Kotla
 
 Pobieranie zapisanych pomiarow z okresu do 3 dni oraz aktualnych nastaw.
 Jednostki, czas UTC i oznaczenia brakow danych pozostaja w pliku.
 
-![Eksport JSON do analizy spalania, dane DEMO](images/panel/0.7.0-beta.20/13-analiza-json.png)
+![Eksport JSON do analizy spalania, dane DEMO](images/panel/0.7.0-beta.21/13-analiza-json.png)
 
 ## Pamiec I Parametry ESP
 
@@ -103,7 +103,14 @@ Zajetosc programu w slocie OTA, RAM wewnetrznej, PSRAM i archiwum flash.
 Osobno parametry procesora, fizyczna pojemnosc flash, czas pracy i restart.
 Wskazania ponizej sa przykladowe, nie odczytem prywatnego urzadzenia.
 
-![Pamiec i parametry ESP: cztery pule pamieci i dane procesora, DEMO](images/panel/0.7.0-beta.20/14-pamiec-esp.png)
+![Pamiec i parametry ESP: cztery pule pamieci i dane procesora, DEMO](images/panel/0.7.0-beta.21/14-pamiec-esp.png)
+
+## Ustawienia Zaawansowane
+
+Osobna sekcja w Parametrach serwisowych. Przykladowe wartosci DEMO,
+nie zalecenia konfiguracji; zapis wymaga osobnego potwierdzenia.
+
+![Dziewiec rozpoznanych ustawien zaawansowanych, dane DEMO](images/panel/0.7.0-beta.21/15-zaawansowane.png)
 
 ## Instalacja I Sprzet
 

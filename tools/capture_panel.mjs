@@ -202,6 +202,14 @@ try {
   await page.locator('.esp-resources').evaluate(el=>el.scrollIntoView({block:'start'}));
   assert.ok((await page.locator('.esp-resources h3').boundingBox()).y>(await page.locator('header').boundingBox()).height,'memory heading is below the fixed header');
   await screenshot('14-pamiec-esp');
+  const advancedDemo=[[158,'Blokada kotla od termostatu','Tak'],[161,'Praca na czas','Tak'],[44,'Funkcja histerezy','Wylaczona LATO'],[151,'Detekcja obrotow wentylatora',0],[46,'Tryb czujnika podajnika','Podajnik i ruszt'],[45,'Kondensacja','OFF'],[162,'Tryb KOMINIARZ','OFF'],[7,'Sterowanie pogodowe kotla','Wylaczone'],[166,'Pompa ciepla','OFF']];
+  state.menu=advancedDemo.map(([index,name,value])=>({index,name,advanced:true,in_structure:true,locked:false,metadata:{value},write_id:'rm:'+index,write_enabled:true}));
+  for(const item of state.menu)state.targets[item.write_id]={name:item.name,before:0,min:0,max:1,step:1,value_kind:'enum',options:[{value:0,label:String(item.metadata.value)}],risk:true,advanced:true};
+  await page.evaluate(()=>poll());await page.locator('#main-nav [data-view="service"]').click();
+  await page.locator('[data-section="service"] [data-view="advanced"]').click();
+  assert.equal(await page.locator('#advanced-tree .parameter-row').count(),9);
+  await screenshot('15-zaawansowane');
+  state.menu=[];
   await page.locator('[data-view="schema"]').click();
   await page.evaluate(()=>EcoHeatingSchema.render(state,false));
   assert.equal(await page.locator('#lbSchema_tempCO').textContent(),'---');
@@ -340,7 +348,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log(`PASS fourteen panel screenshots for ${version}: memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
+  console.log(`PASS fifteen panel screenshots for ${version}: advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

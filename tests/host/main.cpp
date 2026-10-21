@@ -3,6 +3,8 @@
 #include "sensor_decoder.hpp"
 #include "sensor_fixtures.hpp"
 #include "identity_guard.hpp"
+#include "advanced_menu.hpp"
+#include "pellet_commands.hpp"
 #include "thermostat_decoder.hpp"
 #include "network_name.hpp"
 #include "wifi_retry.hpp"
@@ -16,6 +18,40 @@ void settings_journal_tests();
 
 int main() {
     settings_journal_tests();
+    for(const auto &entry:advanced_menu::definitions) {
+        assert(advanced_menu::known(entry.index));
+        assert(advanced_menu::matches(entry.index,entry.unit,entry.multiplier,entry.offset,0,entry.maximum));
+        assert(!advanced_menu::matches(entry.index,entry.unit,entry.multiplier,entry.offset+1,0,entry.maximum));
+        assert(!advanced_menu::matches(entry.index,entry.unit,entry.multiplier,entry.offset,0,entry.maximum+1));
+        assert(!advanced_menu::matches(entry.index,entry.unit,entry.multiplier,entry.offset,NAN,entry.maximum));
+    }
+    assert(!advanced_menu::known(6)&&!advanced_menu::known(164));
+    assert(!advanced_menu::matches(999,31,0,1,0,1));
+    assert(advanced_menu::confirmed(false,false,false));
+    assert(!advanced_menu::confirmed(true,false,false));
+    assert(!advanced_menu::confirmed(true,true,false));
+    assert(!advanced_menu::confirmed(true,false,true));
+    assert(advanced_menu::confirmed(true,true,true));
+    puts("PASS advanced menu: nine exact wire contracts and explicit confirmation");
+    {
+        uint8_t command[3]{};
+        assert(pellet_commands::point(100,command)&&command[2]==0);
+        assert(pellet_commands::point(0,command)&&command[2]==1);
+        assert(!pellet_commands::point(50,command));
+        assert(pellet_commands::write_allowed(command,3,240));
+        command[1]=141;assert(!pellet_commands::write_allowed(command,3,240));command[1]=140;
+        command[2]=2;assert(!pellet_commands::write_allowed(command,3,240));
+        uint8_t frame[546]{};frame[0]=0x68;frame[1]=546&255;frame[2]=546>>8;frame[4]=69;frame[7]=225;
+        frame[8]=178;frame[430]=2;frame[432]=2;frame[545]=0x16;
+        auto checksum=[&](){frame[544]=0;for(unsigned i=0;i<544;++i)frame[544]^=frame[i];};
+        checksum();assert(pellet_commands::configuration(frame,546));
+        frame[430]=0;checksum();assert(!pellet_commands::configuration(frame,546));
+        frame[430]=2;frame[4]=80;checksum();assert(!pellet_commands::configuration(frame,546));
+        assert(!pellet_commands::configuration(frame,545));
+        uint8_t ack[]={0x68,10,0,0,69,0xfc,0x2c,240,7,0x16};
+        assert(pellet_commands::acknowledged(ack,10));ack[8]^=1;assert(!pellet_commands::acknowledged(ack,10));
+        puts("PASS pellet points: exact 100/0 mapping, neutral configuration, strict ACK and malformed-frame rejection");
+    }
     {
         plum::ThermostatSettings settings;settings.slots=3;
         settings.values[0][0]={2,0,7,true};settings.values[0][9]={219,100,350,true};

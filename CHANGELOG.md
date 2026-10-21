@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0-beta.21 - 2026-10-21
+
+- Parametry serwisowe: osobna sekcja Ustawienia zaawansowane z dziewiecioma
+  nastawami rozpoznanymi dla ecoMAX860P-LZ TOUCH / 8.41.38.L0.
+  Dodatkowe potwierdzenie jest sprawdzane zarowno przy przygotowaniu,
+  jak i wykonaniu zapisu. Inne menu producenta pozostaja zablokowane.
+- Pellet: punkty kalibracji 100% i 0%, rozpoznane w pasywnym zapisie
+  polecen fizycznego panelu 8.30.28 i odpowiedzi regulatora.
+  Osobne potwierdzenie rzeczywistego poziomu, identyfikacja kotla,
+  kontrola konfiguracji, pojedyncza wysylka i wynik ACK bez ponawiania.
+  ACK nie oznacza ukonczenia ani poprawnosci calej kalibracji.
+- Kasowanie alarmow i licznikow nadal nie jest udostepnione: obserwacja
+  nacisniecia przy pustej liscie nie pozwolila ustalic polecenia.
+  Harmonogram Cisza nocna nie ma jeszcze potwierdzonego mapowania.
+- Testy protokolu i potwierdzen, widoki telefonu/komputera,
+  zaktualizowana instrukcja i galeria. Bez automatycznych zmian nastaw.
+
 ## 0.7.0-beta.20 - 2026-10-21
 
 - Odczyt ecoSTER przed zapisem rozroznia nieprawidlowe dane od opoznionej

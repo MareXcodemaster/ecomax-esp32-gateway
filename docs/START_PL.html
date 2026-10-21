@@ -8,7 +8,7 @@
 </style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>ecoMAX Wi-Fi - sterowanie kotłem z telefonu</h1>
 <h2>Instrukcja krok po kroku</h2>
 <p><strong>Pierwszy raz z ESP? Zacznij od <a href="SZYBKI_START.html">prostej instrukcji w 7 krokach</a>.</strong></p>
-<p><strong>Oprogramowanie: 0.7.0-beta.20. Instrukcja: wydanie 19, 21.10.2026.</strong></p>
+<p><strong>Oprogramowanie: 0.7.0-beta.21. Instrukcja: wydanie 20, 21.10.2026.</strong></p>
 <p>Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
 Komputer i kabel USB są potrzebne do pierwszego wgrania. Później panel
@@ -219,7 +219,7 @@ i otwórz panel ESP.</li>
 Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz ponownie
 <code>piec.local</code> lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
 Zmiana nie wymaga diagnostyki ani kasowania pamięci.</p>
-<p><img src="images/panel/0.7.0-beta.20/11-zmiana-wifi.png" alt="Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi"></p>
+<p><img src="images/panel/0.7.0-beta.21/11-zmiana-wifi.png" alt="Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi"></p>
 <p><strong>Montaż i zasięg:</strong> moduł można umieścić na szynie DIN 35 mm w odpowiedniej
 szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
 ma według producenta <strong>SMA, nie RP-SMA</strong>. Montaż w kotle tylko w bezpiecznej
@@ -302,6 +302,36 @@ nadawania przez ustawienie losowego adresu.</p>
 połączenia otwiera dane modułu ecoNET. Dla ecoNET podaj jego <strong>lokalny
 adres, lokalny login i lokalne hasło</strong>. To nie są dane konta ecoNET24.</p>
 <h2>9. Sprawdź, czy instalacja działa</h2>
+<h3>Ustawienia zaawansowane</h3>
+<p>Otworz <strong>Parametry serwisowe &gt; Ustawienia zaawansowane</strong>.
+Dla rozpoznanego ecoMAX860P-LZ TOUCH / modulu A 8.41.38.L0 sa to:
+blokada kotla od termostatu, praca na czas, funkcja histerezy,
+detekcja obrotow wentylatora, tryb czujnika podajnika, kondensacja,
+tryb KOMINIARZ, sterowanie pogodowe kotla i pompa ciepla.</p>
+<p>Odczyt i kodowanie sa zgodne z katalogiem tej wersji regulatora.
+Nie wykonano probnych zmian wszystkich tych nastaw na pracujacym kotle.
+Edycja wymaga zalogowania do ESP i osobnego potwierdzenia zmiany.
+To nie jest sprawdzanie kodu serwisowego fizycznego ekranu.
+Limity i blokady regulatora pozostaja sprawdzane. Nie zmieniaj konfiguracji
+czujnikow ani zabezpieczen bez znajomosci swojej instalacji.</p>
+<h3>Punkty poziomu pelletu</h3>
+<p>W zakladce <strong>Pellet</strong> sa czynnosci <strong>Poziom paliwa 100%</strong> i <strong>0%</strong>.
+Ta obsluga jest ograniczona do rozpoznanej wersji modulu A 8.41.38.L0
+i panelu 8.30.28. Przed wysylka ESP sprawdza model i konfiguracje kotla.
+Polecenia oraz ich odpowiedzi zaobserwowano na fizycznym panelu;
+nie przeprowadzono jeszcze niezaleznej proby wysylki obu punktow z ESP.</p>
+<ul>
+<li><strong>100%</strong> potwierdzaj przy rzeczywiscie pelnym zasobniku.</li>
+<li><strong>0%</strong> potwierdzaj dopiero przy rzeczywiscie pustym zasobniku.</li>
+<li>Nie naciskaj obu po kolei przy tej samej ilosci pelletu.
+To zafalszuje kalibracje. Ponowne 100% nie odtwarza poprzednich danych.</li>
+<li>Odpowiedz ACK oznacza przyjecie polecenia, nie dowod poprawnosci
+calej kalibracji ani pomiaru kilogramow pelletu.</li>
+<li>Przy nieznanym wyniku sprawdz ekran kotla. ESP nie ponawia polecenia.</li>
+</ul>
+<p><strong>Kasowanie alarmow/licznikow i Cisza nocna nie sa jeszcze obslugiwane.</strong>
+Nie zastapiono ich usuwaniem wpisow tylko z przegladarki.</p>
+<h3>Pierwsza kontrola</h3>
 <ol>
 <li>Sprawdź, czy panel pokazuje połączenie, model regulatora i świeże odczyty.</li>
 <li>Poczekaj na identyfikację i katalog. Przy pierwszym uruchomieniu może

@@ -238,6 +238,7 @@ static esp_err_t panel_command(httpd_req_t *req) {
         cJSON_Delete(payload); return message(req,ok?"200 OK":"400 Bad Request",ok?"OK":"Invalid clock");
     }
     const char *kind=!strcmp(req->uri,"/api/write/save")?"save":!strcmp(req->uri,"/api/rs485/probe")?"rs_probe":!strcmp(req->uri,"/api/transport")?"transport":!strcmp(req->uri,"/api/connect")?"connect":!strcmp(req->uri,"/api/scan")?"scan":!strcmp(req->uri,"/api/refresh")?"refresh":!strcmp(req->uri,"/api/control/prepare")?"control_prepare":!strcmp(req->uri,"/api/control/execute")?"control_execute":!strcmp(req->uri,"/api/write/prepare")?"prepare":"execute";
+    if(!strcmp(req->uri,"/api/pellet/calibrate"))kind="pellet_calibrate";
     int slot=cookie_session(req); std::string error;
     auto *response=panel::submit(kind,payload,slot>=0?sessions[slot].digest:"basic",error); cJSON_Delete(payload);
     if(!response&&error=="Trwa operacja. Poczekaj na zakonczenie") {
@@ -514,7 +515,7 @@ void start() {
     esp_timer_create_args_t timer{}; timer.callback = [](void *) { esp_restart(); }; timer.name = "ota_reboot";
     ESP_ERROR_CHECK(esp_timer_create(&timer, &reboot_timer));
     httpd_config_t config = HTTPD_DEFAULT_CONFIG(); config.stack_size = 16384;
-    config.max_uri_handlers = 56; config.max_open_sockets = 8; config.lru_purge_enable = true;
+    config.max_uri_handlers = 57; config.max_open_sockets = 8; config.lru_purge_enable = true;
     config.uri_match_fn=httpd_uri_match_wildcard;
     config.recv_wait_timeout = 5; config.send_wait_timeout = 12;
     ESP_ERROR_CHECK(httpd_start(&server, &config));
@@ -537,6 +538,7 @@ void start() {
     add("/api/parameters", HTTP_GET, unavailable); add("/api/schedules", HTTP_GET, unavailable);
     add("/ws", HTTP_GET, websocket, true);
     add("/api/state",HTTP_GET,panel_state); add("/api/export",HTTP_GET,panel_state); add("/api/session",HTTP_GET,panel_session);
+    add("/api/pellet/calibrate",HTTP_POST,panel_command);
     add("/api/job",HTTP_GET,panel_job);
     add("/api/history",HTTP_GET,history_state);
     add("/api/pellet", HTTP_GET, pellet_state); add("/api/pellet/calibration", HTTP_POST, pellet_configure);

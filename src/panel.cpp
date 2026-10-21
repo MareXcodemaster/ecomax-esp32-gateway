@@ -11,6 +11,8 @@
 #include "panel_catalog.hpp"
 #include "econet_defaults.hpp"
 #include "identity_guard.hpp"
+#include "advanced_menu.hpp"
+#include "pellet_commands.hpp"
 #include "esp_http_client.h"
 #include "esp_timer.h"
 #include "esp_random.h"
@@ -195,17 +197,22 @@ J *generic_target(const char *id);
 J *rs_target(const char *id,bool *sensor_pending=nullptr);
 J *rs_menu_temperature_target(const char *id);
 // Access is inherited from every parent section, not only the parameter row.
-bool menu_access(int wanted) {
-    struct Access { bool locked; double pass; }; Access sections[256]{};
+bool menu_access(int wanted,bool advanced=false) {
+    struct Access { bool locked; double pass; bool advanced; }; Access sections[256]{};
     unsigned count=0,parent=0,matches=0; bool allowed=true; J *row; int position=0;
     cJSON_ArrayForEach(row,body("rmStructure")) {
         int type=static_cast<int>(num(get(row,"type"),-1));
         if(type==7&&position>2) ++parent;
         else if(type==0||type==2||type==4||type==5) {
             if(count>=256||parent>=256) return false;
-            sections[count++]={sections[parent].locked||!cJSON_IsFalse(get(row,"lock")),std::max(sections[parent].pass,num(get(row,"pass_index"),99))};
+            auto inherited=sections[parent];
+            bool advanced_section=num(get(row,"index"))==30&&num(get(row,"pass_index"))==3&&inherited.pass<=1&&
+                !strcmp(str(item(body("rmCatsNames"),30)),"Ustawienia zaawansowane");
+            sections[count++]={inherited.locked||!cJSON_IsFalse(get(row,"lock")),std::max(inherited.pass,num(get(row,"pass_index"),99)),inherited.advanced||advanced_section};
         } else if(type==1&&num(get(row,"index"))==wanted) {
-            ++matches; if(parent>=count||sections[parent].locked||sections[parent].pass>1||!cJSON_IsFalse(get(row,"lock"))||num(get(row,"pass_index"),99)>1) allowed=false;
+            ++matches;
+            if(parent>=count||sections[parent].locked||!cJSON_IsFalse(get(row,"lock"))||num(get(row,"pass_index"),99)>1) allowed=false;
+            else if(sections[parent].pass>1&&!(advanced&&sections[parent].pass==3&&sections[parent].advanced&&advanced_menu::known(wanted)))allowed=false;
         }
         ++position;
     }
@@ -303,13 +310,15 @@ J *generic_target(const char *id) {
     } else {
         if(strncmp(id,"rm:",3)) return nullptr;
         char tail; if(sscanf(id+3,"%d%c",&index,&tail)!=1||index<0||index>=cJSON_GetArraySize(body("rmParamsData"))) return nullptr;
-        char canonical[24]; snprintf(canonical,sizeof(canonical),"rm:%d",index); if(strcmp(id,canonical)||!menu_access(index)) return nullptr;
+        char canonical[24]; snprintf(canonical,sizeof(canonical),"rm:%d",index); if(strcmp(id,canonical)||!menu_access(index,true)) return nullptr;
         if(direct&&(index>=168||!native_menu_row_ms[index]||now()-native_menu_row_ms[index]>20000)) return nullptr;
         meta=item(body("rmParamsData"),index); name=str(item(body("rmParamsNames"),index));
         unit=str(item(body("rmParamsUnitsNames"),static_cast<int>(num(get(meta,"unit"),-1)))); key=std::to_string(index);
     }
     if(name.empty()||!cJSON_IsTrue(get(meta,"edit"))) return nullptr;
     double low=scalar(get(meta,"minv")),high=scalar(get(meta,"maxv")),base=scalar(get(meta,"value"));
+    bool advanced=!legacy&&!menu_access(index);
+    if(advanced&&!advanced_menu::matches(index,num(get(meta,"unit")),num(get(meta,"mult")),num(get(meta,"offset")),low,high))return nullptr;
     bool discrete=num(get(meta,"unit"))==31,boolean=cJSON_IsBool(get(meta,"value"));
     double step=discrete||boolean?1:num(get(meta,"mult"));
     if(!std::isfinite(low)||!std::isfinite(high)||!std::isfinite(base)||!std::isfinite(step)||step<=0||step>10000||low>high||base<low||base>high) return nullptr;
@@ -328,6 +337,7 @@ J *generic_target(const char *id) {
     }
     auto *v=cJSON_CreateObject(); text(v,"id",id); text(v,"name",name); text(v,"unit",unit); number(v,"before",base); number(v,"min",low); number(v,"max",high); number(v,"step",step); put(v,"options",options);
     text(v,"endpoint",legacy?"newParam":"rmNewParam"); text(v,"wire_key",key); text(v,"value_kind",boolean?"boolean":discrete?"enum":"number"); flag(v,"generic",true); flag(v,"risk",!legacy); flag(v,"cached",legacy); number(v,"menu_index",index);
+    flag(v,"advanced",advanced);
     if(direct) { number(v,"wire_unit",num(get(meta,"unit"))); number(v,"wire_mult",num(get(meta,"mult"))); number(v,"wire_offset",num(get(meta,"offset"))); }
     if(legacy) {
         std::string slot=key.substr(key.rfind('_')+1),prefix=key.substr(0,key.rfind('_'));
@@ -507,7 +517,7 @@ void build_menu() {
     }
     cJSON_ArrayForEach(row,menu) {
         std::string id=cJSON_IsString(get(row,"index"))?"legacy:"+std::string(str(get(row,"index"))):"rm:"+std::to_string(static_cast<int>(num(get(row,"index"))));
-        if(cJSON_IsString(get(row,"index"))||!get(row,"write_id")) { Owned v{generic_target(id.c_str())}; if(v.p) { text(row,"write_id",id); flag(row,"write_enabled",true); copy(row,"cached",get(v.p,"cached")); copy(row,"enum_text",nullptr); if(cJSON_GetArraySize(get(v.p,"options"))) { J *o; cJSON_ArrayForEach(o,get(v.p,"options")) if(equal(num(get(o,"value")),num(get(v.p,"before")))) copy(row,"enum_text",get(o,"label")); } copy(get(row,"metadata"),"value",get(v.p,"before")); } }
+        if(cJSON_IsString(get(row,"index"))||!get(row,"write_id")) { Owned v{generic_target(id.c_str())}; if(v.p) { text(row,"write_id",id); flag(row,"write_enabled",true); copy(row,"advanced",get(v.p,"advanced")); copy(row,"cached",get(v.p,"cached")); copy(row,"enum_text",nullptr); if(cJSON_GetArraySize(get(v.p,"options"))) { J *o; cJSON_ArrayForEach(o,get(v.p,"options")) if(equal(num(get(o,"value")),num(get(v.p,"before")))) copy(row,"enum_text",get(o,"label")); } copy(get(row,"metadata"),"value",get(v.p,"before")); } }
     }
     // A cold RS485-only boot has no HTTP editParams catalogue; build room rows from the wire.
     if(selected_mode=="rs485") for(auto &d:definitions) if(d.legacy&&d.native) {
@@ -1002,7 +1012,7 @@ bool inspect_generic(const char *id,J *&v) {
         }
         if(strncmp(id,"rm:",3)) return fail("Ta nastawa wymaga lokalnego ecoNET");
         char tail; int index=-1; if(sscanf(id+3,"%d%c",&index,&tail)!=1||index<0||index>=168) return fail("Nieprawidlowy indeks nastawy RS485");
-        char canonical[24]; snprintf(canonical,sizeof(canonical),"rm:%d",index); if(strcmp(id,canonical)||!menu_access(index)) return fail("Parametr zablokowany lub niekanoniczny indeks RS485");
+        char canonical[24]; snprintf(canonical,sizeof(canonical),"rm:%d",index); if(strcmp(id,canonical)||!menu_access(index,true)) return fail("Parametr zablokowany lub niekanoniczny indeks RS485");
         if((!native_identity||now()-native_identity_ms>30000)&&!rs_identify()) return false;
         if(!rs_menu_catalog(true))return fail(native_menu_error.empty()?"Brak potwierdzenia katalogu RS485":native_menu_error.c_str());
         if(!rs_menu_point(index)) return false;
@@ -1026,6 +1036,7 @@ J *prepare_generic(const J *payload,const std::string &owner) {
     bool schedule=!strncmp(id,"schedule:",9); auto *requested=get(payload,"value");
     if(schedule?!schedule_value(v,requested):!generic_value(v,num(requested))) { cJSON_Delete(v); fail("Nieprawidlowa wartosc, zakres, krok lub harmonogram"); return nullptr; }
     if(cJSON_IsTrue(get(v,"risk"))&&!cJSON_IsTrue(get(payload,"confirm_installation"))) { cJSON_Delete(v); fail("Potwierdz zmiane nastawy instalacyjnej"); return nullptr; }
+    if(!advanced_menu::confirmed(cJSON_IsTrue(get(v,"advanced")),cJSON_IsTrue(get(payload,"confirm_installation")),cJSON_IsTrue(get(payload,"confirm_advanced")))) {cJSON_Delete(v);fail("Potwierdz zmiane ustawienia zaawansowanego kotla");return nullptr;}
     if(get(payload,"before")&&!cJSON_Compare(get(payload,"before"),get(v,"before"),true)) { cJSON_Delete(v); fail("Nastawa zmienila sie poza formularzem. Odczytaj aktualna wartosc"); return nullptr; }
     if(!allow_same_value_audit(v,payload)){cJSON_Delete(v);return nullptr;}
     if(schedule) { double day=num(get(payload,"day"),0); if(day<0||day>6||floor(day)!=day) { cJSON_Delete(v); fail("Nieprawidlowy dzien tygodnia"); return nullptr; } number(v,"day",day); }
@@ -1039,10 +1050,11 @@ J *execute_generic(const J *t,const J *payload,const J *prepared_now=nullptr) {
     phase("Sprawdzanie aktualnej nastawy przed wyslaniem","preflight"); J *p=nullptr;
     if(prepared_now)p=cJSON_Duplicate(prepared_now,true); else if(!inspect_generic(id,p))return nullptr;
     Owned current{p};
-    for(auto key:{"before","schema","wire_key","wire_index","wire_width","wire_recipient","wire_parameter","value_kind","cached","profile_mode","profile_raw","observed_key","wire_unit","wire_mult","wire_offset"}) {
+    for(auto key:{"before","schema","advanced","wire_key","wire_index","wire_width","wire_recipient","wire_parameter","value_kind","cached","profile_mode","profile_raw","observed_key","wire_unit","wire_mult","wire_offset"}) {
         auto *a=get(t,key), *b=get(p,key); if((a||b)&&!cJSON_Compare(a,b,true)) { fail("Nastawa, tryb lub metadane zmienily sie. Zapis anulowany"); return nullptr; }
     }
     if(cJSON_IsTrue(get(t,"risk"))&&!cJSON_IsTrue(get(payload,"confirm_installation"))) { fail("Brak potwierdzenia zmiany nastawy instalacyjnej"); return nullptr; }
+    if(!advanced_menu::confirmed(cJSON_IsTrue(get(p,"advanced")),cJSON_IsTrue(get(payload,"confirm_installation")),cJSON_IsTrue(get(payload,"confirm_advanced")))) {fail("Brak potwierdzenia zmiany ustawienia zaawansowanego");return nullptr;}
     if(schedule?!schedule_value(p,get(t,"value")):!generic_value(p,num(get(t,"value")))) { fail("Zmienily sie limity zapisu"); return nullptr; }
     bool audit=cJSON_IsTrue(get(t,"audit_same_value"));
     if(audit&&(!direct||!cJSON_IsTrue(get(payload,"confirm_audit_same_value"))||!equal(num(get(t,"value")),num(get(p,"before"))))) {fail("Audyt identycznej wartosci anulowany");return nullptr;}
@@ -1388,6 +1400,42 @@ bool rs_alarm_refresh() {
     number(status,"read_epoch",epoch()); copy(status,"total_count",get(details,"total_count")); copy(status,"returned_count",get(details,"count"));
     flag(status,"history_available",true); flag(status,"complete",num(get(details,"count"))==num(get(details,"total_count"))); return true;
 }
+bool pellet_model(const J *system) {
+    return !strcmp(str(get(system,"controllerID")),"ecoMAX860P-LZ TOUCH")&&
+           !strcmp(str(get(system,"moduleASoftVer")),"8.41.38.L0")&&
+           !strcmp(str(get(system,"modulePanelSoftVer")),"8.30.28");
+}
+J *calibrate_pellet(const J *payload) {
+    double percent=num(get(payload,"point"));uint8_t command[3]{};
+    if((percent!=0&&percent!=100)||!pellet_commands::point(static_cast<unsigned>(percent),command)||
+       !cJSON_IsTrue(get(payload,"confirm"))||!cJSON_IsTrue(get(payload,"physical_level_confirmed"))) {
+        fail("Potwierdz rzeczywiscie pelny zasobnik dla 100% albo pusty dla 0%");return nullptr;
+    }
+    if(selected_mode!="rs485"||!transport::enabled()||transport::conflict()) {fail("Kalibracja wymaga RS485 bezposrednio, bez konfliktu adresu");return nullptr;}
+    phase("Sprawdzanie modelu i konfiguracji zasobnika","preflight");
+    if(!rs_identify()||!pellet_model(get(raw,"sysParams"))) {fail("Brak zgodnego modelu i wersji dla kalibracji zasobnika");return nullptr;}
+    Owned sensor{boiler::snapshot()};
+    if(!cJSON_IsTrue(get(sensor.p,"fresh"))||!rs_menu_catalog(true)) {fail("Brak swiezego odczytu i zgodnego katalogu kotla");return nullptr;}
+    const uint8_t query[]={255,0};transport::Reply config_reply;
+    if(!transport::request_readonly(97,query,sizeof(query),225,config_reply)||!pellet_commands::configuration(config_reply.bytes,config_reply.length)) {
+        fail("Niepotwierdzona konfiguracja punktow kalibracji. Nie wyslano polecenia");return nullptr;
+    }
+    auto *result=cJSON_CreateObject();text(result,"name",percent==100?"Poziom paliwa 100%":"Poziom paliwa 0%");
+    number(result,"point",percent);text(result,"transport","rs485");text(result,"state","pending");
+    log_result("pellet_calibrate","pending",result);
+    if(!journal()) {cJSON_Delete(result);return nullptr;}
+    phase("Wysylanie jednego punktu kalibracji zasobnika","dispatch");transport::Reply reply;
+    transport::request(112,command,sizeof(command),240,reply);
+    bool ack=reply.sent&&pellet_commands::acknowledged(reply.bytes,reply.length);
+    if(reply.sent) {Lock lock;number(data,"write_count",num(get(data,"write_count"),0)+1);}
+    flag(result,"sent",reply.sent);flag(result,"ack_ok",ack);flag(result,"calibration_complete",false);
+    text(result,"state",!reply.sent?"not_sent":ack?"acknowledged":"unverified");
+    text(result,"message",!reply.sent?"Nie wyslano punktu kalibracji":ack?"Kociol potwierdzil przyjecie punktu. To nie potwierdza poprawnosci calej kalibracji zasobnika":"Brak potwierdzenia punktu. Nie ponowiono polecenia; sprawdz ekran kotla");
+    text(result,"verification_source","RS485 112: pojedynczy indeks konfiguracji 140; odpowiedz 240. Bez automatycznego powtorzenia i bez kasowania EEPROM");
+    {Lock lock;auto *record=item(get(data,"tests"),0);J *field;cJSON_ArrayForEach(field,result)copy(record,field->string,field);copy(record,"result",get(result,"state"));}
+    if(!journal())text(result,"journal_warning","Nie utrwalono wyniku operacji w dzienniku ESP");
+    return result;
+}
 void worker(void *) {
     bool initial=true; uint64_t next_poll=0;
     for(;;) {
@@ -1398,6 +1446,7 @@ void worker(void *) {
             if(kind=="prepare") result=prepare(payload,owner);
             else if(kind=="execute") result=execute(payload,owner);
             else if(kind=="save") result=save_setting(payload,owner);
+            else if(kind=="pellet_calibrate") result=calibrate_pellet(payload);
             else if(kind=="control_prepare") result=prepare_control(payload,owner);
             else if(kind=="control_execute") result=execute_control(payload,owner);
             else if(kind=="transport") result=choose_transport(payload);
@@ -1489,6 +1538,11 @@ cJSON *snapshot() {
     double http_mode=num(get(get(out,"curr"),"mode"));
     overlay(out);
     put(out,"pellet",pellet::snapshot());
+    auto *pellet_info=get(out,"pellet");bool pellet_supported=pellet_model(get(out,"system"));
+    bool pellet_available=pellet_supported&&!strcmp(str(get(out,"write_transport")),"rs485")&&native_identity&&
+        now()-native_identity_ms.load()<60000&&cJSON_IsTrue(get(out,"fresh"))&&transport::enabled()&&!transport::conflict();
+    flag(pellet_info,"boiler_calibration_supported",pellet_supported);flag(pellet_info,"boiler_calibration_available",pellet_available);
+    text(pellet_info,"boiler_calibration_status",pellet_available?"Punkty 100% i 0%: polecenia z panelu kotla. Wymagaja potwierdzenia rzeczywistego poziomu":pellet_supported?"Kalibracja czeka na swieze polaczenie RS485":"Brak potwierdzonej wersji kotla dla kalibracji zasobnika");
     put(out,"esp_device",device_info::snapshot());
     // The RS485 ecoNET address is emulated by ESP. Never label its network fields as real ecoNET data.
     auto *network=get(out,"econet_network"); if(!cJSON_IsObject(network)) { network=cJSON_CreateObject(); put(out,"econet_network",network); }
@@ -1536,6 +1590,7 @@ cJSON *submit(const char *kind, const cJSON *payload, const char *owner, std::st
     if(!strcmp(kind,"control_prepare") && strcmp(str(get(payload,"action")),"start") && strcmp(str(get(payload,"action")),"stop")) { error="Nieprawidlowe polecenie sterowania"; return nullptr; }
     if((!strcmp(kind,"execute")||!strcmp(kind,"control_execute")) && (strlen(str(get(payload,"token")))!=32 || !cJSON_IsTrue(get(payload,"confirm")))) { error="Nieprawidlowe potwierdzenie zapisu"; return nullptr; }
     if(!strcmp(kind,"save")&&!cJSON_IsTrue(get(payload,"confirm"))) { error="Brak potwierdzenia zapisu"; return nullptr; }
+    if(!strcmp(kind,"pellet_calibrate")&&((num(get(payload,"point"))!=0&&num(get(payload,"point"))!=100)||!cJSON_IsTrue(get(payload,"confirm"))||!cJSON_IsTrue(get(payload,"physical_level_confirmed")))) {error="Potwierdz punkt i rzeczywisty poziom pelletu";return nullptr;}
     auto *previous=get(data,"job");
     if(previous&&strcmp(str(get(previous,"status")),"running")&&*str(get(previous,"id"))) {
         if(!completed_jobs)completed_jobs=cJSON_CreateArray();
@@ -1657,6 +1712,16 @@ bool self_test() {
     number(item(dynamic_structure.p,3),"pass_index",8); check(!menu_structure_valid(dynamic_structure.p)); number(item(dynamic_structure.p,3),"pass_index",1);
     number(item(dynamic_structure.p,3),"index",2); check(!menu_structure_valid(dynamic_structure.p));
     Owned missing_parent{cJSON_Parse(R"JSON([{"type":1,"index":47,"lock":false,"pass_index":0}])JSON")}; check(!menu_structure_valid(missing_parent.p));
+    auto *cats=body("rmCatsNames");while(cJSON_GetArraySize(cats)<=30)cJSON_AddItemToArray(cats,cJSON_CreateString("unused"));
+    cJSON_ReplaceItemInArray(cats,30,cJSON_CreateString("Ustawienia zaawansowane"));
+    auto *advanced_structure=body("rmStructure");number(item(advanced_structure,3),"index",30);number(item(advanced_structure,3),"pass_index",3);number(item(advanced_structure,5),"index",158);
+    check(!menu_access(158)&&menu_access(158,true));
+    number(item(advanced_structure,5),"index",47);check(!menu_access(47,true));number(item(advanced_structure,5),"index",158);
+    flag(item(advanced_structure,3),"lock",true);check(!menu_access(158,true));flag(item(advanced_structure,3),"lock",false);
+    flag(item(advanced_structure,5),"lock",true);check(!menu_access(158,true));flag(item(advanced_structure,5),"lock",false);
+    number(item(advanced_structure,3),"pass_index",5);check(!menu_access(158,true));number(item(advanced_structure,3),"pass_index",3);
+    number(item(advanced_structure,5),"pass_index",3);check(!menu_access(158,true));number(item(advanced_structure,5),"pass_index",0);
+    cJSON_AddItemToArray(advanced_structure,cJSON_Duplicate(item(advanced_structure,5),true));check(!menu_access(158,true));
     cJSON_Delete(raw); raw=saved; error_text.clear();
     Owned sensor{cJSON_Parse(R"JSON({"fresh":true,"age_ms":100,"modules":{"module_a":"8.41.38.L0"},"sensors":{"state":0,"pending_alerts":0},"outputs":{"alarm":false}})JSON")};
     auto guarded=[&](bool start) { return control_guard(sensor.p,true,true,true,start); };

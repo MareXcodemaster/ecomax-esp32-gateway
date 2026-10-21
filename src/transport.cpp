@@ -2,6 +2,7 @@
 #include "board.hpp"
 #include "frame_parser.hpp"
 #include "state.hpp"
+#include "pellet_commands.hpp"
 #include "esp_timer.h"
 #include "esp_task_wdt.h"
 #include "esp_system.h"
@@ -36,6 +37,7 @@ static bool readonly_allowed(uint8_t type,const uint8_t *payload,size_t size,uin
     if(size==0) return (type==57&&response==185)||(type==64&&response==192)||
         (type==84&&response==212)||(type==85&&response==213)||(type==54&&response==182);
     if(size!=2||!payload) return false;
+    if(type==97)return payload[0]==255&&payload[1]==0&&response==225;
     if(type==61) return payload[0]==0&&payload[1]==10&&response==189;
     if(type==49) return payload[0]==32&&payload[1]<=96&&payload[1]%32==0&&response==177;
     if(payload[1]!=0) return false;
@@ -45,6 +47,7 @@ static bool readonly_allowed(uint8_t type,const uint8_t *payload,size_t size,uin
 }
 static bool request_allowed(uint8_t type,const uint8_t *payload,size_t size,uint8_t response) {
     return readonly_allowed(type,payload,size,response)||(size==0&&type==25&&response==0)||
+        (type==112&&pellet_commands::write_allowed(payload,size,response))||
         (type==93&&size==2&&payload&&payload[0]==1&&(payload[1]&127)<=7&&response==221)||
         (type==55&&size==46&&payload&&response==0&&payload[0]==1&&payload[1]<=9&&payload[2]<=1&&payload[3]<=100)||
         (type==86&&size==4&&payload&&payload[0]==5&&payload[1]==1&&payload[2]<168&&response==214)||
@@ -284,6 +287,10 @@ bool self_test() {
     bad_menu_write[1]=1; bad_menu_write[2]=168; guards=guards&&!request_allowed(86,bad_menu_write,4,214);
     for(unsigned type:{51,52,55,59,87,89,93,96,97,98,99,100,101,102})
         reads=reads&&!readonly_allowed(type,boiler_read,2,type+128)&&!readonly_allowed(type,nullptr,0,type+128);
+    const uint8_t pellet_config[]={255,0};uint8_t pellet_point[3]{};
+    reads=reads&&readonly_allowed(97,pellet_config,2,225)&&!readonly_allowed(112,pellet_config,2,240);
+    guards=guards&&pellet_commands::point(100,pellet_point)&&request_allowed(112,pellet_point,3,240);
+    pellet_point[1]=141;guards=guards&&!request_allowed(112,pellet_point,3,240);
     uint8_t menu_request[11]{},panel_reply[12]{},ack_request[13]{},ack_reply[10]{};
     menu_request[7]=86; menu_request[8]=3; panel_reply[4]=80; panel_reply[7]=214; panel_reply[8]=3;
     reads=reads&&reply_matches(menu_request,11,214,panel_reply,12);

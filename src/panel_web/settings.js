@@ -21,7 +21,7 @@
   return result;
  }
  function validValue(t,value){if(!Number.isFinite(value)||!Number.isFinite(t.step)||t.step<=0||value<t.min||value>t.max||Math.abs((value-t.min)/t.step-Math.round((value-t.min)/t.step))>0.0001)return false;if(t.value_kind==='boolean'&&![0,1].includes(value))return false;return !t.options?.length||t.options.some(o=>o.value===value);}
- function matchesTarget(a,b){return !!(a&&b&&['before','min','max','step','schema','cached','profile_mode','profile_raw','observed_key','wire_key'].every(k=>same(a[k],b[k])));}
+ function matchesTarget(a,b){return !!(a&&b&&['before','min','max','step','schema','advanced','cached','profile_mode','profile_raw','observed_key','wire_key'].every(k=>same(a[k],b[k])));}
  function reconcileSchedule(draft,actual){if(!draft)return null;return {...draft,changed:!same(draft.before,actual)};}
  function scheduleFresh(data,fresh,key){return !!(fresh&&(data.write_transport==='rs485'?(key==='thermostat1TZ'?data.thermostat_schedule_status:data.schedule_status)?.fresh:typeof data.system_age_seconds==='number'&&data.system_age_seconds<45));}
  function scheduleWritable(data,key,fresh){return scheduleFresh(data,fresh,key)&&validSchedule(data.schedules?.ecomaxSchedules?.[key])&&(data.write_transport!=='rs485'||Number.isInteger(data.schedule_write_indices?.[key]));}
@@ -36,6 +36,7 @@
   if(!/^(rm:|legacy:)/.test(id)){EcoMirror.openTemperature(id);return;}
   const t=snap?.targets?.[id];if(!isFresh||!snap.targets_fresh||!t){notice('Brak aktualnego odczytu nastawy.',true);return;}
   settingId=id;draft={value:t.before,before:clone(t),dirty:false};$('setting-title').textContent=t.name;$('setting-error').textContent='';$('setting-risk').hidden=!t.risk;$('setting-confirm').checked=false;
+  $('setting-risk').lastChild.textContent=t.advanced?'Potwierdzam zmian\u0119 ustawienia zaawansowanego kot\u0142a':'Potwierdzam zmian\u0119 nastawy instalacyjnej';
   const select=$('setting-option');select.replaceChildren(...(t.options||[]).map(o=>new Option(o.label,o.value)));select.hidden=t.value_kind!=='enum';$('setting-number').hidden=t.value_kind!=='number';$('setting-bool-field').hidden=t.value_kind!=='boolean';update();$('setting-dialog').showModal();
  }
  function update(){
@@ -52,7 +53,7 @@
  async function save(id,value,expected,installation=false){
   if(saving||actionBusy)throw new Error('Trwa zapis.');saving=true;
   try{
-   const result=await run('/api/write/save',{id,value,confirm:true,confirm_installation:installation});
+   const result=await run('/api/write/save',{id,value,confirm:true,confirm_installation:installation,confirm_advanced:installation&&expected.advanced===true});
    notice(result.message,!['verified','unchanged'].includes(result.state));return result;
   }finally{saving=false;}
  }
