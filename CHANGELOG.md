@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.0-beta.22 - 2026-10-21
+
+- Poprawka interpretacji poziomu paliwa na ecoMAX860P-LZ TOUCH,
+  modul A 8.41.38.L0 / panel 8.30.28: kod powyzej 100 oznacza
+  Kalibracja (CAL), a nie procenty pomniejszone o 101.
+- Kalibracja jest widoczna na kafelku, w zakladce Pellet i na schemacie.
+  Nie jest prezentowana jako pusty zasobnik ani zapisywana jako 0%
+  w nowych probkach historii. Nie zmieniono juz zapisanych probek.
+- Surowy kod i osobny stan kalibracji sa dostepne w odczytach JSON.
+  Brak danych i nieaktualny odczyt nie sa uznawane za aktywna kalibracje.
+- Zachowanie dotychczasowego kodowania przesunietego o 101 dla innych,
+  nierozpoznanych wersji. Bez zmian polecen kalibracji i nastaw kotla.
+- Testy dekodera, widokow 320/390/1280 px, zwyklego 0%, 100%, CAL
+  i utraty odczytu; zaktualizowane instrukcje i galeria.
+
 ## 0.7.0-beta.21 - 2026-10-21
 
 - Parametry serwisowe: osobna sekcja Ustawienia zaawansowane z dziewiecioma

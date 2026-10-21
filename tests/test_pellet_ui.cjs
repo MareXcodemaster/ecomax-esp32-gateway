@@ -17,6 +17,11 @@ test('pellet renderer works without removed nodes, online and offline',()=>{
  const data={fresh:true,level_percent:50,calibration:{revision:1,sample_kg:null,sample_seconds:null,feeder_kg_h:null}};
  assert.doesNotThrow(()=>context.EcoPellet.render(data,true));
  assert.equal(nodes.get('pellet-level').textContent,'50 %');
+ assert.doesNotThrow(()=>context.EcoPellet.render({...data,level_percent:null,level_calibrating:true},true));
+ assert.equal(nodes.get('pellet-level').textContent,'Kalibracja');
+ assert.equal(nodes.get('pellet-hopper').dataset.calibrating,'true');
+ assert.equal(nodes.get('pellet-hopper').dataset.available,'false');
  assert.doesNotThrow(()=>context.EcoPellet.render(null,false));
  assert.equal(nodes.get('pellet-level').textContent,'Brak odczytu');
+ assert.equal(nodes.get('pellet-hopper').dataset.calibrating,'false');
 });

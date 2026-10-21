@@ -23,6 +23,7 @@ uint64_t updated_ms = 0, checkpoint_at = 0;
 double reported_flow = NAN, flow = NAN;
 Source source = Source::unavailable;
 int level = -1;
+int raw_level=-1,calibrating=-1;
 bool have_sensor = false, feeder_available = false, feeder = false;
 bool dirty = false, storage_ok = true, restored = false;
 struct Lock {
@@ -69,6 +70,7 @@ void init() {
 void receive(const plum::Sensors &sensor, uint64_t ms) {
     Lock lock(mutex);
     have_sensor = true; updated_ms = ms; level = sensor.fuel_level;
+    raw_level=sensor.fuel_level_raw;calibrating=sensor.fuel_calibrating;
     reported_flow = valid_rate(sensor.fuel_consumption) ? sensor.fuel_consumption : NAN;
     feeder_available = sensor.output_flags & 2U; feeder = sensor.output_bits & 2U;
     auto calibrated = calibration_rate(config.sample_kg, config.sample_seconds);
@@ -91,11 +93,12 @@ void checkpoint(bool force) {
     { Lock lock(mutex); storage_ok = ok; if (!ok) dirty = true; }
 }
 cJSON *snapshot() {
-    Store copy; Meter counter; double actual, current; Source origin; int percent;
+    Store copy; Meter counter; double actual, current; Source origin; int percent,raw,calibration_state;
     uint64_t ms; bool have, on, present, stored, resumed;
     {
         Lock lock(mutex); copy = config; counter = meter; actual = reported_flow; current = flow; origin = source;
         percent = level; ms = updated_ms; have = have_sensor; on = feeder; present = feeder_available;
+        raw=raw_level;calibration_state=calibrating;
         stored = storage_ok; resumed = restored;
     }
     auto *root = cJSON_CreateObject(); if (!root) return nullptr;
@@ -103,6 +106,8 @@ cJSON *snapshot() {
     cJSON_AddBoolToObject(root, "fresh", fresh);
     number(root, "age_seconds", have ? (now() - ms) / 1000.0 : NAN);
     number(root, "level_percent", fresh && percent >= 0 && percent <= 100 ? percent : NAN);
+    number(root,"level_raw",fresh&&raw>=0?raw:NAN);
+    if(fresh&&calibration_state>=0)cJSON_AddBoolToObject(root,"level_calibrating",calibration_state==1);else cJSON_AddNullToObject(root,"level_calibrating");
     cJSON_AddStringToObject(root, "level_source", "Poziom z kotla / nie pomiar zasobnika");
     number(root, "reported_flow_kg_h", fresh ? actual : NAN);
     number(root, "flow_kg_h", fresh ? current : NAN);

@@ -6,7 +6,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
 </style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>Jak Wyglada Panel ecoMAX Wi-Fi</h1>
-<p>Zrzuty rzeczywistego interfejsu wersji <strong>0.7.0-beta.21</strong>, uruchomionego
+<p>Zrzuty rzeczywistego interfejsu wersji <strong>0.7.0-beta.22</strong>, uruchomionego
 lokalnie z <strong>danymi przykladowymi (DEMO)</strong>. Nie jest to potwierdzenie
 obslugi kazdej nastawy w dowolnym kotle.
 Aktualizacja zdjec: <strong>21.10.2026</strong>. Kliknij zdjecie, aby je powiekszyc w GitHubie.</p>
@@ -14,64 +14,68 @@ Aktualizacja zdjec: <strong>21.10.2026</strong>. Kliknij zdjecie, aby je powieks
 <p>Stan kotla, temperatury zmierzone i zadane, pokoj, mieszacz oraz poziom
 paliwa, jezeli regulator udostepnia te dane. Na gornej belce widac
 pieciokreskowy wskaznik i szacowany procent sygnalu Wi-Fi ESP.</p>
-<p><img src="images/panel/0.7.0-beta.21/01-odczyty.png" alt="Panel glowny ecoMAX Wi-Fi, dane przykladowe"></p>
+<p><img src="images/panel/0.7.0-beta.22/01-odczyty.png" alt="Panel glowny ecoMAX Wi-Fi, dane przykladowe"></p>
 <h2>Schemat Instalacji</h2>
 <p>Kociol, mieszacz 1, grzejniki, pokoj i zbiornik CWU. Biezace temperatury
 oraz stan pomp; brak odczytu pokazuje kreski. Jest to grafika pogladowa,
 nie dokumentacja polaczen hydraulicznych konkretnego domu.</p>
-<p><img src="images/panel/0.7.0-beta.21/10-schemat.png" alt="Schemat instalacji z temperaturami, przykladowe dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.22/10-schemat.png" alt="Schemat instalacji z temperaturami, przykladowe dane DEMO"></p>
 <h2>Zmiana Sieci Wi-Fi</h2>
 <p><strong>Narzedzia &gt; Zmien siec Wi-Fi</strong>: wyszukiwanie sieci, wybor i haslo.
 <strong>Narzedzia &gt; Ustawienia ESP Wi-Fi</strong>: status polaczenia, IP i nazwa .local.</p>
-<p><img src="images/panel/0.7.0-beta.21/11-zmiana-wifi.png" alt="Bezposrednia zmiana sieci Wi-Fi z panelu"></p>
+<p><img src="images/panel/0.7.0-beta.22/11-zmiana-wifi.png" alt="Bezposrednia zmiana sieci Wi-Fi z panelu"></p>
 <h2>Harmonogram Tygodniowy</h2>
 <p>Dni od poniedzialku do niedzieli, godziny 00-24 i kratki po 30 minut.
 Przy wybranym harmonogramie widac opis jego dzialania.</p>
-<p><img src="images/panel/0.7.0-beta.21/02-harmonogram.png" alt="Harmonogram CWU, przykladowy tydzien"></p>
+<p><img src="images/panel/0.7.0-beta.22/02-harmonogram.png" alt="Harmonogram CWU, przykladowy tydzien"></p>
 <h2>Historia Temperatur</h2>
 <p>Wykresy temperatur i nastaw, wybor zakresu do 3 dni, stany pracy i CSV.
 Pokazane przebiegi sa wygenerowanym przykladem.</p>
-<p><img src="images/panel/0.7.0-beta.21/03-historia.png" alt="Wykresy temperatur CO i CWU z przykladowych danych"></p>
+<p><img src="images/panel/0.7.0-beta.22/03-historia.png" alt="Wykresy temperatur CO i CWU z przykladowych danych"></p>
 <h2>Rozpalanie I Stany Kotla</h2>
 <p>Osobny widok stanow: m.in. rozpalanie, stabilizacja, praca i wygaszanie.</p>
-<p><img src="images/panel/0.7.0-beta.21/04-stany-kotla.png" alt="Historia stanow kotla, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.22/04-stany-kotla.png" alt="Historia stanow kotla, dane DEMO"></p>
 <h2>Zmiana Nastawy</h2>
 <p>Przykladowe okno zadanej temperatury CWU: wartosc zmierzona, obecna
 nastawa, dopuszczalny zakres i zapis. Podczas robienia zdjecia nie
 wysylano polecenia do zadnego kotla.</p>
-<p><img src="images/panel/0.7.0-beta.21/05-nastawa.png" alt="Okno ustawiania temperatury CWU, bez wykonania zapisu"></p>
+<p><img src="images/panel/0.7.0-beta.22/05-nastawa.png" alt="Okno ustawiania temperatury CWU, bez wykonania zapisu"></p>
 <h2>Poziom Pelletu</h2>
 <p>Graficzny zasobnik z procentami z kotla. Brak danych nie oznacza 0%.</p>
-<p><img src="images/panel/0.7.0-beta.21/07-pellet.png" alt="Graficzny poziom pelletu, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.22/07-pellet.png" alt="Graficzny poziom pelletu, dane DEMO"></p>
 <h2>Wlasna Kolejnosc Kafelkow</h2>
 <p>Przycisk edycji ukladu, przeciaganie myszka lub dotykiem i przywracanie
 domyslnej kolejnosci. Kazda przegladarka zapamietuje wlasny uklad.</p>
-<p><img src="images/panel/0.7.0-beta.21/08-uklad-kafelkow.png" alt="Zmiana ukladu kafelkow, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.22/08-uklad-kafelkow.png" alt="Zmiana ukladu kafelkow, dane DEMO"></p>
 <h2>Panel Na Telefonie</h2>
 <p>Ten sam panel na ekranie telefonu; menu boczne jest zwijane.</p>
-<p><img src="images/panel/0.7.0-beta.21/06-telefon.png" alt="Panel w widoku telefonu, dane przykladowe"></p>
+<p><img src="images/panel/0.7.0-beta.22/06-telefon.png" alt="Panel w widoku telefonu, dane przykladowe"></p>
 <h2>Narzedzia Panelu</h2>
 <p>Podpisane przyciski Kafelki i Odswiez oraz menu z nazwami pozostalych funkcji.
 Wyloguj jest ostatnia pozycja, oddzielona od narzedzi.</p>
-<p><img src="images/panel/0.7.0-beta.21/09-narzedzia.png" alt="Nazwane narzedzia i Wyloguj na koncu listy"></p>
+<p><img src="images/panel/0.7.0-beta.22/09-narzedzia.png" alt="Nazwane narzedzia i Wyloguj na koncu listy"></p>
 <h2>Aktualizacje ESP</h2>
 <p>Obecna i najnowsza wersja, wybor kanalow stabilnych lub beta oraz
 sprawdzanie aktualizacji. Gdy ESP ma najnowsza wersje, belka pokazuje
 <strong>Aktualne</strong>. Instalacja nowszego wydania wymaga potwierdzenia.</p>
-<p><img src="images/panel/0.7.0-beta.21/12-aktualizacje.png" alt="Aktualizacje ESP z GitHuba: aktualna wersja beta.20, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.22/12-aktualizacje.png" alt="Aktualizacje ESP z GitHuba: aktualna wersja beta.22, dane DEMO"></p>
 <h2>JSON Do Analizy Pracy Kotla</h2>
 <p>Pobieranie zapisanych pomiarow z okresu do 3 dni oraz aktualnych nastaw.
 Jednostki, czas UTC i oznaczenia brakow danych pozostaja w pliku.</p>
-<p><img src="images/panel/0.7.0-beta.21/13-analiza-json.png" alt="Eksport JSON do analizy spalania, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.22/13-analiza-json.png" alt="Eksport JSON do analizy spalania, dane DEMO"></p>
 <h2>Pamiec I Parametry ESP</h2>
 <p>Zajetosc programu w slocie OTA, RAM wewnetrznej, PSRAM i archiwum flash.
 Osobno parametry procesora, fizyczna pojemnosc flash, czas pracy i restart.
 Wskazania ponizej sa przykladowe, nie odczytem prywatnego urzadzenia.</p>
-<p><img src="images/panel/0.7.0-beta.21/14-pamiec-esp.png" alt="Pamiec i parametry ESP: cztery pule pamieci i dane procesora, DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.22/14-pamiec-esp.png" alt="Pamiec i parametry ESP: cztery pule pamieci i dane procesora, DEMO"></p>
 <h2>Ustawienia Zaawansowane</h2>
 <p>Osobna sekcja w Parametrach serwisowych. Przykladowe wartosci DEMO,
 nie zalecenia konfiguracji; zapis wymaga osobnego potwierdzenia.</p>
-<p><img src="images/panel/0.7.0-beta.21/15-zaawansowane.png" alt="Dziewiec rozpoznanych ustawien zaawansowanych, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.22/15-zaawansowane.png" alt="Dziewiec rozpoznanych ustawien zaawansowanych, dane DEMO"></p>
+<h2>Kalibracja Poziomu Paliwa</h2>
+<p>Stan Kalibracja jest osobny od 0% i 100%. Widoczny przy aktualnym sygnale
+rozpoznanego regulatora; nie oznacza pustego zbiornika. Dane DEMO.</p>
+<p><img src="images/panel/0.7.0-beta.22/16-kalibracja-paliwa.png" alt="Stan Kalibracja zamiast falszywego 0 procent, dane DEMO"></p>
 <h2>Instalacja I Sprzet</h2>
 <p>Oba modele <strong>Waveshare ESP32-S3-RS485-CAN</strong> i <strong>ESP32-S3-RS485-CAN-U</strong>
 (antena zewnetrzna) uzywaja tego samego firmware, 16 MB flash / 8 MB PSRAM.

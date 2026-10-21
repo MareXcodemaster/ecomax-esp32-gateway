@@ -1495,6 +1495,7 @@ void fill_rs_curr(J *curr,const J *snapshot) {
     auto *s=get(snapshot,"sensors");
     const char *map[][2]={{"heating_temp","tempCO"},{"water_heater_temp","tempCWU"},{"outside_temp","tempExternalSensor"},{"feeder_temp","tempFeeder"},{"exhaust_temp","tempFlueGas"},{"heating_target","tempCOSet"},{"water_heater_target","tempCWUSet"},{"state","mode"},{"fan_power","fanPower"},{"boiler_load","boilerPower"},{"fuel_level","fuelLevel"},{"lambda_state","lambdaStatus"},{"heating_status","statusCO"},{"water_heater_status","statusCWU"}};
     for(auto &p:map) copy(curr,p[1],get(s,p[0]));
+    copy(curr,"fuelLevelRaw",get(s,"fuel_level_raw"));copy(curr,"fuelCalibration",get(s,"fuel_calibrating"));
     copy(curr,"fuelStream",get(s,"fuel_consumption")); copy(curr,"boilerPowerKW",get(s,"boiler_power"));
     number(curr,"lambdaLevel",num(get(s,"lambda_level"))*10);
     const char *outputs[][2]={{"fan","fanWorks"},{"feeder","feederWorks"},{"heating_pump","pumpCOWorks"},{"water_heater_pump","pumpCWUWorks"},{"lighter","lighterWorks"},{"circulation_pump","pumpCirculationWorks"},{"alarm","alarmOutputWorks"}};

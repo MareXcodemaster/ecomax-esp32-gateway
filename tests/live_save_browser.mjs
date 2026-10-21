@@ -6,7 +6,7 @@ import {resolve,sep,extname} from 'node:path';
 import {chromium} from 'playwright';
 const root=resolve('src/panel_web'),writes=[],points=[],errors=[];
 const target={name:'CWU DEMO',before:40,effective:40,min:35,max:65,step:1,measured_key:'tempCWU',write_ready:true};
-const state={version:'0.7.0-beta.21',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
+const state={version:'0.7.0-beta.22',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
  system:{controllerID:'ecoMAX DEMO'},values:{},names:{},menu:[],enums:{},units:[],structure:[],category_names:[],tiles:[],endpoints:{},versions:{},tests:[],
  curr:{mode:0,tempCWU:35,tempCWUSet:40,ecoSterMode1:2},targets:{1281:target},controls:{},econet_health:{fresh:true,api_ok:false},
  esp_network:{connected:true,rssi_dbm:-70,ssid:'DEMO',ip:'192.0.2.10',hostname:'piec'},schedules:{ecomaxSchedules:{}},pellet:{}};
@@ -94,6 +94,18 @@ try{
   await page.locator('#pellet-empty').click();await page.locator('#pellet-point-cancel').click();assert.equal(points.length,count);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
   state.pellet.boiler_calibration_available=false;await page.evaluate(()=>poll());assert.equal(await page.locator('#pellet-full').isDisabled(),true);
+  const beforeCal=writes.length,pointsBeforeCal=points.length;
+  state.pellet.level_percent=null;state.pellet.level_calibrating=true;state.curr.fuelLevel=null;state.curr.fuelCalibration=true;
+  await page.evaluate(()=>poll());assert.equal(await page.locator('#pellet-level').textContent(),'Kalibracja');
+  assert.equal(await page.locator('#pellet-hopper').getAttribute('aria-label'),'Poziom pelletu: kalibracja');
+  await page.evaluate(()=>selectView('live'));
+  assert.equal(await page.locator('[data-member=fuelLevel] .tile-value').textContent(),'Kalibracja');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+  await page.screenshot({path:`test-results/fuel-calibration-${width}.png`});
+  state.curr.fuelCalibration=false;state.curr.fuelLevel=0;await page.evaluate(()=>poll());
+  assert.equal(await page.locator('[data-member=fuelLevel] .tile-value').textContent(),'0 %');
+  assert.equal(writes.length,beforeCal);assert.equal(points.length,pointsBeforeCal,'rendering CAL never sends a command');
+  state.pellet.level_calibrating=false;state.pellet.level_percent=0;
   await page.close();console.log('PASS real panel: background polling, Wi-Fi bars, responsive layout, click target, '+width+'px');
  }
  assert.deepEqual(errors,[]);console.log('PASS two-client external change: draft preserved, one atomic Save, readback synchronized');

@@ -11,7 +11,7 @@
   set('model',data.system?.controllerID||'---');
   set('mode',fresh?EcoSettings.boilerModeLabel(c.mode,data.write_transport):'---');
   for(const [id,key]of [['tempExternalSensor','tempExternalSensor'],['ecoSterTemp1','ecoSterTemp1'],['tempFlueGas','tempFlueGas'],['tempCO','tempCO'],['tempCOSet','tempCOSet'],['tempBack','tempBack'],['tempCWU','tempCWU'],['tempCWUSet','tempCWUSet'],['mixerTempA','mixerTemp1'],['mixerTempASet','mixerSetTemp1']])set(id,value(c[key]));
-  for(const [id,key,unit]of [['fuelLevel','fuelLevel','%'],['fuelStream','fuelStream','kg/h'],['fanPower','fanPower','%'],['tempOpticalSensor','tempOpticalSensor','']])set(id,value(c[key],unit));
+  for(const [id,key,unit]of [['fuelLevel','fuelLevel','%'],['fuelStream','fuelStream','kg/h'],['fanPower','fanPower','%'],['tempOpticalSensor','tempOpticalSensor','']])set(id,id==='fuelLevel'&&c.fuelCalibration===true?'Kalibracja':value(c[key],unit));
   set('boilerPowerKW',typeof c.boilerPowerKW==='number'?value(c.boilerPowerKW,'kW'):value(c.boilerPower,'%'));
   set('mixerALabel','MIX1');
   for(const [id,key]of [['schema_pumpMixerA','mixerPumpWorks1'],['schema_pumpCWU','pumpCWUWorks']]){

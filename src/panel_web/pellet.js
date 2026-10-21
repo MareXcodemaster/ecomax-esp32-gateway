@@ -5,32 +5,34 @@
   const value=kg*3600/seconds;return value>=0.01&&value<=100?value:null;
  }
  function level(value,fresh){return fresh&&typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=100?value:null;}
+ function levelView(value,fresh,calibrating=false){const calibration=!!fresh&&calibrating===true,percent=calibration?null:level(value,fresh);return {percent,calibrating:calibration,label:calibration?'Kalibracja':percent===null?'Brak odczytu':Math.round(percent)+' %'};}
  function calibrationPayload(point,physical){if(![0,100].includes(point)||physical!==true)throw new Error('Potwierdz rzeczywisty poziom pelletu');return {point,confirm:true,physical_level_confirmed:true};}
  function readings(data,fresh){
   const live=!!(fresh&&data?.fresh),finite=value=>typeof value==='number'&&Number.isFinite(value)?value:null;
-  return {level:level(data?.level_percent,live),flow:live?finite(data.flow_kg_h):null,reported:live?finite(data.reported_flow_kg_h):null,consumed:fresh?finite(data?.consumed_kg):null,source:live?data.flow_source:'unavailable'};
+  return {level:levelView(data?.level_percent,live,data?.level_calibrating).percent,flow:live?finite(data.flow_kg_h):null,reported:live?finite(data.reported_flow_kg_h):null,consumed:fresh?finite(data?.consumed_kg):null,source:live?data.flow_source:'unavailable'};
  }
- if(typeof module!=='undefined'&&module.exports)module.exports={calibrationRate,readings,level,calibrationPayload};
+ if(typeof module!=='undefined'&&module.exports)module.exports={calibrationRate,readings,level,levelView,calibrationPayload};
  if(typeof document==='undefined')return;
  const get=id=>document.getElementById(id);let available=false,saving=false,point=null,initialized=false;
- function gauge(element,value){
+ function gauge(element,value,calibrating=false){
   element.classList.add('pellet-gauge');element.dataset.available=String(value!==null);
+  element.dataset.calibrating=String(calibrating);
   element.style.setProperty('--pellet-level',(value??0)+'%');
-  element.setAttribute('role','img');element.setAttribute('aria-label',value===null?'Poziom pelletu: brak odczytu':'Poziom pelletu: '+Math.round(value)+'%');
+  element.setAttribute('role','img');element.setAttribute('aria-label',calibrating?'Poziom pelletu: kalibracja':value===null?'Poziom pelletu: brak odczytu':'Poziom pelletu: '+Math.round(value)+'%');
   if(!element.firstElementChild){const fill=document.createElement('span');fill.className='pellet-fill';element.append(fill);}
  }
- function decorateLevelTile(tile,value,fresh){
+ function decorateLevelTile(tile,value,fresh,calibrating=false){
   if(!tile)return;
   const graphic=tile.querySelector('.pellet-gauge,.tile-symbol,.tile-bitmap');
   if(!graphic)return;
   if(!graphic.classList.contains('pellet-gauge')){graphic.className='pellet-gauge';graphic.replaceChildren();}
-  value=level(value,fresh);gauge(graphic,value);tile.dataset.levelAvailable=String(value!==null);
-  tile.querySelector('.tile-value').textContent=value===null?'Brak odczytu':Math.round(value)+' %';
+  const view=levelView(value,fresh,calibrating);gauge(graphic,view.percent,view.calibrating);tile.dataset.levelAvailable=String(view.percent!==null);
+  tile.querySelector('.tile-value').textContent=view.label;
  }
  function render(data,valid){
-  const value=readings(data,valid).level;
-  document.getElementById('pellet-level').textContent=value===null?'Brak odczytu':Math.round(value)+' %';
-  gauge(document.getElementById('pellet-hopper'),value);
+  const view=levelView(data?.level_percent,!!(valid&&data?.fresh),data?.level_calibrating);
+  document.getElementById('pellet-level').textContent=view.label;
+  gauge(document.getElementById('pellet-hopper'),view.percent,view.calibrating);
   document.getElementById('pellet-calibration-status').textContent=data?.boiler_calibration_status||'Brak potwierdzonej komendy kalibracji zasobnika RS485';
   available=!!(valid&&data?.boiler_calibration_available);
   for(const id of ['pellet-full','pellet-empty'])get(id).disabled=!available||saving;

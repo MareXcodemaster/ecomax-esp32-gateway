@@ -162,7 +162,7 @@
    if(!actual){const value=el.querySelector('.tile-value,.tile-mode');value.textContent=key==='mode'?(isFresh?EcoSettings.boilerModeLabel(curr.mode,snapshot.write_transport):'---'):key==='lambdaLevel'?(isFresh?(curr.lambdaStatus===0?'STOP':num(curr[key]/10)):'---'):num(curr[key],0)+' %';}
   }
  }
- function updatePelletTile(){EcoPellet.decorateLevelTile(get('mirror-tiles').querySelector('[data-member="fuelLevel"]'),snapshot.curr?.fuelLevel,isFresh);}
+ function updatePelletTile(){EcoPellet.decorateLevelTile(get('mirror-tiles').querySelector('[data-member="fuelLevel"]'),snapshot.curr?.fuelLevel,isFresh,snapshot.curr?.fuelCalibration);}
  function reading(kind,set){const row=make('div','tile-reading '+(set?'set':''));row.dataset.reading=kind;const graphic=make('div','tile-symbol'),i=make('i');i.dataset.lucide=set?'thermometer-sun':'thermometer';graphic.append(i);const content=make('div');content.append(make('div','tile-value','---'),make('small','',set?'temp. zadana [\u00b0C]':'temp. aktualna [\u00b0C]'));row.append(graphic,content);return row;}
  function openCurrent(key){parameterSelection={key};updateCurrent(key);get('parameter-dialog').showModal();}
  function updateCurrent(key){get('parameter-name').textContent=labels[key]||currentName(key);details('parameter-values',[['Temperatura aktualna',degrees(isFresh?snapshot.curr[key]:null)],['Temperatura zadana',degrees(isFresh?snapshot.curr[{mixerTemp1:'mixerSetTemp1',ecoSterTemp1:'ecoSterSetTemp1'}[key]]:null)],['Dost\u0119p','Tylko odczyt']]);get('parameter-description').textContent='';get('parameter-raw').textContent='';}

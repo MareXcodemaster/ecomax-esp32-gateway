@@ -55,6 +55,8 @@ cJSON *snapshot() {
     cJSON_AddNumberToObject(sensors, "state", s.state); cJSON_AddNumberToObject(sensors, "transmission", s.transmission);
     number(sensors, "fan_power", s.fan_power); number(sensors, "boiler_power", s.boiler_power);
     number(sensors, "fuel_consumption", s.fuel_consumption); optional(sensors, "fuel_level", s.fuel_level);
+    optional(sensors,"fuel_level_raw",s.fuel_level_raw);
+    if(s.fuel_calibrating>=0)cJSON_AddBoolToObject(sensors,"fuel_calibrating",s.fuel_calibrating==1);else cJSON_AddNullToObject(sensors,"fuel_calibrating");
     optional(sensors, "boiler_load", s.boiler_load); optional(sensors, "lambda_state", s.lambda_state);
     number(sensors, "lambda_level", s.lambda_level); optional(sensors, "lambda_target", s.lambda_target);
     cJSON_AddNumberToObject(sensors, "pending_alerts", s.pending_alerts);

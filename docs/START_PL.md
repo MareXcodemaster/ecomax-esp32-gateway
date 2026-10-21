@@ -4,7 +4,7 @@
 
 **Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
 
-**Oprogramowanie: 0.7.0-beta.21. Instrukcja: wydanie 20, 21.10.2026.**
+**Oprogramowanie: 0.7.0-beta.22. Instrukcja: wydanie 21, 21.10.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -228,7 +228,7 @@ Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz pon
 `piec.local` lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
 Zmiana nie wymaga diagnostyki ani kasowania pamięci.
 
-![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.21/11-zmiana-wifi.png)
+![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.22/11-zmiana-wifi.png)
 
 **Montaż i zasięg:** moduł można umieścić na szynie DIN 35 mm w odpowiedniej
 szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
@@ -309,6 +309,14 @@ Limity i blokady regulatora pozostaja sprawdzane. Nie zmieniaj konfiguracji
 czujnikow ani zabezpieczen bez znajomosci swojej instalacji.
 
 ### Punkty poziomu pelletu
+
+**Kalibracja / CAL zamiast procentow** oznacza, ze rozpoznany regulator
+zglasza trwajaca kalibracje poziomu paliwa. To nie oznacza pustego zasobnika.
+Panel nie wysyla z tego powodu zadnych polecen i nie podstawia 100%.
+Po utracie aktualnego odczytu nie podtrzymuje napisu Kalibracja.
+Surowa wartosc jest dostepna w JSON jako `fuel_level_raw` / `level_raw`,
+a osobny stan jako `fuel_calibrating` / `level_calibrating`.
+Punkt kalibracji 100% nie jest tym samym co zgloszenie dosypania paliwa.
 
 W zakladce **Pellet** sa czynnosci **Poziom paliwa 100%** i **0%**.
 Ta obsluga jest ograniczona do rozpoznanej wersji modulu A 8.41.38.L0

@@ -195,6 +195,11 @@ try {
     return [[b.x,b.y],[b.x+b.width,b.y+b.height]].some(([x,y])=>{const p=new DOMPoint(x,y).matrixTransform(matrix);return p.x<0||p.y<0||p.x>841.66||p.y>437.104;});
   }).map(node=>node.textContent)),[],'schematic text fits drawing');
   await screenshot('10-schemat');
+  await page.evaluate(()=>EcoHeatingSchema.render({...state,curr:{...state.curr,fuelLevel:null,fuelCalibration:true}},true));
+  assert.equal(await page.locator('#lbSchema_fuelLevel').textContent(),'Kalibracja');
+  await page.evaluate(()=>EcoHeatingSchema.render({...state,curr:{...state.curr,fuelCalibration:true}},false));
+  assert.equal(await page.locator('#lbSchema_fuelLevel').textContent(),'---');
+  await page.evaluate(()=>EcoHeatingSchema.render(state,true));
   await page.locator('#update-open').click();
   await page.locator('#update-current').getByText(version,{exact:true}).waitFor();
   await page.locator('.update-panel').scrollIntoViewIfNeeded();
@@ -256,6 +261,10 @@ try {
   assert.equal(await page.locator('#pellet-level').textContent(),'68 %');
   assert.equal(await page.locator('#pellet-hopper .pellet-fill').count(),1);
   await screenshot('07-pellet');
+  state.pellet.level_percent=null;state.pellet.level_calibrating=true;state.curr.fuelLevel=null;state.curr.fuelCalibration=true;
+  await page.evaluate(()=>poll());assert.equal(await page.locator('#pellet-level').textContent(),'Kalibracja');
+  await screenshot('16-kalibracja-paliwa');
+  state.pellet.level_percent=68;state.pellet.level_calibrating=false;state.curr.fuelLevel=68;state.curr.fuelCalibration=false;
   for(const value of [0,100,null,101]){
     await page.evaluate(value=>EcoPellet.render({fresh:true,level_percent:value},true),value);
     assert.equal(await page.locator('#pellet-level').textContent(),value===null||value>100?'Brak odczytu':value+' %');
@@ -348,7 +357,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log(`PASS fifteen panel screenshots for ${version}: advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
+  console.log(`PASS sixteen panel screenshots for ${version}: fuel calibration, advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

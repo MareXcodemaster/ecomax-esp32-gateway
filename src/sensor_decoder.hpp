@@ -25,6 +25,14 @@ struct Thermostat {
     float current = NAN, target = NAN;
 };
 struct Mixer { bool available = false, pump = false; float current = NAN; int target = -1; };
+struct FuelLevel { int raw=-1,percent=-1,calibrating=-1; };
+inline FuelLevel decode_fuel_level(int raw,bool calibration_encoding) {
+    if(raw<0||raw>255)return {};
+    if(raw==255)return {raw,-1,-1};
+    if(raw<=100)return {raw,raw,0};
+    // The captured LZ panel uses values above 100 as CAL, not a percentage offset.
+    return calibration_encoding?FuelLevel{raw,-1,1}:FuelLevel{raw,raw-101,-1};
+}
 struct Sensors {
     uint16_t versions[256]{};
     bool version_present[256]{};
@@ -33,6 +41,7 @@ struct Sensors {
     float temperature[17];
     int heating_target = -1, heating_status = -1, water_heater_target = -1, water_heater_status = -1;
     int fuel_level = -1, boiler_load = -1, lambda_state = -1, lambda_target = -1;
+    int fuel_level_raw=-1,fuel_calibrating=-1;
     float fan_power = NAN, boiler_power = NAN, fuel_consumption = NAN, lambda_level = NAN;
     char module_version[6][24]{};
     Thermostat thermostats[16];
@@ -74,8 +83,7 @@ inline bool decode_sensors(const uint8_t *bytes, size_t size, Sensors &result) {
     s.heating_target = r.optional(); s.heating_status = r.optional();
     s.water_heater_target = r.optional(); s.water_heater_status = r.optional();
     s.pending_alerts = r.u8(); r.skip(s.pending_alerts);
-    s.fuel_level = r.optional();
-    if (s.fuel_level >= 101) s.fuel_level -= 101;
+    s.fuel_level_raw = r.u8();
     s.transmission = r.u8(); s.fan_power = r.f32(); s.boiler_load = r.optional();
     s.boiler_power = r.f32(); s.fuel_consumption = r.f32(); s.thermostat = r.u8();
     for (unsigned i = 0; i < 6; ++i) {
@@ -108,6 +116,8 @@ inline bool decode_sensors(const uint8_t *bytes, size_t size, Sensors &result) {
         m.pump = r.u8() & 1; r.skip(1); m.available = std::isfinite(m.current);
     }
     if (!r.ok || r.pos != size) return false;
+    auto fuel=decode_fuel_level(s.fuel_level_raw,!std::strcmp(s.module_version[0],"8.41.38.L0")&&!std::strcmp(s.module_version[5],"8.30.28"));
+    s.fuel_level=fuel.percent;s.fuel_calibrating=fuel.calibrating;
     result = s; return true;
 }
 }

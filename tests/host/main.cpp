@@ -12,6 +12,7 @@
 #include <string>
 #include <cassert>
 #include <cstdio>
+#include <vector>
 void access_tests();
 void diagnostics_tests();
 void settings_journal_tests();
@@ -184,8 +185,22 @@ int main() {
         assert(!std::strcmp(s.module_version[5], "8.30.28"));
         assert(s.thermostat_slots == 3 && s.mixer_slots == 4);
         assert(s.thermostats[0].available && s.mixers[0].available);
+        plum::Reader locate(fixture.data,fixture.size);unsigned versions=locate.u8();locate.skip(versions*3+9);
+        unsigned temperatures=locate.u8();locate.skip(temperatures*5+4);unsigned alerts=locate.u8();locate.skip(alerts);
+        auto fuel_offset=locate.pos;std::vector<uint8_t> changed(fixture.data,fixture.data+fixture.size);
+        for(unsigned raw:{0,50,100,101,201,254,255}) {
+            changed[fuel_offset]=raw;assert(plum::decode_sensors(changed.data(),changed.size(),s));
+            assert(s.fuel_level_raw==static_cast<int>(raw));
+            assert(s.fuel_level==(raw<=100?static_cast<int>(raw):-1));
+            assert(s.fuel_calibrating==(raw<=100?0:raw==255?-1:1));
+        }
+        changed[fuel_offset]=201;changed[fuel_offset+16]=9;
+        assert(plum::decode_sensors(changed.data(),changed.size(),s));
+        assert(s.fuel_level_raw==201&&s.fuel_level==100&&s.fuel_calibrating==-1);
         for (size_t length = 0; length < fixture.size; ++length)
             assert(!plum::decode_sensors(fixture.data, length, s));
     }
+    assert(plum::decode_fuel_level(-1,true).percent==-1&&plum::decode_fuel_level(256,true).percent==-1);
+    puts("PASS fuel calibration: raw code retained, CAL is not zero percent, other module versions keep offset compatibility");
     puts("PASS: real protocol self-test, truncated synthetic sensor frames, identity guards, NVS password persistence/failure/erase");
 }
