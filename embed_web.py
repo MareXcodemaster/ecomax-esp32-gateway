@@ -37,7 +37,8 @@ for index, path in enumerate(sorted((source.parent.parent / "panel_web").rglob("
         continue
     relative = path.relative_to(source.parent.parent / "panel_web").as_posix()
     mime = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
-            ".html": "text/html; charset=utf-8", ".woff2": "font/woff2", ".svg": "image/svg+xml"}.get(path.suffix, mimetypes.guess_type(path.name)[0] or "application/octet-stream")
+            ".html": "text/html; charset=utf-8", ".woff2": "font/woff2", ".svg": "image/svg+xml",
+            ".ico": "image/x-icon", ".png": "image/png"}.get(path.suffix, mimetypes.guess_type(path.name)[0] or "application/octet-stream")
     payload = path.read_bytes()
     compressed = path.suffix in (".html", ".js", ".css", ".svg")
     if compressed:

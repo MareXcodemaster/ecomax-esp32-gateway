@@ -76,7 +76,7 @@ const server = createServer(async (req, res) => {
   const path = resolve(root, '.' + decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname));
   if (!path.startsWith(root + sep)) { res.writeHead(403).end(); return; }
   try {
-    const types = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml', '.jpg':'image/jpeg', '.woff2': 'font/woff2' };
+    const types = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml', '.jpg':'image/jpeg', '.png':'image/png', '.ico':'image/x-icon', '.woff2': 'font/woff2' };
     res.writeHead(200, { 'Content-Type': types[extname(path)] || 'application/octet-stream' }).end(await readFile(path));
   } catch { res.writeHead(404).end(); }
 });
@@ -93,6 +93,20 @@ try {
     else await route.continue();
   });
   await page.goto(origin);
+  assert.equal(await page.locator('link[rel="icon"][type="image/svg+xml"]').getAttribute('href'),'/assets/favicon.svg');
+  for(const [path,mime]of [['/assets/favicon.svg','image/svg+xml'],['/favicon.ico','image/x-icon'],['/assets/icon-180.png','image/png']]){
+    const response=await page.request.get(origin+path);assert.equal(response.status(),200);assert.equal(response.headers()['content-type'],mime);
+  }
+  for(const size of [16,32,180]){
+    const pixels=await page.evaluate(async size=>{
+      const img=new Image();img.src='/assets/favicon.svg';await img.decode();
+      const canvas=document.createElement('canvas');canvas.width=canvas.height=size;
+      const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,size,size);
+      const pixel=(x,y)=>[...ctx.getImageData(Math.floor(x*size),Math.floor(y*size),1,1).data];
+      return {background:pixel(.2,.2),flame:pixel(.5,.65)};
+    },size);
+    assert.deepEqual(pixels.background,[23,107,103,255]);assert.deepEqual(pixels.flame,[255,255,255,255]);
+  }
   await page.locator('.eco-tile .tile-value').first().waitFor();
   await page.evaluate(() => notice('DEMO - dane przykladowe, nie odczyt prawdziwego kotla.'));
   await page.evaluate(() => document.fonts.ready);

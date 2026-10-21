@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0-beta.25 - 2026-10-21
+
+- Lokalna favicona: bialy plomien na zielonym tle panelu, bez logo producenta.
+- Ta sama ikona w panelu i diagnostyce, format SVG oraz ICO dla zgodnosci
+  przegladarek i PNG 180 px dla skrotu na ekranie telefonu.
+- Zasoby zapisane w firmware, bez pobierania ikon z internetu. Testy
+  formatow, wymiarow i czytelnosci przy 16, 32 oraz 180 px.
+- Bez zmian regulacji spalania, nastaw kotla i komunikacji RS485.
+
 ## 0.7.0-beta.24 - 2026-10-21
 
 - Usuniety dodatkowy przycisk ustawien zaawansowanych z gory
