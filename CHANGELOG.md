@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.0-beta.27 - 2026-10-21
+
+- Czytelniejsze male podpisy: lokalna czcionka Inter Medium, rozmiar
+  12-13 px zamiast 9-10 px, ciemniejszy kolor i odstepy 17-18 px.
+- Podpisy nastaw i pomiarow pod calym odczytem, z miejscem na opis celu
+  biezacego. Duze liczby i kolejnosc kafelkow bez zmian.
+- Wentylator obraca sie przy aktywnym wyjsciu lub dodatniej mocy, gdy
+  stan wyjscia nie jest udostepniony. Plomien pulsuje przy dodatniej mocy.
+- Animacje zatrzymuja sie przy nieaktualnym odczycie i postoju; respektuja
+  ograniczenie ruchu w systemie telefonu. Tylko CSS, bez nowych zapytan.
+- Kontrola czytelnosci i geometrii przy dziewieciu szerokosciach ekranu.
+- Bez zmian komend RS485, nastaw kotla, Wi-Fi i historii pomiarow.
+
 ## 0.7.0-beta.26 - 2026-10-21
 
 - Wybrana zakladka jest zapisana w adresie strony i wraca po odswiezeniu,

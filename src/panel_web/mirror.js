@@ -96,7 +96,13 @@
   const live=data.targets?.[ticket.id],equal=(a,b)=>typeof a==='number'&&typeof b==='number'&&Math.abs(a-b)<0.0001;
   return !!(fresh&&data.targets_fresh&&live&&live.write_ready!==false&&['before','min','max','step'].every(k=>equal(live[k],ticket[k]))&&(!(ticket.legacy||ticket.generic&&ticket.profile_mode!==undefined)||equal(live.profile_mode,ticket.profile_mode))&&(!(ticket.legacy&&ticket.transport==='rs485')||['wire_index','parameter_count','profile_raw'].every(k=>equal(live[k],ticket[k])))&&(!(ticket.legacy&&ticket.transport==='rs485'&&ticket.active_profile===false)||equal(live.active_target,ticket.active_target))&&(!ticket.generic||['schema','cached','profile_raw','wire_key','observed_key'].every(k=>JSON.stringify(live[k])===JSON.stringify(ticket[k])))&&data.write_transport===ticket.transport&&ticket.expires*1000>now);
  }
- if(typeof module!=='undefined'&&module.exports)module.exports={decodeSchedule,buildTree,visibleTree,reconcileDraft,clock,targetIdForTile,writeIdForEntry,ticketMatches,isThermostatMenu,parameterReading,econetNetworkValue,scheduleHelp,advancedEntries};
+ function tileRunning(key,curr,fresh){
+  if(!fresh)return false;
+  const power=curr?.[key];
+  if(key==='fanPower'&&typeof curr?.fanWorks==='boolean')return curr.fanWorks;
+  return (key==='boilerPower'||key==='fanPower')&&typeof power==='number'&&Number.isFinite(power)&&power>0&&power<=100;
+ }
+ if(typeof module!=='undefined'&&module.exports)module.exports={decodeSchedule,buildTree,visibleTree,reconcileDraft,clock,targetIdForTile,writeIdForEntry,ticketMatches,isThermostatMenu,parameterReading,econetNetworkValue,scheduleHelp,advancedEntries,tileRunning};
  let snapshot=null,isFresh=false,tempId=null,temperatureDraft=null,parameterSelection=null,treeSignature='',trees={};
  const get=id=>document.getElementById(id);
  const make=(tag,cls,value)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=value;return el;};
@@ -157,7 +163,7 @@
    article.append(body);container.append(article);
   }container.dataset.signature=signature;EcoTileLayout.decorate();icons();}
   const curr=isFresh?snapshot.curr:{};
-  for(const [i,tile]of tiles.entries()){const el=container.children[i];if(!el)continue;const key=tile.memberName_;el.dataset.stale=String(!isFresh);const actual=el.querySelector('[data-reading=actual] .tile-value');
+  for(const [i,tile]of tiles.entries()){const el=container.children[i];if(!el)continue;const key=tile.memberName_;el.dataset.stale=String(!isFresh);el.dataset.running=String(tileRunning(key,curr,isFresh));const actual=el.querySelector('[data-reading=actual] .tile-value');
    if(actual)actual.textContent=num(curr[key]);const set=el.querySelector('[data-reading=set] .tile-value');if(set){const id=targetIdForTile(key,snapshot),target=id?snapshot.targets?.[id]:null;set.textContent=num(id&&!key.startsWith('ecoSter')?(isFresh&&snapshot.targets_fresh?target?.before:null):curr[tile.setMemberName_]);const active=el.querySelector('.tile-target-now');if(active)active.textContent='Cel teraz: '+degrees(curr[tile.setMemberName_]);const button=el.querySelector('.tile-action');if(button&&id){button.disabled=!isFresh||!snapshot.targets_fresh||!target||target.write_ready===false||actionBusy||snapshot.busy;button.title=target?.write_ready===false?target.write_error||'Zapis zablokowany':'Zmie\u0144 temperatur\u0119 ustawion\u0105: '+labels[key];}}
    if(!actual){const value=el.querySelector('.tile-value,.tile-mode');value.textContent=key==='mode'?(isFresh?EcoSettings.boilerModeLabel(curr.mode,snapshot.write_transport):'---'):key==='lambdaLevel'?(isFresh?(curr.lambdaStatus===0?'STOP':num(curr[key]/10)):'---'):num(curr[key],0)+' %';}
   }

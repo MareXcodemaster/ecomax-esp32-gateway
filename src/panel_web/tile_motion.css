@@ -1,0 +1,7 @@
+@keyframes tile-fan-spin{to{transform:rotate(360deg)}}
+@keyframes tile-flame-pulse{0%,100%{transform:scale(1) translateY(0)}50%{transform:scale(1.06) translateY(-1px)}}
+.eco-tile[data-running=true] .tile-symbol svg{transform-origin:center;transform-box:fill-box}
+.eco-tile[data-member=fanPower][data-running=true] .tile-symbol svg{animation:tile-fan-spin 1.6s linear infinite}
+.eco-tile[data-member=boilerPower][data-running=true] .tile-symbol svg{animation:tile-flame-pulse 1.4s ease-in-out infinite}
+.editing-layout .eco-tile[data-member][data-running] .tile-symbol svg{animation:none}
+@media(prefers-reduced-motion:reduce){.eco-tile[data-member][data-running] .tile-symbol svg{animation:none}}

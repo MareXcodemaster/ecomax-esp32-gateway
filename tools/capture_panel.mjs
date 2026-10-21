@@ -116,8 +116,44 @@ try {
   for(const width of [320,390,1280]){
     await page.setViewportSize({width,height:1080});
     const geometry=await brand.evaluate(img=>{const icon=img.getBoundingClientRect(),label=img.nextElementSibling.getBoundingClientRect(),parent=img.parentElement.getBoundingClientRect();return {width:icon.width,height:icon.height,gap:label.left-icon.right,alignment:Math.abs((label.top+label.height/2)-(icon.top+icon.height/2)),fits:icon.left>=parent.left&&label.right<=parent.right+1}});
-    assert.equal(geometry.width,32);assert.equal(geometry.height,32);assert.ok(geometry.gap>=8);assert.ok(geometry.alignment<1);assert.ok(geometry.fits);
+    assert.ok(Math.abs(geometry.width-32)<.01);assert.ok(Math.abs(geometry.height-32)<.01);assert.ok(geometry.gap>=8);assert.ok(geometry.alignment<1);assert.ok(geometry.fits);
   }
+  for(const width of [320,360,390,640,900,1100,1280,1500,1920]){
+    await page.setViewportSize({width,height:1080});
+    const captions=await page.locator('.tile-reading small').evaluateAll(elements=>elements.map(el=>{
+      const style=getComputedStyle(el),box=el.getBoundingClientRect(),row=el.closest('.tile-reading').getBoundingClientRect(),tile=el.closest('.eco-tile').getBoundingClientRect();
+      return {text:el.textContent,size:parseFloat(style.fontSize),line:parseFloat(style.lineHeight),font:style.fontFamily,weight:style.fontWeight,box:box.toJSON(),row:row.toJSON(),tile:tile.toJSON(),
+        fits:box.left>=tile.left&&box.right<=tile.right&&box.top>=row.top&&box.bottom<=row.bottom&&box.bottom<=tile.bottom,
+        separated:box.top>=el.previousElementSibling.getBoundingClientRect().bottom-1};
+    }));
+    assert.ok(captions.length>0);
+    for(const caption of captions){
+      assert.ok(caption.font.startsWith('InterLocal'));assert.equal(caption.weight,'500');
+      assert.ok(caption.size>=12);assert.ok(caption.line>=17);assert.ok(caption.fits,`caption fits at ${width}px: ${JSON.stringify(caption)}`);
+      assert.ok(caption.separated,`caption does not overlap its value at ${width}px`);
+    }
+    assert.ok(await page.evaluate(()=>document.fonts.check('500 12px InterLocal','Temperatura aktualna \u017c\u00f3\u0142\u0107')));
+  }
+  await page.setViewportSize({width:1280,height:1080});
+  const animated=page.locator('[data-member="fanPower"] .tile-symbol svg'),flame=page.locator('[data-member="boilerPower"] .tile-symbol svg');
+  assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationName),'tile-fan-spin');
+  assert.equal(await flame.evaluate(el=>getComputedStyle(el).animationName),'tile-flame-pulse');
+  const phase=await animated.evaluate(el=>getComputedStyle(el).transform);
+  await page.waitForTimeout(120);
+  assert.notEqual(await animated.evaluate(el=>getComputedStyle(el).transform),phase,'fan actually rotates');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationName),'none');
+  assert.equal(await flame.evaluate(el=>getComputedStyle(el).animationName),'none');
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.evaluate(data=>EcoMirror.render('live',data,false),state);
+  assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationName),'none');
+  assert.equal(await flame.evaluate(el=>getComputedStyle(el).animationName),'none');
+  const stopped={...state,curr:{...state.curr,boilerPower:0,fanPower:0,fanWorks:false}};
+  await page.evaluate(data=>EcoMirror.render('live',data,true),stopped);
+  assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationName),'none');
+  assert.equal(await flame.evaluate(el=>getComputedStyle(el).animationName),'none');
+  await page.evaluate(data=>EcoMirror.render('live',data,true),state);
+  await page.emulateMedia({reducedMotion:'reduce'});
   const targetLabels = await page.locator('.tile-target-now').evaluateAll(elements => elements.map(el => {
     const actual = el.closest('.tile-body').querySelector('[data-reading="actual"]').getBoundingClientRect();
     const label = el.getBoundingClientRect();

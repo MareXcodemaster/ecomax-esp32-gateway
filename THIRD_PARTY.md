@@ -7,6 +7,10 @@ components that are not linked in this particular build.
 
 ## Firmware Dependencies
 
+- **Inter**, packaged by @fontsource/inter 5.3.0, SIL Open Font License 1.1.
+  Medium weight, Latin and Latin-ext subsets bundled locally for captions.
+  Full notice in `LICENSES/installer`. https://github.com/rsms/inter
+
 - **SortableJS 1.15.7**, MIT: touch and mouse tile reordering, bundled locally.
   https://github.com/SortableJS/Sortable/tree/1.15.7
 - **Lato**, packaged by @fontsource/lato 5.2.7, SIL Open Font License 1.1.
