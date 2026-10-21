@@ -4,7 +4,7 @@
 @font-face{font-family:LatoLocal;font-style:normal;font-weight:700;src:url('/assets/lato-latin-ext-700-normal.woff2') format('woff2');font-display:swap;unicode-range:U+0100-02FF,U+1E00-1EFF}
 :root{font-family:LatoLocal,"Segoe UI",sans-serif;color:#151519;background:#f4f4f4;--plum:#176b67;--ink:#2f323b;--cyan:#187eaa}
 .parameter-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid #d1d1d5;padding:14px 0;margin-top:18px}.parameter-actions p{flex:1 1 240px;margin:0;font-size:12px;line-height:1.5;color:#696575}.parameter-actions button{flex:0 1 auto;max-width:100%;white-space:normal;text-align:left}.parameter-actions button svg{flex:none}
-@media(max-width:640px){.parameter-actions{align-items:stretch}.parameter-actions button{width:100%;justify-content:center;font-size:13px}[data-section=service] .parameter-search .status{display:none}[data-section=service] .parameter-search .icon{flex:none}}
+@media(max-width:640px){.parameter-actions{align-items:stretch}.parameter-actions button{width:100%;justify-content:center;font-size:13px}[data-section=service] .parameter-search .status{display:none}}
 .installation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
 .installation-node{min-width:0;border-top:2px solid #176b67;padding:14px 0}
 .installation-node h3{display:flex;align-items:center;gap:10px;font-size:16px;margin:0 0 12px}

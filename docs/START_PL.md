@@ -4,7 +4,7 @@
 
 **Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
 
-**Oprogramowanie: 0.7.0-beta.23. Instrukcja: wydanie 22, 21.10.2026.**
+**Oprogramowanie: 0.7.0-beta.24. Instrukcja: wydanie 23, 21.10.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -228,7 +228,7 @@ Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz pon
 `piec.local` lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
 Zmiana nie wymaga diagnostyki ani kasowania pamięci.
 
-![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.23/11-zmiana-wifi.png)
+![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.24/11-zmiana-wifi.png)
 
 **Montaż i zasięg:** moduł można umieścić na szynie DIN 35 mm w odpowiedniej
 szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
@@ -297,7 +297,8 @@ adres, lokalny login i lokalne hasło**. To nie są dane konta ecoNET24.
 
 Otworz **Parametry serwisowe > Ustawienia zaawansowane**.
 Na dole Parametrow serwisowych jest belka z przyciskiem
-**Ustawienia zaawansowane · 8888**; u gory pozostaje skrot z tarcza.
+**Ustawienia zaawansowane · 8888** w kolorze zielonym. U gory nie ma
+drugiego przycisku do tego samego menu.
 8888 oznacza kod tego menu na ekranie opisanego kotla, nie haslo logowania
 do ESP ani dodatkowa blokade PIN. Inne sterowniki moga miec inny kod.
 Dla rozpoznanego ecoMAX860P-LZ TOUCH / modulu A 8.41.38.L0 sa to:

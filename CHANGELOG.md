@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0-beta.24 - 2026-10-21
+
+- Usuniety dodatkowy przycisk ustawien zaawansowanych z gory
+  Parametrow serwisowych. Pozostaje jeden przycisk na dolnej belce.
+- Dolny przycisk Ustawienia zaawansowane / 8888 ma zielony styl
+  glownych przyciskow panelu. Bez zmian nastaw, uprawnien i komend.
+- Test pojedynczego przycisku, jego koloru i nawigacji na telefonie
+  oraz komputerze; zaktualizowane zrzuty ekranu i instrukcje.
+
 ## 0.7.0-beta.23 - 2026-10-21
 
 - Dolna belka Parametrow serwisowych z przyciskiem Ustawienia zaawansowane

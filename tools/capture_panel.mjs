@@ -212,6 +212,8 @@ try {
   for(const item of state.menu)state.targets[item.write_id]={name:item.name,before:0,min:0,max:1,step:1,value_kind:'enum',options:[{value:0,label:String(item.metadata.value)}],risk:true,advanced:true};
   await page.evaluate(()=>poll());await page.locator('#main-nav [data-view="service"]').click();
   const serviceWrites=requests.filter(([method])=>method==='POST').length;
+  assert.equal(await page.locator('[data-section="service"] .parameter-search [data-view="advanced"]').count(),0,'no duplicate upper shortcut');
+  assert.equal(await page.locator('.parameter-actions [data-view="advanced"]').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(23, 107, 103)','bottom shortcut uses the green primary style');
   for(const width of [320,390,1280]){
     await page.setViewportSize({width,height:1080});
     await page.locator('.parameter-actions').scrollIntoViewIfNeeded();
@@ -226,7 +228,7 @@ try {
   }
   assert.equal(requests.filter(([method])=>method==='POST').length,serviceWrites,'navigation never submits a setting');
   await screenshot('17-menu-zaawansowane');
-  await page.locator('[data-section="service"] .parameter-search [data-view="advanced"]').click();
+  await page.locator('.parameter-actions [data-view="advanced"]').click();
   assert.equal(await page.locator('#advanced-tree .parameter-row').count(),9);
   await screenshot('15-zaawansowane');
   state.menu=[];

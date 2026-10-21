@@ -7,7 +7,9 @@ const {matchesTarget}=require('../src/panel_web/settings.js');
 test('service footer links to advanced menu and identifies the physical panel code without a new ESP password',()=>{
  const html=fs.readFileSync('src/panel_web/index.html','utf8');
  const service=html.slice(html.indexOf('<section data-section="service"'),html.indexOf('<section data-section="advanced"'));
- assert.equal((service.match(/data-view="advanced"/g)||[]).length,2);
+ assert.equal((service.match(/data-view="advanced"/g)||[]).length,1);
+ assert.match(service,/<button type="button" class="primary" data-view="advanced"/);
+ assert.ok(service.indexOf('data-view="advanced"')>service.indexOf('class="parameter-actions"'));
  assert.ok(service.indexOf('class="parameter-actions"')>service.indexOf('id="service-tree"'));
  assert.match(service,/role="toolbar"/);
  assert.match(service,/aria-describedby="advanced-code-note"/);
