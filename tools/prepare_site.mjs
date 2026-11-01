@@ -19,7 +19,7 @@ await writeFile(new URL('site/manifest.json', root), JSON.stringify(manifest, nu
 await writeFile(new URL('site/.nojekyll', root), '');
 await copyFile(new URL('docs/START_PL.html', root), new URL('site/instrukcja.html', root));
 await copyFile(new URL('docs/SZYBKI_START.html', root), new URL('site/szybki-start.html', root));
-for (const stem of ['START_PL', 'SZYBKI_START', 'GALERIA', 'SPRZET', 'ZGODNOSC'])
+for (const stem of ['START_PL', 'SZYBKI_START', 'GALERIA', 'SPRZET', 'ZGODNOSC', 'POMPKA_CWU'])
   await copyFile(new URL('docs/' + stem + '.html', root), new URL('site/' + stem + '.html', root));
 await cp(new URL('docs/images/', root), new URL('site/images/', root), { recursive: true });
 console.log(`Installer ready: ${release.version}; only ESP32-S3 16 MB / 8 MB PSRAM`);

@@ -8,6 +8,7 @@
 #include "panel_history.hpp"
 #include "pellet.hpp"
 #include "updates.hpp"
+#include "cwu_pump.hpp"
 #include "esp_http_server.h"
 #include "esp_ota_ops.h"
 #include "esp_timer.h"
@@ -145,9 +146,10 @@ static uint64_t query_number(httpd_req_t *req, const char *name, uint64_t fallba
     char *end; auto n = strtoull(value, &end, 10);
     return *value && !*end && value[0] != '-' && n < UINT64_MAX - 1 ? n : fallback;
 }
-static cJSON *request_json(httpd_req_t *req) {
+static cJSON *request_json(httpd_req_t *req,bool secret=false) {
     if (!req->content_len || req->content_len > 1024) { message(req, "400 Bad Request", "JSON limit: 1024 bytes"); return nullptr; }
     char body[1025]; size_t offset = 0; unsigned timeouts = 0;
+    struct Wipe{char *data;size_t size;bool enabled;~Wipe(){if(enabled)mbedtls_platform_zeroize(data,size);}}wipe{body,sizeof(body),secret};
     while (offset < req->content_len) {
         int n = httpd_req_recv(req, body + offset, req->content_len - offset);
         if (n == HTTPD_SOCK_ERR_TIMEOUT && ++timeouts <= 2) continue;
@@ -417,6 +419,19 @@ static esp_err_t update_status(httpd_req_t *req) {
     if(!authorize(req))return ESP_OK;
     return json(req,updates::snapshot());
 }
+static esp_err_t pump_status(httpd_req_t *req){
+    if(!authorize(req))return ESP_OK;
+    return json(req,cwu_pump::snapshot());
+}
+static esp_err_t pump_configure(httpd_req_t *req){
+    if(!authorize(req,true))return ESP_OK;
+    char token[64];if(httpd_req_get_hdr_value_str(req,"X-Tester-Token",token,sizeof(token))!=ESP_OK||!equal(token,panel_csrf))return message(req,"403 Forbidden","Missing panel token");
+    auto *body=request_json(req,true);if(!body)return ESP_OK;
+    std::string error;bool accepted=cwu_pump::configure(body,error);
+    for(const char *key:{"username","password"}){auto *v=cJSON_GetObjectItemCaseSensitive(body,key);if(cJSON_IsString(v))mbedtls_platform_zeroize(v->valuestring,strlen(v->valuestring));}
+    cJSON_Delete(body);
+    return accepted?json(req,cwu_pump::snapshot()):message(req,"400 Bad Request",error.c_str());
+}
 static esp_err_t update_command(httpd_req_t *req) {
     if(!authorize(req,true))return ESP_OK;
     if(!strcmp(req->uri,"/api/updates/check")){
@@ -531,6 +546,7 @@ void start() {
     add("/api/ota", HTTP_POST, ota); add("/api/ecomax", HTTP_GET, ecomax);
     add("/api/updates",HTTP_GET,update_status);add("/api/updates/check",HTTP_POST,update_command);
     add("/api/access",HTTP_POST,configure_access);
+    add("/api/cwu-pump",HTTP_GET,pump_status);add("/api/cwu-pump",HTTP_POST,pump_configure);
     add("/api/updates/config",HTTP_POST,update_command);add("/api/updates/install",HTTP_POST,update_command);
     add("/api/mixers", HTTP_GET, subset); add("/api/thermostats", HTTP_GET, subset);
     add("/api/alarms", HTTP_GET, alarms); add("/api/frames", HTTP_GET, frame_stats);

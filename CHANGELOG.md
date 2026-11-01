@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.0-beta.29 - 2026-11-01
+
+- Zewnetrzna pompka cyrkulacyjna CWU przez lokalny Tapo P110 / KLAP v2.
+  Wyszukiwanie w LAN, powiazanie MAC i identyfikatora, odzyskiwanie IP.
+- Osobne menu: progi wlaczenia/wylaczenia, tryb automatyczny i reczny,
+  opcjonalny tygodniowy harmonogram po 30 minut; dzialanie samodzielne ESP.
+- Domyslnie nieaktywne. Pierwsze parowanie tylko odczytuje stan.
+  Nie emuluje modulu C PLUM ani nie zmienia nastaw kotla.
+- Odczyt zwrotny stanu, deduplikacja zapisow, ograniczone czasy sieci,
+  ochrona przed brakiem temperatury oraz nieznanym czasem harmonogramu.
+- Przy niedostepnym P110 stan jest nieznany; nie ma gwarancji fizycznego
+  wylaczenia bez lacznosci. Szczegoly i konfiguracja: docs/POMPKA_CWU.md.
+- Testy syntetycznej kryptografii, regul, harmonogramu i telefonu/komputera.
+  Rzeczywiste parowanie i automatyke trzeba zweryfikowac na swoim P110.
+
 ## 0.7.0-beta.28 - 2026-10-21
 
 - Ikona mocy pokazuje kolorowy, nieregularnie zmieniajacy ksztalt plomien

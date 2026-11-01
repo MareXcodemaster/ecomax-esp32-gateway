@@ -58,6 +58,12 @@ const rows = Array.from({ length: 433 }, (_, i) => {
 });
 const history = { schema: 1, columns, rows, gap_seconds: 1200, resolution_seconds: 600,
   archive: { ready: true, samples: 4320, oldest_epoch: now - 3 * 86400, newest_epoch: now } };
+const pump = { configured:true, paired:true, armed:true, host:'192.0.2.20',
+  alias:'Pompka CWU (DEMO)', model:'P110', mac:'020000000020', fresh:true,
+  on:true, temperature:46.5, sensor_fresh:true, pending:false,
+  status:'Polaczono lokalnie', reason:'CWU powyzej progu wlaczenia',
+  lower:40, upper:45, mode:1, schedule_enabled:true, week:week.slice(0,7),
+  revision:1, write_count:0, scan_busy:false, scan_sequence:0, devices:[], clock_valid:true };
 const requests = [], errors = [], external = [];
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
@@ -68,6 +74,7 @@ const server = createServer(async (req, res) => {
       : url.pathname === '/api/panel/clock' ? { ok: true }
       : url.pathname === '/api/logout' ? { ok: true }
       : url.pathname === '/api/history' ? history
+      : url.pathname === '/api/cwu-pump' ? pump
       : url.pathname === '/api/updates' ? { current: version, current_release:version,version,channel:'all',beta:true,phase:'up_to_date',checked:now, automatic: true, available: false, install_supported: true }
       : null;
     res.writeHead(data ? 200 : 404, { 'Content-Type': 'application/json' }).end(JSON.stringify(data || { error: 'Demo: endpoint disabled' }));
@@ -277,7 +284,9 @@ try {
   const advancedDemo=[[158,'Blokada kotla od termostatu','Tak'],[161,'Praca na czas','Tak'],[44,'Funkcja histerezy','Wylaczona LATO'],[151,'Detekcja obrotow wentylatora',0],[46,'Tryb czujnika podajnika','Podajnik i ruszt'],[45,'Kondensacja','OFF'],[162,'Tryb KOMINIARZ','OFF'],[7,'Sterowanie pogodowe kotla','Wylaczone'],[166,'Pompa ciepla','OFF']];
   state.menu=advancedDemo.map(([index,name,value])=>({index,name,advanced:true,in_structure:true,locked:false,metadata:{value},write_id:'rm:'+index,write_enabled:true}));
   for(const item of state.menu)state.targets[item.write_id]={name:item.name,before:0,min:0,max:1,step:1,value_kind:'enum',options:[{value:0,label:String(item.metadata.value)}],risk:true,advanced:true};
-  await page.evaluate(()=>poll());await page.locator('#main-nav [data-view="service"]').click();
+  await page.evaluate(()=>poll());
+  await page.waitForFunction(()=>state.menu.length===9);
+  await page.locator('#main-nav [data-view="service"]').click();
   const serviceWrites=requests.filter(([method])=>method==='POST').length;
   assert.equal(await page.locator('[data-section="service"] .parameter-search [data-view="advanced"]').count(),0,'no duplicate upper shortcut');
   assert.equal(await page.locator('.parameter-actions [data-view="advanced"]').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(23, 107, 103)','bottom shortcut uses the green primary style');
@@ -356,9 +365,13 @@ try {
   await page.evaluate(()=>EcoPellet.render({fresh:true,level_percent:68},false));
   assert.equal(await page.locator('#pellet-hopper').getAttribute('data-available'),'false');
   await page.locator('[data-view="schedule"]').click();
-  assert.equal(await page.locator('.week-cell').count(), 336);
-  assert.equal(await page.locator('.week-cell:not(:disabled)').count(), 336);
+  assert.equal(await page.locator('#week-grid .week-cell').count(), 336);
+  assert.equal(await page.locator('#week-grid .week-cell:not(:disabled)').count(), 336);
   await screenshot('02-harmonogram');
+  await page.getByRole('button',{name:'Pompka CWU',exact:true}).click();
+  await page.locator('#pump-on').getByText('Pracuje',{exact:true}).waitFor();
+  assert.equal(await page.locator('#pump-week button').count(),336);
+  await screenshot('18-pompka-cwu');
   await page.locator('[data-view="history"]').click();
   await page.waitForFunction(() => document.getElementById('history-range').textContent.includes('433'));
   const canvas = await page.locator('#chart').evaluate(el => {
@@ -441,7 +454,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log(`PASS seventeen panel screenshots for ${version}: advanced footer navigation/code label, fuel calibration, advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
+  console.log(`PASS eighteen panel screenshots for ${version}: external CWU recirculation, advanced footer navigation/code label, fuel calibration, advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com https://docs.waveshare.net; base-uri 'none'; form-action 'none'">
+<title>ecoMAX Wi-Fi - Pompka cyrkulacyjna CWU</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
+</style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>Pompka Cyrkulacyjna CWU Z Tapo P110</h1>
+<p>Funkcja zewnetrznej cyrkulacji wody do kranow. Nie steruje pompa ladujaca
+bojler, nie emuluje modulu C na magistrali PLUM i nie odblokowuje jego
+pozostalych funkcji. Pierwsze wydanie jest testowe, domyslnie nieaktywne.</p>
+<h2>Polaczenie</h2>
+<ol>
+<li>Skonfiguruj P110 w aplikacji Tapo i podlacz go do tej samej sieci LAN
+co ESP. Nie podlaczaj pompki do wyjscia kotla i gniazdka jednoczesnie.
+Sposob zasilania i obciazalnosc powinien potwierdzic instalator.</li>
+<li>W panelu otworz <strong>Pompka CWU &gt; Polaczenie Tapo P110 &gt; Wyszukaj P110</strong>.
+Wybierz model, IP i MAC swojego gniazdka. Mozna tez wpisac lokalny IP.</li>
+<li>Klient korzysta z KLAP v2. Jesli urzadzenie oferuje tylko TPAP,
+moze byc konieczna opcja <strong>Zgodnosc z aplikacjami innych firm</strong> w Tapo.
+Wlaczasz ja swiadomie samodzielnie: TP-Link ostrzega przed oslabieniem
+ochrony. <a href="https://www.tapo.com/uk/faqs/frequently-asked-questions-about-the-third-party-compatibility-feature/">Wyjasnienie producenta</a>.</li>
+<li>Wpisz dane konta Tapo tylko w lokalnym panelu, przez zaufana siec.
+Polaczenie z panelem jest HTTP, nie HTTPS. Haslo nie jest zwracane,
+eksportowane ani zapisywane w przegladarce przez aplikacje. ESP zapisuje
+lokalny odcisk uwierzytelniania KLAP, nie haslo do konta; odcisk nadal
+jest tajnym poswiadczeniem, a pamiec NVS nie jest szyfrowana.</li>
+<li><strong>Polacz lokalnie</strong> wykonuje odczyt, bez zmiany stanu gniazdka.
+Sprawdz nazwe i model przed zapisaniem trybu sterowania.</li>
+</ol>
+<p>ESP zapamietuje MAC i skrot identyfikatora odczytanego po zalogowaniu.
+Po utracie lacznosci wyszukuje ten sam MAC w swojej podsieci. Przed
+kolejnym przelaczeniem ponownie sprawdza model, MAC i identyfikator.
+Zmiana IP nie powinna wymagac ponownego parowania; izolacja klientow
+Wi-Fi i rozne VLAN-y moga blokowac wyszukiwanie. Rezerwacja DHCP jest
+dodatkowym, przydatnym zabezpieczeniem przed zmiana adresu.</p>
+<h2>Temperatury I Tryby</h2>
+<ul>
+<li><strong>Automatycznie</strong>: wlaczenie po osiagnieciu gornego progu CWU,
+wylaczenie po spadku do dolnego. Miedzy progami stan zapotrzebowania
+pozostaje zachowany. Przyklad: wlacz od 45 C, wylacz przy 40 C.</li>
+<li>Po starcie w srodku przedzialu ESP czeka na gorny prog zamiast wlaczac
+pompke na podstawie starego stanu. Progi sa ustawiane niezaleznie od
+temperatury zadanej CWU w kotle; zmiana nie zapisuje niczego do kotla.</li>
+<li><strong>Wlaczona recznie</strong>: wymuszenie pracy z pominieciem harmonogramu
+i progow, ale nadal wymaga aktualnego, poprawnego czujnika CWU.</li>
+<li><strong>Wylaczona</strong>: polecenie wylaczenia gniazdka. Samo zapisanie pliku
+konfiguracji nie oznacza potwierdzonego przelaczenia.</li>
+<li>Przerwa po potwierdzonym wylaczeniu wynosi co najmniej 30 sekund,
+zanim ESP pozwoli ponownie wlaczyc pompke. Wylaczenie nie jest opozniane.</li>
+<li>Przed kazdym poleceniem i po nim odczytywany jest stan P110.
+Powtorzenie tego samego zadania HTTP nie zapisuje drugi raz konfiguracji.</li>
+</ul>
+<h2>Harmonogram</h2>
+<p>Opcja <strong>Uzywaj harmonogramu</strong> jest niezalezna od zapisanej siatki tygodnia.
+Wylaczona: automatyka temperatury dziala przez cala dobe.
+Wlaczona: automatyka moze uruchamiac pompke tylko w zaznaczonych polach.
+Nie wymusza to ciaglej pracy; temperatura nadal musi na nia pozwalac.</p>
+<p>Siatka jest od poniedzialku do niedzieli, w odcinkach po 30 minut.
+Mozna malowac prostokat obejmujacy kilka dni i godzin. Pusta siatka
+z wlaczonym harmonogramem oznacza brak godzin dozwolonej pracy.
+Wylaczenie harmonogramu nie kasuje siatki. Zapis dotyczy tylko ESP.</p>
+<p>Czas lokalny: Europe/Warsaw, z automatyczna zmiana lato/zima. ESP moze
+otrzymac zegar z otwartego panelu; po restarcie probuje tez odczytac czas
+z powiazanego P110. Jesli zaden zegar nie jest prawidlowy, harmonogram
+nie uruchamia pompki. Po utracie zasilania wszystkich urzadzen i przy
+braku internetu moze byc potrzebne otwarcie panelu, aby ustawic czas.</p>
+<h2>Ograniczenia</h2>
+<ul>
+<li>Wylacz kolidujace harmonogramy, tryb poza domem i automatyczne
+wylaczenie w aplikacji Tapo, jezeli zrodlem sterowania ma byc ESP.
+Oprogramowanie nie kasuje automatycznie Twoich ustawien w Tapo.</li>
+<li>Przy braku poprawnej temperatury CWU ESP zleca wylaczenie. Jezeli
+jednak P110 nie odpowiada, ESP nie moze fizycznie go wylaczyc:
+wyswietla <strong>Stan nieznany</strong>, a gniazdko moze pozostac wlaczone.</li>
+<li>Utrata zasilania ESP sama w sobie nie odcina zasilania P110.
+Ta funkcja nie jest zabezpieczeniem kotla i nie zastepuje instalacji
+elektrycznej ani zabezpieczen hydraulicznych producenta.</li>
+<li>Konto Tapo i urzadzenie musza zostac wczesniej skonfigurowane w aplikacji.
+Pozniejsze sterowanie odbywa sie bez chmury, ale wymaga dzialajacego LAN.</li>
+<li>Testy automatyki, kryptografii i formularza sa lokalne i syntetyczne.
+Rzeczywisty P110 nalezy sparowac i sprawdzic przed pozostawieniem
+automatyki bez nadzoru. Samo ACK nie jest potwierdzeniem pracy pompki.</li>
+</ul>
+</main></body></html>

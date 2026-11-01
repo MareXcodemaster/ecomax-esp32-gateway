@@ -125,7 +125,7 @@ try {
     console.log(`PASS Polish guide ${width}px: local screenshots and wiring image loaded, layout`);
   }
   const html=await readFile('src/panel_web/index.html','utf8');
-  for (const width of [1280,390]) for (const stem of ['SZYBKI_START','GALERIA','SPRZET','ZGODNOSC']) {
+  for (const width of [1280,390]) for (const stem of ['SZYBKI_START','GALERIA','SPRZET','ZGODNOSC','POMPKA_CWU']) {
     const page=await browser.newPage({viewport:{width,height:900}});
     await page.route(/^https:\/\/(?:www\.waveshare\.com|docs\.waveshare\.net)\//,route=>route.abort());
     await page.goto(origin+'/'+stem+'.html');

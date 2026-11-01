@@ -57,6 +57,8 @@ jobs:
         run: node tests/live_save_browser.mjs
       - name: View refresh and browser history navigation tests
         run: node tests/navigation_browser.mjs
+      - name: External CWU pump configuration and schedule browser tests
+        run: node tests/cwu_pump_browser.mjs
       - name: Read-only analysis JSON download and cancellation browser tests
         run: node tests/analysis_export_browser.mjs
       - name: ESP memory, hardware parameters and stale state browser tests

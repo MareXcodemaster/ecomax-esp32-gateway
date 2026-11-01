@@ -7,6 +7,15 @@ components that are not linked in this particular build.
 
 ## Firmware Dependencies
 
+- **esp-tapo**, MIT, protocol files pinned at commit
+  `d4721b6ec6949b7f2db6fdaa95a8dc6089ac40f5` from
+  https://github.com/Alejandro12120/esp-tapo . Local adaptations: ESP-IDF
+  transport, hashed credentials, hardware random seeds, response signature
+  verification, strict size limits and cleanup. Notice: `LICENSES/esp-tapo`.
+  Tapo UDP discovery uses public TDP protocol facts documented by
+  https://github.com/python-kasa/python-kasa/blob/master/kasa/discover.py ;
+  no python-kasa source code is bundled.
+
 - **Inter**, packaged by @fontsource/inter 5.3.0, SIL Open Font License 1.1.
   Medium weight, Latin and Latin-ext subsets bundled locally for captions.
   Full notice in `LICENSES/installer`. https://github.com/rsms/inter

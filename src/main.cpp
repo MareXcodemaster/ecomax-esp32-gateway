@@ -10,6 +10,7 @@
 #include "panel.hpp"
 #include "pellet.hpp"
 #include "updates.hpp"
+#include "cwu_pump.hpp"
 #include "nvs_flash.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
@@ -45,7 +46,9 @@ extern "C" void app_main() {
     ESP_ERROR_CHECK(device_access::init());
     configASSERT(pellet::self_test()); pellet::init();
     state::log("Pellet meter self-test: PASS; ESP calculations only, no boiler calibration command");
-    transport::start(); network::start(); panel::start(); updates::init(); api::start();
+    configASSERT(cwu_pump::self_test());
+    state::log("CWU pump self-test: PASS; KLAP synthetic crypto/temperature rules, no device commands");
+    transport::start(); network::start(); panel::start(); updates::init(); cwu_pump::start(); api::start();
     configASSERT(self_test_api());
     state::log("BOOT REQUIRED SELF-TESTS: PASS; parser/sensors/protocol/pellet/panel guard/HTTP assertions completed");
     usb_console::start();

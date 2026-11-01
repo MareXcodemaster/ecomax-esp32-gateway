@@ -16,8 +16,10 @@
 void access_tests();
 void diagnostics_tests();
 void settings_journal_tests();
+void circulation_tests();
 
 int main() {
+    circulation_tests();
     settings_journal_tests();
     for(const auto &entry:advanced_menu::definitions) {
         assert(advanced_menu::known(entry.index));

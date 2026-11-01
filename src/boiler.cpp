@@ -91,6 +91,13 @@ cJSON *snapshot() {
     }
     return root;
 }
+bool water_heater_temperature(double &value,uint64_t &age_ms) {
+    xSemaphoreTake(mutex,portMAX_DELAY);
+    value=available?current.temperature[2]:NAN;
+    age_ms=available?esp_timer_get_time()/1000-updated_ms:UINT64_MAX;
+    xSemaphoreGive(mutex);
+    return age_ms<=stale_ms&&std::isfinite(value)&&value>=0&&value<=100;
+}
 bool self_test() {
     unsigned passed = 0;
     for (const auto &fixture : sensor_fixtures) {
