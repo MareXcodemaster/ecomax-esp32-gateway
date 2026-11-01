@@ -25,7 +25,7 @@ const server=createServer(async(req,res)=>{
   res.end('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/mirror.css"><link rel="stylesheet" href="/week.css"><link rel="stylesheet" href="/typography.css"><link rel="stylesheet" href="/cwu_pump.css"><main></main><script src="/lucide.js"></script><script>function icons(){lucide.createIcons();} const EcoMirror={clock:s=>String(Math.floor(s/2)).padStart(2,"0")+":"+(s%2?"30":"00")};async function request(path,payload){const r=await fetch(path,{method:payload?"POST":"GET",headers:{"Content-Type":"application/json"},body:payload?JSON.stringify(payload):undefined});if(!r.ok)throw Error("HTTP "+r.status);return r.json();}</script><script src="/cwu_pump.js"></script><script>EcoCwuPump.init();document.querySelector("section").hidden=false;EcoCwuPump.show(true);</script>');return;
  }
  const path=resolve(root,'.'+decodeURIComponent(url.pathname));if(!path.startsWith(root+sep)){res.writeHead(403).end();return;}
- try{res.writeHead(200,{'Content-Type':{'.css':'text/css','.js':'text/javascript','.woff2':'font/woff2'}[extname(path)]||'application/octet-stream'}).end(await readFile(path));}catch{res.writeHead(404).end();}
+ try{res.writeHead(200,{'Content-Type':{'.css':'text/css','.js':'text/javascript','.woff2':'font/woff2','.jpg':'image/jpeg','.png':'image/png'}[extname(path)]||'application/octet-stream'}).end(await readFile(path));}catch{res.writeHead(404).end();}
 });
 await new Promise(done=>server.listen(0,'127.0.0.1',done));const origin='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true});
@@ -51,6 +51,9 @@ try{
   assert.equal(posts.at(-1).mode,2);assert.equal(await page.locator('#pump-tap').getAttribute('data-state'),'off','a command is not a confirmed relay state');
   state.on=true;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.locator('#pump-tap[data-state="on"]').waitFor();
   assert.equal(await page.locator('.tap-water').evaluate(el=>getComputedStyle(el).display),'block');
+  assert.equal(await page.locator('.tap-motion').evaluate(el=>getComputedStyle(el).animationName),'pump-current');
+  await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.tap-motion').evaluate(el=>getComputedStyle(el).animationName),'none');await page.emulateMedia({reducedMotion:'no-preference'});
+  assert.equal(await page.locator('[data-section="pump"] video').count(),0);
   await page.locator('#pump-auto').click();await page.locator('#pump-auto-panel').waitFor();assert.equal(await page.locator('#pump-schedule-enabled').isVisible(),true,'automatic schedule toggle is immediately visible');
   assert.equal(await page.locator('#pump-schedule-enabled').evaluate(el=>el.getBoundingClientRect().width>=48),true,'schedule switch has a visible touch target');
   await page.locator('#pump-upper').fill('47');await page.locator('#pump-manual').click();await page.locator('#pump-manual-controls').waitFor();

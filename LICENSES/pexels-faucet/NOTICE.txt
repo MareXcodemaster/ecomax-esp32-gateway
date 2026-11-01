@@ -1,0 +1,11 @@
+Photographic faucet PNG status artwork
+Author of source: Monsieur Sylvain (Pexels)
+Original: Video of a Faucet with Flowing Water, video 5571843
+Source: https://www.pexels.com/video/video-of-a-faucet-with-flowing-water-5571843/
+License: Pexels License https://www.pexels.com/license/
+Retrieved: 2026-11-02
+Adaptation: 18-second still; background extraction with image_gen;
+alpha-bound crop, resize and palette optimization to transparent PNG.
+The original movie is not bundled. This is an adapted photograph,
+not unaltered original footage. No endorsement by the photographer or
+Pexels is implied. Not relicensed under MIT.

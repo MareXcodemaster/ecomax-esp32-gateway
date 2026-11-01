@@ -110,3 +110,17 @@ is included in these assets. The SVG contains empty live-reading labels
 which the panel fills from the current controller data.
 
 Brand names describe compatibility, not affiliation or endorsement.
+
+## Photographic faucet PNG
+
+The local src/panel_web/assets/faucet-real.png is adapted from a still
+at 18 seconds in "Video of a Faucet with Flowing Water" by Monsieur
+Sylvain on Pexels (video 5571843).
+Source: https://www.pexels.com/video/video-of-a-faucet-with-flowing-water-5571843/
+License: https://www.pexels.com/license/
+Adaptations: background extraction with the built-in image editing tool,
+alpha-bound crop, resizing and palette optimization to a transparent
+400x336 PNG. The surrounding water animation is project SVG/CSS code.
+The photographic asset remains under the Pexels License, not MIT.
+The original video and movie player are not bundled in the firmware.
+Source notice: LICENSES/pexels-faucet/NOTICE.txt.

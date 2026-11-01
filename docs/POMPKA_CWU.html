@@ -80,17 +80,19 @@ progów ani harmonogramu.</p>
 Po jej zaznaczeniu pojawia sie siatka godzin. Ustaw progi, opcjonalnie
 zaznacz dni i godziny, a nastepnie <strong>Zapisz i wlacz automatyke</strong>.
 Bez harmonogramu automatyka temperatury dziala przez cala dobe.</p>
-<p>Kran z ciaglym animowanym strumieniem wody oznacza potwierdzone wlaczenie
-gniazdka. Zakrecony kran bez wody oznacza potwierdzone wylaczenie. Przy
-braku aktualnego odczytu animacja ustaje i pojawia sie <strong>Stan nieznany</strong>.
-To symbol zasilania pompy: gniazdko nie mierzy rzeczywistego przeplywu.</p>
+<p>Fotograficzny kran to przezroczysty PNG, bez tla. Woda jest lekka
+animacja SVG/CSS, wlaczana po potwierdzonym wlaczeniu gniazdka. Po
+wylaczeniu jej nie ma; utrata odczytu oznacza <strong>Stan nieznany</strong>.
+To symbol zasilania pompy, nie pomiar fizycznego przeplywu. W ESP nie
+ma filmu ani odtwarzacza; pliki dzialaja lokalnie. Respektowane jest
+ustawienie przegladarki ograniczajace ruch.</p>
 <p>Funkcja jest opcjonalna i domyslnie wylaczona w nowej instalacji.
 Aktualizacja zachowuje dzialanie wczesniej skonfigurowanego gniazdka.
 Wylaczenie <strong>obslugi cyrkulacji</strong> zatrzymuje wysylanie polecen przez ESP,
 ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz <strong>Wylaczona</strong> i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.</p>
-<p><img src="images/panel/0.7.0-beta.32/19-cyrkulacja-recznie.png" alt="Reczne wlaczanie i wylaczanie pompy, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.33/19-cyrkulacja-recznie.png" alt="Reczne wlaczanie i wylaczanie pompy, dane DEMO"></p>
 <h2>Temperatury I Tryby</h2>
 <ul>
 <li><strong>Automatycznie</strong>: wlaczenie po osiagnieciu gornego progu CWU,
@@ -121,7 +123,7 @@ Niepelna historia oznacza Brak odczytu sumy 7 dni.</p>
 Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
 Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
 oprogramowania gniazdka moga nie udostepniac pelnej historii.</p>
-<p><img src="images/panel/0.7.0-beta.32/20-energia-pompy.png" alt="Zuzycie energii pompy, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.33/20-energia-pompy.png" alt="Zuzycie energii pompy, dane DEMO"></p>
 <h2>Harmonogram</h2>
 <p>Opcja <strong>Uzywaj harmonogramu</strong> jest niezalezna od zapisanej siatki tygodnia.
 Wylaczona: automatyka temperatury dziala przez cala dobe.

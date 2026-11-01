@@ -1,12 +1,10 @@
 .pump-feature{padding:8px 0 16px;border-bottom:1px solid #dbe3de}.pump-feature .check{font-size:16px;font-weight:600}.pump-feature p{font-size:13px;line-height:1.5;margin:8px 0;color:#52646a}
-.pump-overview{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);align-items:center;gap:24px;padding:20px 0}
-.pump-hero{display:flex;align-items:center;gap:20px;min-width:0}.pump-hero h3{margin:0;font-size:20px}.pump-hero strong{font-size:28px;color:#176b67}.pump-hero p{font-size:13px;line-height:1.5;margin:6px 0;overflow-wrap:anywhere}.pump-alias{color:#52646a}
-.pump-tap{width:160px;height:190px;flex-shrink:0;color:#176b67}.tap-handle{transform-box:fill-box;transform-origin:center;transform:rotate(-35deg)}
-.tap-water,.tap-unknown{display:none}.pump-tap[data-state=on] .tap-water,.pump-tap[data-state=unknown] .tap-unknown{display:block}.pump-tap[data-state=on] .tap-handle{transform:rotate(0)}
-.pump-tap[data-state=unknown]{color:#7a858e}.pump-tap[data-state=off]{color:#607e77}
-.tap-flow-lines{animation:pump-flow .85s linear infinite}.tap-ripple{transform-box:fill-box;transform-origin:center;animation:pump-ripple 1.5s ease-out infinite}.ripple-two{animation-delay:-.75s}
-@keyframes pump-flow{to{transform:translateY(18px)}}
-@keyframes pump-ripple{from{transform:scale(.6);opacity:.8}to{transform:scale(2.2);opacity:0}}
+.pump-overview{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);align-items:center;gap:24px;padding:20px 0}
+.pump-hero{display:block;min-width:0}.pump-hero h3{margin:0;font-size:20px}.pump-hero strong{font-size:28px;color:#176b67}.pump-hero p{font-size:13px;line-height:1.5;margin:6px 0;overflow-wrap:anywhere}.pump-alias{color:#52646a}
+.pump-tap{position:relative;width:100%;max-width:300px;aspect-ratio:400/336;display:block;overflow:hidden;background:transparent}
+.pump-tap img,.pump-tap svg{display:block;width:100%;height:100%;object-fit:contain;position:absolute;inset:0}.pump-tap img{z-index:1}.pump-tap .tap-water,.pump-tap .tap-unknown{display:none}.pump-tap[data-state=on] .tap-water,.pump-tap[data-state=unknown] .tap-unknown{display:block}.pump-tap .tap-unknown{z-index:2;position:absolute;right:12px;top:12px;border-radius:50%;background:#fff;color:#647c72;border:1px solid #aabcb4;width:32px;height:32px;text-align:center;line-height:30px;font-size:22px}
+.tap-motion{animation:pump-current .8s linear infinite}@keyframes pump-current{to{transform:translateY(24px)}}
+.pump-tap[data-state=unknown]{filter:grayscale(1);opacity:.75}
 .pump-controls{display:flex;gap:10px;flex-wrap:wrap}.pump-controls button{min-width:115px;justify-content:center}.pump-controls [aria-pressed=true]{background:#176b67;border-color:#176b67;color:#fff}
 .pump-caption{font-size:12px;line-height:1.5;color:#52646a}.pump-rules{margin-top:20px;border-top:1px solid #dbe3de}.pump-rules>h3{padding:18px 0 0;font-size:17px;color:#176b67}
 .pump-manual-controls{margin-top:18px;padding:18px;background:#eef6f3;border:1px solid #d0e3db;border-radius:6px}.pump-manual-controls h3{font-size:16px;margin:0 0 12px}.pump-switches{display:flex;gap:12px;flex-wrap:wrap}.pump-switches button{flex:1;justify-content:center}.pump-switches [aria-pressed=true]{border-color:#176b67;color:#176b67;background:#fff}
@@ -29,6 +27,6 @@
 .pump-energy{padding:22px 0;border-top:1px solid #dbe3de}.pump-energy h3{font-size:17px;color:#176b67}.pump-energy-values{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}.pump-energy-values>div{padding:14px;background:#fff;border:1px solid #dbe3de;border-radius:5px}.pump-energy-values dt{font-size:13px}.pump-energy-values dd{margin:6px 0 0;font-size:21px;overflow-wrap:anywhere}
 .pump-energy-days{display:flex;list-style:none;margin:20px 0 0;padding:0;gap:12px;max-width:680px}.pump-energy-days li{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px}.pump-energy-days strong{font-size:12px;font-weight:500;white-space:nowrap}.pump-energy-track{height:65px;width:100%;max-width:38px;display:flex;align-items:flex-end;background:#eaf1ed;border-radius:3px;overflow:hidden}.pump-energy-track span{display:block;width:100%;background:#21867a;border-radius:3px 3px 0 0}
 @media(max-width:640px){.pump-energy-values{grid-template-columns:repeat(2,minmax(0,1fr))}.pump-energy-days{gap:5px}.pump-energy-values dd{font-size:19px}}
-@media(max-width:800px){.pump-overview{grid-template-columns:minmax(0,1fr);gap:12px}.pump-hero{gap:12px}.pump-tap{width:125px;height:148px}.pump-controls button{min-width:0;flex:1}.pump-fields{grid-template-columns:minmax(0,1fr)}.pump-discovery select{width:100%;flex-basis:100%}.pump-settings{padding:18px 0}}
+@media(max-width:800px){.pump-overview{grid-template-columns:minmax(0,1fr);gap:12px}.pump-tap{width:100%;height:auto}.pump-controls button{min-width:0;flex:1}.pump-fields{grid-template-columns:minmax(0,1fr)}.pump-discovery select{width:100%;flex-basis:100%}.pump-settings{padding:18px 0}}
 @media(max-width:420px){.pump-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.pump-controls #pump-auto{grid-column:1/-1}}
-@media(prefers-reduced-motion:reduce){.tap-flow-lines,.tap-ripple{animation:none;opacity:.7}}
+@media(prefers-reduced-motion:reduce){.tap-motion{animation:none!important}}

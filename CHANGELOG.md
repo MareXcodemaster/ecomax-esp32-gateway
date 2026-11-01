@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0-beta.33 - 2026-11-02
+
+- Fotograficzny kran w przezroczystym PNG zamiast rysunku lub filmu.
+  Grafika okolo 20 KiB; ruch wody realizuje lekka animacja SVG/CSS.
+- PNG bez tla powstalo z materialu Pexels / Monsieur Sylvain z usunieciem
+  tla narzedziem edycji obrazow. Zrodlo i opis adaptacji w paczce.
+- Brak plikow filmowych i playera. Woda znika po wylaczeniu lub utracie
+  odczytu. Obsluga ograniczenia ruchu w przegladarce.
+- Funkcje beta.32 zachowane: reczne ON/OFF, widoczny harmonogram,
+  opcjonalna cyrkulacja i odczyt energii z gniazdka.
+
 ## 0.7.0-beta.32 - 2026-11-02
 
 - Ciagly, polprzezroczysty strumien wody z ruchomymi odbiciami i falami
