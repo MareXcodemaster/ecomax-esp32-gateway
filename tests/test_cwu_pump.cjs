@@ -11,6 +11,6 @@ test('CWU circulation week is Monday first and retains all 336 half-hours',()=>{
 });
 test('pump settings reject missing, reversed, nonfinite or too-close thresholds',()=>{
  const settings={lower:40,upper:45,mode:1,schedule_enabled:false,week:empty()};assert.ok(validSettings(settings));
- for(const patch of [{lower:NaN},{upper:Infinity},{lower:45},{upper:40.1},{lower:4},{upper:86},{mode:3},{schedule_enabled:'false'},{week:[]}])assert.equal(validSettings({...settings,...patch}),false);
+ for(const patch of [{lower:NaN},{upper:Infinity},{lower:45},{upper:40.1},{lower:4},{upper:86},{mode:4},{schedule_enabled:'false'},{week:[]}])assert.equal(validSettings({...settings,...patch}),false);
  assert.throws(()=>paint(empty(),[7,0],[0,0],true));assert.throws(()=>paint(empty(),[0,0],[0,48],true));
 });

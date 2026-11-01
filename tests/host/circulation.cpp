@@ -1,5 +1,6 @@
 #include "circulation_policy.hpp"
 #include "tapo_discovery.hpp"
+#include "tapo_energy.hpp"
 #include <cassert>
 void circulation_tests() {
     assert(tapo_discovery::normalize_mac("02:11:aa:BB:44:55")=="0211AABB4455");
@@ -7,6 +8,20 @@ void circulation_tests() {
     assert(tapo_discovery::normalize_mac("bad").empty());
     for(auto model:{"P100","P100(EU)","P105","P110","P110(FR)","P110M","P115"})assert(tapo_discovery::supported_model(model));
     for(auto model:{"","P110X","P110()","P110(EU","P110(EU)garbage","L530","P300","P999"})assert(!tapo_discovery::supported_model(model));
+    assert(tapo_discovery::metered_model("P110(FR)")&&!tapo_discovery::metered_model("P100"));
+    {
+        auto *data=cJSON_Parse(R"({"current_power":3999,"today_energy":10,"month_energy":120})");
+        auto value=tapo_energy::usage(data);assert(value.power==3.999&&value.today==.010&&value.month==.120);cJSON_Delete(data);
+        data=cJSON_Parse(R"({"current_power":-1,"today_energy":null})");value=tapo_energy::usage(data);assert(std::isnan(value.power)&&std::isnan(value.today));cJSON_Delete(data);
+        tapo_energy::Days days;assert(!tapo_energy::range(0,days));assert(tapo_energy::range(1793570400,days));
+        // Six complete days, including a 23-hour DST day, and a live today total.
+        days.start[0]=1700000000;for(unsigned day=0;day<7;day++)days.start[day+1]=days.start[day]+(day==2?23:24)*3600;
+        data=cJSON_CreateObject();cJSON_AddNumberToObject(data,"start_timestamp",days.start[0]);cJSON_AddNumberToObject(data,"interval",60);
+        auto *hours=cJSON_AddArrayToObject(data,"data");for(unsigned hour=0;hour<143;hour++)cJSON_AddItemToArray(hours,cJSON_CreateNumber(100));
+        assert(tapo_energy::hourly(data,days));assert(days.kwh[2]==2.3&&std::abs(tapo_energy::week(days,.01)-14.31)<.00001);
+        cJSON_DeleteItemFromArray(hours,100);tapo_energy::Days short_days;short_days.start=days.start;assert(tapo_energy::hourly(data,short_days));assert(std::isnan(tapo_energy::week(short_days,.01)));
+        cJSON_ReplaceItemInObject(data,"interval",cJSON_CreateNumber(1440));assert(!tapo_energy::hourly(data,days));cJSON_Delete(data);
+    }
     using namespace circulation;
     Rules r;r.mode=Mode::automatic;Policy p;Input i;i.armed=true;i.fresh=true;i.temperature=45;i.now_ms=30000;
     assert(p.step(r,i).on);i.temperature=42;assert(p.step(r,i).on);i.temperature=40;assert(!p.step(r,i).on);
@@ -21,6 +36,7 @@ void circulation_tests() {
     assert(p.step(r,i).reason==Reason::cooldown);i.now_ms=59999;assert(p.step(r,i).on);
     i.now_ms=i.last_off_ms;r.mode=Mode::on;assert(p.step(r,i).on); // Manual ON bypasses automatic anti-cycling.
     i.fresh=false;assert(p.step(r,i).reason==Reason::sensor);i.fresh=true;
+    r.mode=Mode::manual_off;i.fresh=false;assert(!p.step(r,i).on&&p.step(r,i).reason==Reason::manual_off);i.fresh=true;
     r.low=450;assert(!valid(r));assert(p.step(r,i).reason==Reason::invalid);
     r.low=400;i.armed=false;assert(!p.step(r,i).manage);
     for(unsigned day=0;day<7;day++)for(unsigned slot=0;slot<48;slot++){

@@ -68,23 +68,34 @@ dodatkowym, przydatnym zabezpieczeniem przed zmiana adresu.
 
 ## Proste sterowanie
 
-**Automatycznie**, **Recznie** i **Wylaczona** dzialaja po jednym nacisnieciu, bez
-kolejnego przycisku Zapisz. Ustawiaja trwaly tryb sterowania w ESP.
-Nie zapisuja niedokonczonych zmian progow ani harmonogramu.
-**Ustawienia automatyczne i harmonogram** rozwijaja formularz;
-**Zapisz i wlacz automatyke** zapisuje jego zmiany i uruchamia automatyke.
+Wybierz **Automatycznie**, **Recznie** albo **Wylaczona**. Tryb zapisuje
+sie od razu, bez dodatkowego Zapisz. **Wylaczona** zleca zatrzymanie pompy.
 
-Animowany kran z woda oznacza potwierdzone wlaczenie gniazdka. Zakrecony
-kran bez wody oznacza potwierdzone wylaczenie. Przy braku aktualnego
-odczytu animacja ustaje i pojawia sie **Stan nieznany**. To symbol
-zasilania pompy: P110 nie mierzy rzeczywistego przeplywu wody.
+**Recznie** pokazuje osobne przyciski **Wlacz pompe** i **Wylacz pompe**.
+Samo wybranie trybu zachowuje aktualny potwierdzony stan; przy stanie
+nieznanym nie uruchamia pompy. Reczne wylaczenie pozostawia tryb Recznie.
+Sterowanie reczne pomija progi i harmonogram, ale wlaczenie wymaga
+aktualnego odczytu temperatury CWU. Zmiana trybu nie zapisuje szkicu
+progów ani harmonogramu.
+
+**Automatycznie** pokazuje od razu progi i opcje **Uzywaj harmonogramu**.
+Po jej zaznaczeniu pojawia sie siatka godzin. Ustaw progi, opcjonalnie
+zaznacz dni i godziny, a nastepnie **Zapisz i wlacz automatyke**.
+Bez harmonogramu automatyka temperatury dziala przez cala dobe.
+
+Kran z ciaglym animowanym strumieniem wody oznacza potwierdzone wlaczenie
+gniazdka. Zakrecony kran bez wody oznacza potwierdzone wylaczenie. Przy
+braku aktualnego odczytu animacja ustaje i pojawia sie **Stan nieznany**.
+To symbol zasilania pompy: gniazdko nie mierzy rzeczywistego przeplywu.
 
 Funkcja jest opcjonalna i domyslnie wylaczona w nowej instalacji.
-Aktualizacja zachowuje dzialanie wczesniej skonfigurowanego P110.
+Aktualizacja zachowuje dzialanie wczesniej skonfigurowanego gniazdka.
 Wylaczenie **obslugi cyrkulacji** zatrzymuje wysylanie polecen przez ESP,
 ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz **Wylaczona** i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.
+
+![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.32/19-cyrkulacja-recznie.png)
 
 ## Temperatury I Tryby
 
@@ -102,6 +113,25 @@ Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.
   30 sekund. Tryb **Recznie** pomija te przerwe; wylaczenie nie jest opozniane.
 - Przed kazdym poleceniem i po nim odczytywany jest stan P110.
   Powtorzenie tego samego zadania HTTP nie zapisuje drugi raz konfiguracji.
+
+## Pobor mocy i energia
+
+P110, P110M i P115 moga udostepniac pomiar energii: **pobor mocy w W**,
+**dzisiaj**, **ostatnie 7 dni** i **ten miesiac w kWh**. P100/P105 nie
+maja tego pomiaru; sekcja jest ukryta i sterowanie nadal dziala.
+
+Ostatnie 7 dni to szesc poprzednich dni kalendarzowych i dzisiaj do
+ostatniego odczytu, wedlug czasu Europe/Warsaw. ESP czyta historie
+z gniazdka, a dzisiejsza wartosc pobiera z jego aktualnego licznika.
+Brakujace dane nie sa zamieniane na zera ani szacowane ze stalej mocy.
+Niepelna historia oznacza Brak odczytu sumy 7 dni.
+
+Moc/liczniki sa odczytywane co okolo 30 sekund, historia co 10 minut.
+Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
+Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
+oprogramowania gniazdka moga nie udostepniac pelnej historii.
+
+![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.32/20-energia-pompy.png)
 
 ## Harmonogram
 
@@ -134,6 +164,7 @@ braku internetu moze byc potrzebne otwarcie panelu, aby ustawic czas.
   elektrycznej ani zabezpieczen hydraulicznych producenta.
 - Konto Tapo i urzadzenie musza zostac wczesniej skonfigurowane w aplikacji.
   Pozniejsze sterowanie odbywa sie bez chmury, ale wymaga dzialajacego LAN.
-- Testy automatyki, kryptografii i formularza sa lokalne i syntetyczne.
+- Testy automatyki, kryptografii i formularza korzystaja z danych syntetycznych.
+  Polaczenie TPAP oraz przelaczanie zweryfikowano tez na fizycznym P110.
   Rzeczywisty P110 nalezy sparowac i sprawdzic przed pozostawieniem
   automatyki bez nadzoru. Samo ACK nie jest potwierdzeniem pracy pompki.

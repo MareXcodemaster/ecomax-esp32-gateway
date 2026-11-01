@@ -68,21 +68,29 @@ Zmiana IP nie powinna wymagac ponownego parowania; izolacja klientow
 Wi-Fi i rozne VLAN-y moga blokowac wyszukiwanie. Rezerwacja DHCP jest
 dodatkowym, przydatnym zabezpieczeniem przed zmiana adresu.</p>
 <h2>Proste sterowanie</h2>
-<p><strong>Automatycznie</strong>, <strong>Recznie</strong> i <strong>Wylaczona</strong> dzialaja po jednym nacisnieciu, bez
-kolejnego przycisku Zapisz. Ustawiaja trwaly tryb sterowania w ESP.
-Nie zapisuja niedokonczonych zmian progow ani harmonogramu.
-<strong>Ustawienia automatyczne i harmonogram</strong> rozwijaja formularz;
-<strong>Zapisz i wlacz automatyke</strong> zapisuje jego zmiany i uruchamia automatyke.</p>
-<p>Animowany kran z woda oznacza potwierdzone wlaczenie gniazdka. Zakrecony
-kran bez wody oznacza potwierdzone wylaczenie. Przy braku aktualnego
-odczytu animacja ustaje i pojawia sie <strong>Stan nieznany</strong>. To symbol
-zasilania pompy: P110 nie mierzy rzeczywistego przeplywu wody.</p>
+<p>Wybierz <strong>Automatycznie</strong>, <strong>Recznie</strong> albo <strong>Wylaczona</strong>. Tryb zapisuje
+sie od razu, bez dodatkowego Zapisz. <strong>Wylaczona</strong> zleca zatrzymanie pompy.</p>
+<p><strong>Recznie</strong> pokazuje osobne przyciski <strong>Wlacz pompe</strong> i <strong>Wylacz pompe</strong>.
+Samo wybranie trybu zachowuje aktualny potwierdzony stan; przy stanie
+nieznanym nie uruchamia pompy. Reczne wylaczenie pozostawia tryb Recznie.
+Sterowanie reczne pomija progi i harmonogram, ale wlaczenie wymaga
+aktualnego odczytu temperatury CWU. Zmiana trybu nie zapisuje szkicu
+progów ani harmonogramu.</p>
+<p><strong>Automatycznie</strong> pokazuje od razu progi i opcje <strong>Uzywaj harmonogramu</strong>.
+Po jej zaznaczeniu pojawia sie siatka godzin. Ustaw progi, opcjonalnie
+zaznacz dni i godziny, a nastepnie <strong>Zapisz i wlacz automatyke</strong>.
+Bez harmonogramu automatyka temperatury dziala przez cala dobe.</p>
+<p>Kran z ciaglym animowanym strumieniem wody oznacza potwierdzone wlaczenie
+gniazdka. Zakrecony kran bez wody oznacza potwierdzone wylaczenie. Przy
+braku aktualnego odczytu animacja ustaje i pojawia sie <strong>Stan nieznany</strong>.
+To symbol zasilania pompy: gniazdko nie mierzy rzeczywistego przeplywu.</p>
 <p>Funkcja jest opcjonalna i domyslnie wylaczona w nowej instalacji.
-Aktualizacja zachowuje dzialanie wczesniej skonfigurowanego P110.
+Aktualizacja zachowuje dzialanie wczesniej skonfigurowanego gniazdka.
 Wylaczenie <strong>obslugi cyrkulacji</strong> zatrzymuje wysylanie polecen przez ESP,
 ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz <strong>Wylaczona</strong> i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.</p>
+<p><img src="images/panel/0.7.0-beta.32/19-cyrkulacja-recznie.png" alt="Reczne wlaczanie i wylaczanie pompy, dane DEMO"></p>
 <h2>Temperatury I Tryby</h2>
 <ul>
 <li><strong>Automatycznie</strong>: wlaczenie po osiagnieciu gornego progu CWU,
@@ -100,6 +108,20 @@ konfiguracji nie oznacza potwierdzonego przelaczenia.</li>
 <li>Przed kazdym poleceniem i po nim odczytywany jest stan P110.
 Powtorzenie tego samego zadania HTTP nie zapisuje drugi raz konfiguracji.</li>
 </ul>
+<h2>Pobor mocy i energia</h2>
+<p>P110, P110M i P115 moga udostepniac pomiar energii: <strong>pobor mocy w W</strong>,
+<strong>dzisiaj</strong>, <strong>ostatnie 7 dni</strong> i <strong>ten miesiac w kWh</strong>. P100/P105 nie
+maja tego pomiaru; sekcja jest ukryta i sterowanie nadal dziala.</p>
+<p>Ostatnie 7 dni to szesc poprzednich dni kalendarzowych i dzisiaj do
+ostatniego odczytu, wedlug czasu Europe/Warsaw. ESP czyta historie
+z gniazdka, a dzisiejsza wartosc pobiera z jego aktualnego licznika.
+Brakujace dane nie sa zamieniane na zera ani szacowane ze stalej mocy.
+Niepelna historia oznacza Brak odczytu sumy 7 dni.</p>
+<p>Moc/liczniki sa odczytywane co okolo 30 sekund, historia co 10 minut.
+Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
+Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
+oprogramowania gniazdka moga nie udostepniac pelnej historii.</p>
+<p><img src="images/panel/0.7.0-beta.32/20-energia-pompy.png" alt="Zuzycie energii pompy, dane DEMO"></p>
 <h2>Harmonogram</h2>
 <p>Opcja <strong>Uzywaj harmonogramu</strong> jest niezalezna od zapisanej siatki tygodnia.
 Wylaczona: automatyka temperatury dziala przez cala dobe.
@@ -127,7 +149,8 @@ Ta funkcja nie jest zabezpieczeniem kotla i nie zastepuje instalacji
 elektrycznej ani zabezpieczen hydraulicznych producenta.</li>
 <li>Konto Tapo i urzadzenie musza zostac wczesniej skonfigurowane w aplikacji.
 Pozniejsze sterowanie odbywa sie bez chmury, ale wymaga dzialajacego LAN.</li>
-<li>Testy automatyki, kryptografii i formularza sa lokalne i syntetyczne.
+<li>Testy automatyki, kryptografii i formularza korzystaja z danych syntetycznych.
+Polaczenie TPAP oraz przelaczanie zweryfikowano tez na fizycznym P110.
 Rzeczywisty P110 nalezy sparowac i sprawdzic przed pozostawieniem
 automatyki bez nadzoru. Samo ACK nie jest potwierdzeniem pracy pompki.</li>
 </ul>

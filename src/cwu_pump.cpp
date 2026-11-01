@@ -1,6 +1,7 @@
 #include "cwu_pump.hpp"
 #include "circulation_policy.hpp"
 #include "tapo_discovery.hpp"
+#include "tapo_energy.hpp"
 #include "third_party/esp_tapo/tapo_client.h"
 #include "smart_tapo.hpp"
 #include "esp_random.h"
@@ -48,6 +49,12 @@ TaskHandle_t worker=nullptr;
 bool known=false,actual_on=false,linked=false,pending=false;
 uint64_t verified_ms=0,last_off_ms=0;
 unsigned writes=0;
+tapo_energy::Usage energy;
+tapo_energy::Days energy_days;
+tapo_energy::Days energy_staging; // Single worker scratch, outside its bounded task stack.
+char energy_request[180]{};
+uint64_t energy_ms=0,energy_history_ms=0;
+time_t energy_epoch=0;
 std::string status="Nie skonfigurowano",alias,model,protocol;
 circulation::Decision decision;
 std::vector<tapo_discovery::Device> discovered;
@@ -141,7 +148,7 @@ bool read(TapoClient &client,const Config &c,std::string &found_id,bool &on,std:
 }
 void run(void *){
     Transport transport;TapoClient client(random_fill,nullptr,crypto_yield,now);client.set_transport(&transport);
-    circulation::Policy policy;uint32_t revision=UINT32_MAX;uint64_t next_read=0,next_discovery=0,next_clock=0;unsigned failures=0;
+    circulation::Policy policy;uint32_t revision=UINT32_MAX;uint64_t next_read=0,next_discovery=0,next_clock=0,next_energy=0,next_history=0;unsigned failures=0;
     std::string policy_identity;
     auto find=[&](const Config &c){
         auto found=tapo_discovery::scan();{Lock l(mutex);discovered=found;scan_busy=false;++scan_sequence;}
@@ -163,7 +170,7 @@ void run(void *){
             continue;
         }
         if(c.auth_blocked){client.reset();Lock l(mutex);linked=false;status=*c.auth_error?c.auth_error:"Logowanie Tapo wstrzymane. Wpisz poprawne haslo i polacz ponownie";continue;}
-        if(c.revision!=revision){revision=c.revision;next_read=0;failures=0;if(policy_identity!=c.identity)policy.demand=false;policy_identity=c.identity;client.reset();transport.host=c.host;Lock l(mutex);pending=false;}
+        if(c.revision!=revision){revision=c.revision;next_read=0;failures=0;if(policy_identity!=c.identity){policy.demand=false;next_energy=next_history=0;Lock l(mutex);energy={};energy_days={};energy_epoch=0;energy_ms=energy_history_ms=0;}policy_identity=c.identity;client.reset();transport.host=c.host;Lock l(mutex);pending=false;}
         double temperature;uint64_t age;bool sensor=boiler::water_heater_temperature(temperature,age);
         auto seconds=time(nullptr);tm local{};localtime_r(&seconds,&local);
         circulation::Input input;input.armed=c.armed&&*c.identity;input.fresh=sensor;input.temperature=temperature;
@@ -213,7 +220,8 @@ void run(void *){
             updates::FlashGuard flash;if(flash.acquired&&store(c)){Lock l(mutex);config=c;}else{Lock l(mutex);status="Nie zapisano powiazania Tapo";}
             next_read=now()+10000;continue;
         }
-        if(d.manage&&on!=d.on){
+        bool changing=d.manage&&on!=d.on;
+        if(changing){
             {Lock l(mutex);if(c.revision!=config.revision)continue;pending=true;status="Oczekiwanie na potwierdzenie pompki";}
             cJSON *response=nullptr;
             bool acknowledged=call(client,d.on?R"JSON({"method":"set_device_info","params":{"device_on":true}})JSON":R"JSON({"method":"set_device_info","params":{"device_on":false}})JSON",response);
@@ -224,12 +232,31 @@ void run(void *){
              pending=!checked||observed!=d.on;status=checked&&observed==d.on?"Stan potwierdzony w Tapo":"Zmiana niepotwierdzona; oczekiwanie na odczyt";}
             if(!acknowledged||!checked)client.reset();
         }else{Lock l(mutex);pending=false;}
+        // One bounded optional telemetry request per cycle, after relay control.
+        bool metered=tapo_discovery::metered_model(type);
+        bool current;{Lock l(mutex);current=c.revision==config.revision;}
+        if(!changing&&metered&&current&&client.is_ready()&&!updates::installing()){
+            if(now()>=next_energy){
+                cJSON *body=nullptr;bool ok=call(client,R"JSON({"method":"get_energy_usage"})JSON",body);
+                if(ok){auto value=tapo_energy::usage(get(body,"result"));Lock l(mutex);if(c.revision==config.revision){energy=value;energy_ms=now();energy_epoch=time(nullptr);}}
+                cJSON_Delete(body);next_energy=now()+30000;
+            }else if(now()>=next_history){
+                auto &days=energy_staging;days={};
+                if(tapo_energy::range(time(nullptr),days)){
+                    snprintf(energy_request,sizeof(energy_request),"{\"method\":\"get_energy_data\",\"params\":{\"interval\":60,\"start_timestamp\":%lld,\"end_timestamp\":%lld}}",static_cast<long long>(days.start[0]),static_cast<long long>(days.start[7]-1));
+                    cJSON *body=nullptr;bool ok=call(client,energy_request,body)&&tapo_energy::hourly(get(body,"result"),days);
+                    if(ok){Lock l(mutex);if(c.revision==config.revision){energy_days=days;energy_history_ms=now();}}
+                    cJSON_Delete(body);
+                }
+                next_history=now()+600000;
+            }
+        }
         next_read=now()+10000;
     }
 }
 bool start_worker(){return worker||xTaskCreate(run,"cwu_tapo",6144,nullptr,2,&worker)==pdPASS;}
 const char *reason(circulation::Reason r){
-    const char *names[]={"Sterowanie nieaktywne","Nieprawidlowe progi","Wylaczone","Brak aktualnej temperatury CWU","Brak czasu do harmonogramu","Poza godzinami harmonogramu","CWU ponizej dolnego progu","Oczekiwanie na gorny prog","Przerwa przed ponownym wlaczeniem","Wlaczenie reczne","CWU powyzej progu wlaczenia"};
+    const char *names[]={"Sterowanie nieaktywne","Nieprawidlowe progi","Wylaczone","Brak aktualnej temperatury CWU","Brak czasu do harmonogramu","Poza godzinami harmonogramu","CWU ponizej dolnego progu","Oczekiwanie na gorny prog","Przerwa przed ponownym wlaczeniem","Wlaczenie reczne","CWU powyzej progu wlaczenia","Recznie: pompa wylaczona"};
     return names[static_cast<unsigned>(r)];
 }
 }
@@ -294,7 +321,7 @@ bool configure(const cJSON *request,std::string &error){
     }else if(action=="settings"){
         auto *low=get(request,"lower"),*high=get(request,"upper"),*mode=get(request,"mode"),*schedule=get(request,"schedule_enabled"),*week=get(request,"week");
         if(!cJSON_IsNumber(low)||!cJSON_IsNumber(high)||!cJSON_IsNumber(mode)||!cJSON_IsBool(schedule)||!cJSON_IsArray(week)||cJSON_GetArraySize(week)!=7){error="Nieprawidlowe ustawienia pompki";return false;}
-        if(!std::isfinite(low->valuedouble)||!std::isfinite(high->valuedouble)||low->valuedouble<5||high->valuedouble>85||high->valuedouble-low->valuedouble<.5||mode->valuedouble!=mode->valueint||mode->valueint<0||mode->valueint>2){error="Dolny prog 5-84,5 C; gorny do 85 C; roznica co najmniej 0,5 C";return false;}
+        if(!std::isfinite(low->valuedouble)||!std::isfinite(high->valuedouble)||low->valuedouble<5||high->valuedouble>85||high->valuedouble-low->valuedouble<.5||mode->valuedouble!=mode->valueint||mode->valueint<0||mode->valueint>3){error="Dolny prog 5-84,5 C; gorny do 85 C; roznica co najmniej 0,5 C";return false;}
         next.rules.low=std::lround(low->valuedouble*10);next.rules.high=std::lround(high->valuedouble*10);next.rules.mode=static_cast<circulation::Mode>(mode->valueint);next.rules.schedule=cJSON_IsTrue(schedule);
         for(unsigned day=0;day<7;day++){auto *row=cJSON_GetArrayItem(week,day);if(!cJSON_IsArray(row)||cJSON_GetArraySize(row)!=6){error="Nieprawidlowy tydzien";return false;}for(unsigned byte=0;byte<6;byte++){auto *v=cJSON_GetArrayItem(row,byte);if(!cJSON_IsNumber(v)||v->valuedouble!=v->valueint||v->valueint<0||v->valueint>255){error="Nieprawidlowy tydzien";return false;}next.rules.week[day][byte]=v->valueint;}}
         if(!next.credentials||!*next.identity){error="Najpierw polacz i potwierdz Tapo";return false;}
@@ -327,6 +354,18 @@ cJSON *snapshot(){
     cJSON_AddNumberToObject(out,"lower",config.rules.low/10.0);cJSON_AddNumberToObject(out,"upper",config.rules.high/10.0);
     cJSON_AddNumberToObject(out,"mode",static_cast<unsigned>(config.rules.mode));cJSON_AddBoolToObject(out,"schedule_enabled",config.rules.schedule);
     cJSON_AddNumberToObject(out,"revision",config.revision);cJSON_AddNumberToObject(out,"write_count",writes);
+    auto *meter=cJSON_AddObjectToObject(out,"energy");bool supported=tapo_discovery::metered_model(model);
+    bool meter_fresh=fresh&&energy_ms&&now()-energy_ms<=90000;
+    tapo_energy::Days current_days;bool dates=tapo_energy::range(time(nullptr),current_days);
+    bool day_fresh=meter_fresh&&dates&&energy_epoch>=current_days.start[6]&&energy_epoch<current_days.start[7];
+    bool history_fresh=fresh&&dates&&energy_history_ms&&now()-energy_history_ms<=1200000&&energy_days.start[6]==current_days.start[6];
+    cJSON_AddBoolToObject(meter,"supported",supported);cJSON_AddBoolToObject(meter,"fresh",meter_fresh);cJSON_AddBoolToObject(meter,"history_fresh",history_fresh);
+    auto numeric=[&](const char *key,double value){if(std::isfinite(value))cJSON_AddNumberToObject(meter,key,value);else cJSON_AddNullToObject(meter,key);};
+    numeric("power_w",meter_fresh?energy.power:NAN);numeric("today_kwh",day_fresh?energy.today:NAN);numeric("month_kwh",day_fresh?energy.month:NAN);
+    numeric("week_kwh",day_fresh&&history_fresh?tapo_energy::week(energy_days,energy.today):NAN);
+    auto *daily=cJSON_AddArrayToObject(meter,"days");
+    if(dates)for(unsigned day=0;day<7;day++){auto *item=cJSON_CreateObject();tm date{};localtime_r(&current_days.start[day],&date);char label[11];strftime(label,sizeof(label),"%Y-%m-%d",&date);cJSON_AddStringToObject(item,"date",label);
+        double value=day==6?(day_fresh?energy.today:NAN):(history_fresh?energy_days.kwh[day]:NAN);if(std::isfinite(value))cJSON_AddNumberToObject(item,"kwh",value);else cJSON_AddNullToObject(item,"kwh");cJSON_AddItemToArray(daily,item);}
     cJSON_AddBoolToObject(out,"clock_valid",time(nullptr)>=1735689600);
     auto *week=cJSON_AddArrayToObject(out,"week");for(auto &day:config.rules.week){auto *row=cJSON_CreateArray();for(auto byte:day)cJSON_AddItemToArray(row,cJSON_CreateNumber(byte));cJSON_AddItemToArray(week,row);}
     return out;

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0-beta.32 - 2026-11-02
+
+- Ciagly, polprzezroczysty strumien wody z ruchomymi odbiciami i falami
+  pod kranem zamiast kropel. Po wylaczeniu brak wody; nieznany stan
+  zatrzymuje animacje. Lekka grafika SVG/CSS, bez filmu i plikow GIF.
+- Tryb Recznie ma osobne Wlacz pompe / Wylacz pompe. Reczne wylaczenie
+  zachowuje tryb Recznie. Wybor trybu nie uruchamia wylaczonej pompy.
+- W trybie Automatycznie progi i opcjonalny harmonogram sa od razu
+  widoczne. Zaznaczenie Uzywaj harmonogramu rozwija siatke tygodnia.
+- Neutralne potwierdzenie zapisu nie sugeruje oczekiwania po odczytanym
+  przelaczeniu. Aktualny stan nadal pochodzi z potwierdzenia gniazdka.
+- Duzy przelacznik harmonogramu nad progami; usuniete zbedne opisy.
+- Pobor mocy, energia dzienna/miesieczna i suma 7 dni z wykresem.
+  Historia pochodzi z gniazdka; brakujace godziny nie staja sie zerami.
+  P100/P105 ukrywaja sekcje energii, zachowujac sterowanie.
+- Opcjonalna funkcja i dane logowania z beta.31 pozostaja zachowane.
+
 ## 0.7.0-beta.31 - 2026-11-01
 
 - Cyrkulacja CWU: Automatycznie / Recznie / Wylaczona bez dodatkowego zapisu;

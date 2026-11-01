@@ -64,6 +64,7 @@ const pump = { enabled:true, configured:true, paired:true, armed:true, host:'192
   status:'Polaczono lokalnie', reason:'CWU powyzej progu wlaczenia',
   lower:40, upper:45, mode:1, schedule_enabled:true, week:week.slice(0,7),
   revision:1, write_count:0, scan_busy:false, scan_sequence:0, devices:[], clock_valid:true };
+pump.energy={supported:true,fresh:true,history_fresh:true,power_w:4.2,today_kwh:.018,week_kwh:.177,month_kwh:.84,days:[.020,.026,.019,.025,.030,.039,.018].map((kwh,i)=>({date:new Date(Date.UTC(2026,9,26+i,12)).toISOString().slice(0,10),kwh}))};
 const requests = [], errors = [], external = [];
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
@@ -378,6 +379,12 @@ try {
   await page.locator('#pump-on').getByText('Pracuje',{exact:true}).waitFor();
   assert.equal(await page.locator('#pump-week button').count(),336);
   await screenshot('18-pompka-cwu');
+  pump.mode=2;pump.reason='Wlaczenie reczne';await page.evaluate(()=>EcoCwuPump.refresh(true));
+  await page.locator('#pump-manual-controls').waitFor();
+  assert.equal(await page.locator('#pump-start').isVisible(),true);assert.equal(await page.locator('#pump-stop').isVisible(),true);
+  await screenshot('19-cyrkulacja-recznie');
+  await page.locator('#pump-energy').scrollIntoViewIfNeeded();await screenshot('20-energia-pompy');await page.evaluate(()=>window.scrollTo(0,0));
+  pump.mode=1;pump.reason='CWU powyzej progu wlaczenia';
   await page.locator('[data-view="history"]').click();
   await page.waitForFunction(() => document.getElementById('history-range').textContent.includes('433'));
   const canvas = await page.locator('#chart').evaluate(el => {
@@ -460,7 +467,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log(`PASS eighteen panel screenshots for ${version}: external CWU recirculation, advanced footer navigation/code label, fuel calibration, advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
+  console.log(`PASS twenty panel screenshots for ${version}: CWU automatic schedule and manual switches, continuous water stream, advanced footer navigation/code label, fuel calibration, advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));
