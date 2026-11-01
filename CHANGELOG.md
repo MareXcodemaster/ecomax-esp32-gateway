@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.0-beta.30 - 2026-11-01
+
+- Lokalna obsluga Tapo P110 przez TPAP: SPAKE2+ / P-256, wzajemne
+  potwierdzenie hasla, AES-128-CCM i kontrola numeru kazdej odpowiedzi.
+- Automatyczne wykrycie TPAP; KLAP pozostaje dla urzadzen, ktore go
+  udostepniaja. Dzialajacy TPAP nie wymaga wlaczania zgodnosci innych firm.
+- E-mail opcjonalny dla TPAP. Migracja beta.29 zachowuje progi, tydzien
+  i MAC, ale wymaga jednokrotnego ponownego wpisania hasla dla TPAP.
+- Odrzucone haslo wstrzymuje logowanie takze po restarcie, do zapisania
+  poprawnych danych. Bledy sieci i brak odpowiedzi pozostaja osobne.
+- Zachowanie histerezy przy odzyskiwaniu tego samego P110 po zmianie IP.
+- Poprawiony komunikat zakonczenia wyszukiwania i widoczny protokol.
+- Natywne testy rzeczywistego kodu: wektor RFC 9383, PBKDF2, AES-CCM,
+  nieprawidlowy punkt, podpis, sekwencja, wariant TLS i blokada logowania.
+
 ## 0.7.0-beta.29 - 2026-11-01
 
 - Zewnetrzna pompka cyrkulacyjna CWU przez lokalny Tapo P110 / KLAP v2.

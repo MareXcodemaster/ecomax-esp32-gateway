@@ -7,7 +7,7 @@ Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 **[Prosta instalacja w 7 krokach](docs/SZYBKI_START.md)** ·
 **[Pobierz firmware i instrukcje](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases)**
 
-**Wersja 0.7.0-beta.29. Projekt niezalezny, nieoficjalny. Nie jest produktem
+**Wersja 0.7.0-beta.30. Projekt niezalezny, nieoficjalny. Nie jest produktem
 PLUM ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
 
@@ -21,9 +21,9 @@ kolejne OTA zachowuja hasla wybrane przez uzytkownika.
 
 ## Jak Wyglada Panel
 
-![Panel ecoMAX Wi-Fi - odczyty i nastawy, przykladowe dane DEMO](docs/images/panel/0.7.0-beta.29/01-odczyty.png)
+![Panel ecoMAX Wi-Fi - odczyty i nastawy, przykladowe dane DEMO](docs/images/panel/0.7.0-beta.30/01-odczyty.png)
 
-![Schemat kotla, mieszacza i CWU z przykladowymi temperaturami](docs/images/panel/0.7.0-beta.29/10-schemat.png)
+![Schemat kotla, mieszacza i CWU z przykladowymi temperaturami](docs/images/panel/0.7.0-beta.30/10-schemat.png)
 
 Siec zmienisz od razu przez **Narzedzia > Zmien siec Wi-Fi** (wyszukiwanie,
 wybor i haslo), bez diagnostyki. Status i nazwa `piec.local` sa w
@@ -31,15 +31,15 @@ wybor i haslo), bez diagnostyki. Status i nazwa `piec.local` sa w
 
 ### Harmonogram Tygodniowy
 
-![Harmonogram CWU: dni tygodnia i godziny, dane DEMO](docs/images/panel/0.7.0-beta.29/02-harmonogram.png)
+![Harmonogram CWU: dni tygodnia i godziny, dane DEMO](docs/images/panel/0.7.0-beta.30/02-harmonogram.png)
 
 ### Historia Temperatur I Pracy Kotla
 
-![Historia temperatur CO i CWU oraz stanow kotla, dane DEMO](docs/images/panel/0.7.0-beta.29/03-historia.png)
+![Historia temperatur CO i CWU oraz stanow kotla, dane DEMO](docs/images/panel/0.7.0-beta.30/03-historia.png)
 
 **[Galeria: harmonogram, wykresy, stany kotla, zmiana nastawy i telefon](docs/GALERIA.md)**
 
-Zrzuty zaktualizowano 01.11.2026 do wersji **0.7.0-beta.29**.
+Zrzuty zaktualizowano 01.11.2026 do wersji **0.7.0-beta.30**.
 
 ### Pompka Cyrkulacyjna CWU
 
@@ -49,7 +49,7 @@ tygodnia ogranicza godziny pracy. Sterowanie dziala lokalnie na ESP,
 bez otwartego panelu. Pierwsze wydanie testowe; funkcja domyslnie nieaktywna.
 Nie jest to emulacja modulu C ani sterowanie pompa ladujaca bojler.
 
-![Pompka cyrkulacyjna CWU z progami i harmonogramem, dane DEMO](docs/images/panel/0.7.0-beta.29/18-pompka-cwu.png)
+![Pompka cyrkulacyjna CWU z progami i harmonogramem, dane DEMO](docs/images/panel/0.7.0-beta.30/18-pompka-cwu.png)
 
 **[Podlaczenie Tapo P110 i opis dzialania](docs/POMPKA_CWU.md)**
 Przedstawiaja rzeczywisty interfejs z danymi przykladowymi (DEMO),

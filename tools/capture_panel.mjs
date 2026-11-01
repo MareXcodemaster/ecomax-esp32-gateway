@@ -59,7 +59,7 @@ const rows = Array.from({ length: 433 }, (_, i) => {
 const history = { schema: 1, columns, rows, gap_seconds: 1200, resolution_seconds: 600,
   archive: { ready: true, samples: 4320, oldest_epoch: now - 3 * 86400, newest_epoch: now } };
 const pump = { configured:true, paired:true, armed:true, host:'192.0.2.20',
-  alias:'Pompka CWU (DEMO)', model:'P110', mac:'020000000020', fresh:true,
+  alias:'Pompka CWU (DEMO)', protocol:'TPAP', model:'P110', mac:'020000000020', fresh:true,
   on:true, temperature:46.5, sensor_fresh:true, pending:false,
   status:'Polaczono lokalnie', reason:'CWU powyzej progu wlaczenia',
   lower:40, upper:45, mode:1, schedule_enabled:true, week:week.slice(0,7),
@@ -115,6 +115,10 @@ try {
     assert.deepEqual(pixels.background,[23,107,103,255]);assert.deepEqual(pixels.flame,[255,255,255,255]);
   }
   await page.locator('.eco-tile .tile-value').first().waitFor();
+  // This fixture deliberately renders stale/changed snapshots below. Keep its
+  // background GET from racing those assertions; live_save_browser tests polling.
+  await page.evaluate(()=>{clearInterval(espPollTimer);espPollTimer=null;});
+  await page.waitForFunction(()=>!pollBusy);
   await page.evaluate(() => notice('DEMO - dane przykladowe, nie odczyt prawdziwego kotla.'));
   await page.evaluate(() => document.fonts.ready);
   const brand=page.locator('#nav-esp .nav-device-icon');
@@ -152,9 +156,11 @@ try {
   assert.notEqual(await animated.evaluate(el=>getComputedStyle(el).transform),phase,'fan actually rotates');
   assert.notEqual(await flame.evaluate(el=>el.toDataURL()),fireFrame,'fire shape changes, not just its scale');
   for(const power of [10,25,50,100]){
+    state.curr.fanPower=power;
     await page.evaluate(data=>EcoMirror.render('live',data,true),{...state,curr:{...state.curr,fanPower:power}});
     assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationDuration),(80/power)+'s');
   }
+  state.curr.fanPower=32;
   await page.evaluate(data=>EcoMirror.render('live',data,true),state);
   await page.emulateMedia({reducedMotion:'reduce'});
   assert.equal(await animated.evaluate(el=>getComputedStyle(el).animationName),'none');

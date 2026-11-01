@@ -16,18 +16,30 @@ co ESP. Nie podlaczaj pompki do wyjscia kotla i gniazdka jednoczesnie.
 Sposob zasilania i obciazalnosc powinien potwierdzic instalator.</li>
 <li>W panelu otworz <strong>Pompka CWU &gt; Polaczenie Tapo P110 &gt; Wyszukaj P110</strong>.
 Wybierz model, IP i MAC swojego gniazdka. Mozna tez wpisac lokalny IP.</li>
-<li>Klient korzysta z KLAP v2. Jesli urzadzenie oferuje tylko TPAP,
-moze byc konieczna opcja <strong>Zgodnosc z aplikacjami innych firm</strong> w Tapo.
-Wlaczasz ja swiadomie samodzielnie: TP-Link ostrzega przed oslabieniem
-ochrony. <a href="https://www.tapo.com/uk/faqs/frequently-asked-questions-about-the-third-party-compatibility-feature/">Wyjasnienie producenta</a>.</li>
+<li>Od beta.30 ESP automatycznie wykrywa <strong>TPAP</strong> i tworzy lokalna,
+szyfrowana sesje z potwierdzeniem znajomosci hasla po obu stronach.
+Przy dzialajacym TPAP nie trzeba wlaczac zgodnosci aplikacji innych firm.
+Starszy wariant KLAP v2 pozostaje obslugiwany, gdy gniazdko go udostepnia.
+Dostepnosc KLAP moze zalezec od opcji zgodnosci w Tapo; zmieniasz ja
+swiadomie samodzielnie. <a href="https://www.tapo.com/uk/faqs/frequently-asked-questions-about-the-third-party-compatibility-feature/">Wyjasnienie producenta</a>.</li>
 <li>Wpisz dane konta Tapo tylko w lokalnym panelu, przez zaufana siec.
 Polaczenie z panelem jest HTTP, nie HTTPS. Haslo nie jest zwracane,
 eksportowane ani zapisywane w przegladarce przez aplikacje. ESP zapisuje
-lokalny odcisk uwierzytelniania KLAP, nie haslo do konta; odcisk nadal
+lokalny odcisk uwierzytelniania KLAP i poswiadczenie TPAP password-shadow,
+nie haslo do konta; te odciski nadal
 jest tajnym poswiadczeniem, a pamiec NVS nie jest szyfrowana.</li>
 <li><strong>Polacz lokalnie</strong> wykonuje odczyt, bez zmiany stanu gniazdka.
 Sprawdz nazwe i model przed zapisaniem trybu sterowania.</li>
 </ol>
+<p>W TPAP pole e-mail jest opcjonalne; do KLAP potrzebny jest tez e-mail
+konta. Po aktualizacji z beta.29 wpisz haslo jeden raz ponownie:
+stary odcisk KLAP nie pozwala odtworzyc poswiadczenia TPAP. Nastepne
+polaczenia i restarty nie wymagaja wpisywania hasla. Nie przesylaj go
+autorowi projektu ani na GitHub.</p>
+<p>Jesli gniazdko odrzuci haslo lub nie potwierdzi jego znajomosci,
+ESP wstrzymuje kolejne proby logowania do czasu zapisania poprawnych
+danych. Blokada jest zachowywana po restarcie. Nie ponawiaj logowania
+wielokrotnie przy blednym hasle; P110 ma wlasne ograniczenie prob.</p>
 <p>ESP zapamietuje MAC i skrot identyfikatora odczytanego po zalogowaniu.
 Po utracie lacznosci wyszukuje ten sam MAC w swojej podsieci. Przed
 kolejnym przelaczeniem ponownie sprawdza model, MAC i identyfikator.

@@ -14,7 +14,7 @@ const server=createServer(async(req,res)=>{
    let raw='';for await(const data of req)raw+=data;const body=JSON.parse(raw);posts.push(body);
    if(applied.has(body.request_id)){res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(state));return;}applied.add(body.request_id);
    if(body.action==='scan')state.devices=[{host:'192.168.1.222',mac:'021122334455',model:'P110',protocol:'KLAP'}];
-   if(body.action==='connect')state={...state,host:body.host,mac:body.mac,configured:true,paired:true,model:'P110',alias:'Pompa DEMO',fresh:true,on:false,status:'Polaczono lokalnie'};
+   if(body.action==='connect')state={...state,host:body.host,mac:body.mac,configured:true,paired:true,model:'P110',protocol:'TPAP',alias:'Pompa DEMO',fresh:true,on:false,status:'Polaczono lokalnie'};
    if(body.action==='settings'){state={...state,...body,armed:true};if(failPost){failPost=false;res.destroy();return;}}
   }
   res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(state));return;
@@ -36,8 +36,9 @@ try{
   await page.locator('#pump-connect').locator('summary').click();await page.locator('#pump-scan').click();
   await page.locator('#pump-device-select option[value="021122334455"]').waitFor({state:'attached'});
   await page.locator('#pump-device-select').selectOption('021122334455');assert.equal(await page.locator('#pump-host').inputValue(),'192.168.1.222');
-  await page.locator('#pump-username').fill('demo@example.invalid');await page.locator('#pump-password').fill('demo-pump-password');await page.locator('#pump-connect-save').click();
+  await page.locator('#pump-password').fill('demo-pump-password');await page.locator('#pump-connect-save').click();
   await page.locator('#pump-message').filter({hasText:'Dane przyj'}).waitFor();assert.equal(await page.locator('#pump-password').inputValue(),'');
+  assert.equal(posts.at(-1).username,'');assert.match(await page.locator('#pump-device').innerText(),/^TPAP/);
   await page.locator('#pump-mode').selectOption('1');await page.locator('#pump-schedule-enabled').check();
   assert.equal(await page.locator('#pump-week button').count(),336);
   await page.locator('#pump-week button[data-row="0"][data-slot="0"]').click();

@@ -7,6 +7,15 @@ components that are not linked in this particular build.
 
 ## Firmware Dependencies
 
+- **tapo TPAP protocol**, MIT, adapted from mihai-dinculescu/tapo at
+  `a99f1968ce7f33184facc691a3e4d19ee834d811`:
+  https://github.com/mihai-dinculescu/tapo . SPAKE2+ / P-256, password-shadow
+  transformation, TPAP session framing and AES-CCM known-answer tests.
+  ESP-IDF C++ adaptation uses the bundled mbedTLS primitives, bounded
+  parameters, authenticated replies and cooperative CPU yielding.
+  Notice: `LICENSES/tapo-tpap/LICENSE`. SPAKE2+ test vector: RFC 9383,
+  https://www.rfc-editor.org/rfc/rfc9383.html .
+
 - **esp-tapo**, MIT, protocol files pinned at commit
   `d4721b6ec6949b7f2db6fdaa95a8dc6089ac40f5` from
   https://github.com/Alejandro12120/esp-tapo . Local adaptations: ESP-IDF

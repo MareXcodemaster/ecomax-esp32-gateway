@@ -33,6 +33,8 @@ jobs:
         run: pio run -e waveshare_s3
       - name: Native protocol and identity tests
         run: python tools/host_tests.py
+      - name: Native TPAP crypto and authentication validation
+        run: python tools/tpap_crypto_tests.py
       - name: Package blank first-install and OTA images
         run: python tools/package_release.py
       - name: Build self-hosted USB installer

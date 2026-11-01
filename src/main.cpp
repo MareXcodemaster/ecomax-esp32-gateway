@@ -47,7 +47,7 @@ extern "C" void app_main() {
     configASSERT(pellet::self_test()); pellet::init();
     state::log("Pellet meter self-test: PASS; ESP calculations only, no boiler calibration command");
     configASSERT(cwu_pump::self_test());
-    state::log("CWU pump self-test: PASS; KLAP synthetic crypto/temperature rules, no device commands");
+    state::log("CWU pump self-test: PASS; KLAP, TPAP RFC9383/CCM and temperature rules, no device commands");
     transport::start(); network::start(); panel::start(); updates::init(); cwu_pump::start(); api::start();
     configASSERT(self_test_api());
     state::log("BOOT REQUIRED SELF-TESTS: PASS; parser/sensors/protocol/pellet/panel guard/HTTP assertions completed");
