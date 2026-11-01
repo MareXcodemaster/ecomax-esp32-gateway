@@ -58,8 +58,8 @@ const rows = Array.from({ length: 433 }, (_, i) => {
 });
 const history = { schema: 1, columns, rows, gap_seconds: 1200, resolution_seconds: 600,
   archive: { ready: true, samples: 4320, oldest_epoch: now - 3 * 86400, newest_epoch: now } };
-const pump = { configured:true, paired:true, armed:true, host:'192.0.2.20',
-  alias:'Pompka CWU (DEMO)', protocol:'TPAP', model:'P110', mac:'020000000020', fresh:true,
+const pump = { enabled:true, configured:true, paired:true, armed:true, host:'192.0.2.20',
+  alias:'Cyrkulacja CWU (DEMO)', protocol:'TPAP', model:'P110', mac:'020000000020', fresh:true,
   on:true, temperature:46.5, sensor_fresh:true, pending:false,
   status:'Polaczono lokalnie', reason:'CWU powyzej progu wlaczenia',
   lower:40, upper:45, mode:1, schedule_enabled:true, week:week.slice(0,7),
@@ -374,7 +374,7 @@ try {
   assert.equal(await page.locator('#week-grid .week-cell').count(), 336);
   assert.equal(await page.locator('#week-grid .week-cell:not(:disabled)').count(), 336);
   await screenshot('02-harmonogram');
-  await page.getByRole('button',{name:'Pompka CWU',exact:true}).click();
+  await page.getByRole('button',{name:'Cyrkulacja CWU',exact:true}).click();
   await page.locator('#pump-on').getByText('Pracuje',{exact:true}).waitFor();
   assert.equal(await page.locator('#pump-week button').count(),336);
   await screenshot('18-pompka-cwu');

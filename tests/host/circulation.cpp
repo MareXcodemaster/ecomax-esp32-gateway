@@ -5,6 +5,8 @@ void circulation_tests() {
     assert(tapo_discovery::normalize_mac("02:11:aa:BB:44:55")=="0211AABB4455");
     assert(tapo_discovery::normalize_mac("02-11-AA-BB-44-55")=="0211AABB4455");
     assert(tapo_discovery::normalize_mac("bad").empty());
+    for(auto model:{"P100","P100(EU)","P105","P110","P110(FR)","P110M","P115"})assert(tapo_discovery::supported_model(model));
+    for(auto model:{"","P110X","P110()","P110(EU","P110(EU)garbage","L530","P300","P999"})assert(!tapo_discovery::supported_model(model));
     using namespace circulation;
     Rules r;r.mode=Mode::automatic;Policy p;Input i;i.armed=true;i.fresh=true;i.temperature=45;i.now_ms=30000;
     assert(p.step(r,i).on);i.temperature=42;assert(p.step(r,i).on);i.temperature=40;assert(!p.step(r,i).on);
@@ -17,6 +19,8 @@ void circulation_tests() {
     r.schedule=true;i.clock=false;r.mode=Mode::on;assert(p.step(r,i).on);
     r.mode=Mode::off;assert(!p.step(r,i).on);r.mode=Mode::automatic;r.schedule=false;i.last_off_ms=29999;
     assert(p.step(r,i).reason==Reason::cooldown);i.now_ms=59999;assert(p.step(r,i).on);
+    i.now_ms=i.last_off_ms;r.mode=Mode::on;assert(p.step(r,i).on); // Manual ON bypasses automatic anti-cycling.
+    i.fresh=false;assert(p.step(r,i).reason==Reason::sensor);i.fresh=true;
     r.low=450;assert(!valid(r));assert(p.step(r,i).reason==Reason::invalid);
     r.low=400;i.armed=false;assert(!p.step(r,i).manage);
     for(unsigned day=0;day<7;day++)for(unsigned slot=0;slot<48;slot++){

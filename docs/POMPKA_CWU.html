@@ -2,19 +2,35 @@
 <html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com https://docs.waveshare.net; base-uri 'none'; form-action 'none'">
-<title>ecoMAX Wi-Fi - Pompka cyrkulacyjna CWU</title>
+<title>ecoMAX Wi-Fi - Cyrkulacja CWU</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
-</style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>Pompka Cyrkulacyjna CWU Z Tapo P110</h1>
+</style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>Cyrkulacja CWU z gniazdkiem Tapo</h1>
 <p>Funkcja zewnetrznej cyrkulacji wody do kranow. Nie steruje pompa ladujaca
 bojler, nie emuluje modulu C na magistrali PLUM i nie odblokowuje jego
 pozostalych funkcji. Pierwsze wydanie jest testowe, domyslnie nieaktywne.</p>
+<h2>Gniazdka</h2>
+<ul>
+<li><strong>P110</strong>: polaczenie TPAP i przelaczanie sprawdzane na rzeczywistym
+urzadzeniu; pozostale warianty sprzetu/firmware nadal wymagaja weryfikacji.</li>
+<li><strong>P100, P105, P110M, P115</strong>: udostepnione wykrywanie i ten sam lokalny
+odczyt/zapis zasilania przez KLAP v2 lub TPAP. Nie testowano fizycznie
+wszystkich tych modeli. P100 nie potrzebuje pomiaru zuzycia energii.</li>
+<li>Podstawa protokolu: <a href="https://github.com/mihai-dinculescu/tapo">biblioteka Tapo i jej lista modeli</a>.
+Zgodnosc biblioteki nie jest gwarancja przetestowania tego firmware ESP.</li>
+<li>Starsze gniazdka udostepniajace tylko protokol AES, inne marki, kamery,
+zarowki i listwy wielogniazdowe nie sa obslugiwane. Sam adres IP nie
+wystarcza. Panel pokazuje odczytany model; przed przelaczeniem sprawdza
+zapisany MAC i identyfikator urzadzenia. Nie steruje dowolnym znalezionym
+urzadzeniem.</li>
+</ul>
 <h2>Polaczenie</h2>
 <ol>
 <li>Skonfiguruj P110 w aplikacji Tapo i podlacz go do tej samej sieci LAN
 co ESP. Nie podlaczaj pompki do wyjscia kotla i gniazdka jednoczesnie.
 Sposob zasilania i obciazalnosc powinien potwierdzic instalator.</li>
-<li>W panelu otworz <strong>Pompka CWU &gt; Polaczenie Tapo P110 &gt; Wyszukaj P110</strong>.
+<li>W panelu otworz <strong>Cyrkulacja CWU</strong> i zaznacz <strong>Wlacz obsluge cyrkulacji CWU</strong>.
+Nastepnie otworz <strong>Polaczenie Tapo &gt; Wyszukaj gniazdka</strong>.
 Wybierz model, IP i MAC swojego gniazdka. Mozna tez wpisac lokalny IP.</li>
 <li>Od beta.30 ESP automatycznie wykrywa <strong>TPAP</strong> i tworzy lokalna,
 szyfrowana sesje z potwierdzeniem znajomosci hasla po obu stronach.
@@ -27,7 +43,7 @@ Polaczenie z panelem jest HTTP, nie HTTPS. Haslo nie jest zwracane,
 eksportowane ani zapisywane w przegladarce przez aplikacje. ESP zapisuje
 lokalny odcisk uwierzytelniania KLAP i poswiadczenie TPAP password-shadow,
 nie haslo do konta; te odciski nadal
-jest tajnym poswiadczeniem, a pamiec NVS nie jest szyfrowana.</li>
+sa tajnymi poswiadczeniami, a pamiec NVS nie jest szyfrowana.</li>
 <li><strong>Polacz lokalnie</strong> wykonuje odczyt, bez zmiany stanu gniazdka.
 Sprawdz nazwe i model przed zapisaniem trybu sterowania.</li>
 </ol>
@@ -40,12 +56,33 @@ autorowi projektu ani na GitHub.</p>
 ESP wstrzymuje kolejne proby logowania do czasu zapisania poprawnych
 danych. Blokada jest zachowywana po restarcie. Nie ponawiaj logowania
 wielokrotnie przy blednym hasle; P110 ma wlasne ograniczenie prob.</p>
+<p>Beta.31 poprawia zachowanie jednego polaczenia HTTP podczas logowania.
+Aktualizacja z beta.30 zachowuje zapisane dane i blokade ponawiania
+odrzuconego logowania. Po zapisaniu poprawnych danych panel zachowa
+dokladny etap i kod ewentualnej odmowy. Aktualizacja i zwykly restart
+nie ponawiaja automatycznie odrzuconych danych.</p>
 <p>ESP zapamietuje MAC i skrot identyfikatora odczytanego po zalogowaniu.
 Po utracie lacznosci wyszukuje ten sam MAC w swojej podsieci. Przed
 kolejnym przelaczeniem ponownie sprawdza model, MAC i identyfikator.
 Zmiana IP nie powinna wymagac ponownego parowania; izolacja klientow
 Wi-Fi i rozne VLAN-y moga blokowac wyszukiwanie. Rezerwacja DHCP jest
 dodatkowym, przydatnym zabezpieczeniem przed zmiana adresu.</p>
+<h2>Proste sterowanie</h2>
+<p><strong>Automatycznie</strong>, <strong>Recznie</strong> i <strong>Wylaczona</strong> dzialaja po jednym nacisnieciu, bez
+kolejnego przycisku Zapisz. Ustawiaja trwaly tryb sterowania w ESP.
+Nie zapisuja niedokonczonych zmian progow ani harmonogramu.
+<strong>Ustawienia automatyczne i harmonogram</strong> rozwijaja formularz;
+<strong>Zapisz i wlacz automatyke</strong> zapisuje jego zmiany i uruchamia automatyke.</p>
+<p>Animowany kran z woda oznacza potwierdzone wlaczenie gniazdka. Zakrecony
+kran bez wody oznacza potwierdzone wylaczenie. Przy braku aktualnego
+odczytu animacja ustaje i pojawia sie <strong>Stan nieznany</strong>. To symbol
+zasilania pompy: P110 nie mierzy rzeczywistego przeplywu wody.</p>
+<p>Funkcja jest opcjonalna i domyslnie wylaczona w nowej instalacji.
+Aktualizacja zachowuje dzialanie wczesniej skonfigurowanego P110.
+Wylaczenie <strong>obslugi cyrkulacji</strong> zatrzymuje wysylanie polecen przez ESP,
+ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
+wybierz <strong>Wylaczona</strong> i poczekaj na potwierdzenie, a potem wylacz obsluge.
+Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.</p>
 <h2>Temperatury I Tryby</h2>
 <ul>
 <li><strong>Automatycznie</strong>: wlaczenie po osiagnieciu gornego progu CWU,
@@ -54,12 +91,12 @@ pozostaje zachowany. Przyklad: wlacz od 45 C, wylacz przy 40 C.</li>
 <li>Po starcie w srodku przedzialu ESP czeka na gorny prog zamiast wlaczac
 pompke na podstawie starego stanu. Progi sa ustawiane niezaleznie od
 temperatury zadanej CWU w kotle; zmiana nie zapisuje niczego do kotla.</li>
-<li><strong>Wlaczona recznie</strong>: wymuszenie pracy z pominieciem harmonogramu
+<li><strong>Recznie</strong>: wymuszenie pracy z pominieciem harmonogramu
 i progow, ale nadal wymaga aktualnego, poprawnego czujnika CWU.</li>
 <li><strong>Wylaczona</strong>: polecenie wylaczenia gniazdka. Samo zapisanie pliku
 konfiguracji nie oznacza potwierdzonego przelaczenia.</li>
-<li>Przerwa po potwierdzonym wylaczeniu wynosi co najmniej 30 sekund,
-zanim ESP pozwoli ponownie wlaczyc pompke. Wylaczenie nie jest opozniane.</li>
+<li>W trybie Auto przerwa po potwierdzonym wylaczeniu wynosi co najmniej
+30 sekund. Tryb <strong>Recznie</strong> pomija te przerwe; wylaczenie nie jest opozniane.</li>
 <li>Przed kazdym poleceniem i po nim odczytywany jest stan P110.
 Powtorzenie tego samego zadania HTTP nie zapisuje drugi raz konfiguracji.</li>
 </ul>

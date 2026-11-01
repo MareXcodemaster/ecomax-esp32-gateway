@@ -15,6 +15,11 @@ struct FakeTransport:smart_tapo::Transport {
     Response post(const std::string &,const std::string &,const std::string &)override{assert(false);return {};}
     void reset()override{}
 };
+struct RejectRegister:FakeTransport {
+    Response exchange(const std::string &,const std::string &,const char *)override{
+        calls++;return {200,calls==1?reply:R"({"error_code":-2203})",{}};
+    }
+};
 int main(){
     using namespace tapo_tpap;
     assert(self_test(random_bytes,nullptr));
@@ -37,5 +42,9 @@ int main(){
     transport.reply=R"({"error_code":0,"result":{"tpap":{"tls":1,"port":443,"pake":[2]}}})";
     assert(!client.handshake(Bytes(32),Bytes(20),true));assert(!client.credentials_rejected());
     assert(transport.calls==3);
+    RejectRegister rejection;client.set_transport(&rejection);
+    assert(!client.handshake(Bytes(32),Bytes(20),true)&&client.credentials_rejected());
+    assert(rejection.calls==2&&client.trace().stage=="pake_register"&&client.trace().code==-2203&&client.trace().http==200);
+    client.reset();assert(client.trace().code==-2203&&client.error().find("pake_register")!=std::string::npos);
     puts("PASS TPAP: RFC 9383 proof, PBKDF2, known AES-CCM vector, mutual confirmation, invalid point/parameters/tag/sequence and session reset");
 }

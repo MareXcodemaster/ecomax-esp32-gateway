@@ -24,21 +24,25 @@ Bytes decoded(const cJSON *v,size_t minimum,size_t maximum){
 }
 std::string encoded(cJSON *value){char *raw=cJSON_PrintUnformatted(value);if(!raw)return {};std::string out(raw);cJSON_free(raw);return out;}
 }
-void Client::reset(){ready_=false;expires_=0;path_.clear();cipher_.reset();legacy_.reset();}
+void Client::reset(){ready_=false;expires_=0;path_.clear();cipher_.reset();legacy_.reset();if(transport_)transport_->reset();}
 bool Client::is_ready(){if(ready_&&clock_&&clock_()>=expires_)reset();return ready_;}
 bool Client::handshake(const Bytes &auth,const Bytes &shadow,bool has_klap){
-    reset();error_.clear();rejected_=false;
+    reset();error_.clear();rejected_=false;trace_={};
     if(!transport_||!random_||!clock_){error_="Brak klienta Tapo";return false;}
+    struct Timer {uint64_t (*clock)();uint64_t start;AuthTrace &trace;~Timer(){trace.total_ms=clock()-start;}} timer{clock_,clock_(),trace_};
+    trace_.stage="discover";
     auto discovery=transport_->exchange("/",R"({"method":"login","params":{"sub_method":"discover"}})","application/json");
-    if(discovery.status<=0){error_="Brak odpowiedzi P110 w sieci lokalnej";return false;}
+    trace_.http=discovery.status;
+    if(discovery.status<=0){error_="Brak odpowiedzi Tapo w sieci lokalnej";return false;}
     Json discover(cJSON_ParseWithLength(discovery.body.data(),discovery.body.size()));
+    if(cJSON_IsNumber(get(discover.v,"error_code")))trace_.code=get(discover.v,"error_code")->valueint;
     auto *info=get(get(discover.v,"result"),"tpap");
     if(!cJSON_IsObject(info)){
         if(integer(get(discover.v,"error_code"),-2101,-2101)){rejected_=true;error_="Tapo zablokowalo logowanie; odczekaj i sprawdz haslo";return false;}
         tpap_=false;detected_=true;
-        if(!has_klap){error_="P110 wymaga KLAP: wpisz takze e-mail Tapo";return false;}
+        if(!has_klap){error_="Tapo wymaga KLAP: wpisz takze e-mail Tapo";return false;}
         if(!legacy_.handshake(auth)){rejected_=legacy_.get_error_message().find("invalid credentials")!=std::string::npos;
-            error_=rejected_?"KLAP: odrzucono dane konta; ponowne proby wstrzymane":"Brak sesji KLAP; sprawdz dostepnosc P110";return false;}
+            error_=rejected_?"KLAP: odrzucono dane konta; ponowne proby wstrzymane":"Brak sesji KLAP; sprawdz dostepnosc Tapo";return false;}
         ready_=true;expires_=clock_()+900000;return true;
     }
     tpap_=true;detected_=true;
@@ -48,16 +52,19 @@ bool Client::handshake(const Bytes &auth,const Bytes &shadow,bool has_klap){
     if(!integer(get(info,"tls"),0,0)||(port&&!integer(port,80,80))||!account){error_="Nieobslugiwany wariant TPAP (wymagany userpw, HTTP 80)";return false;}
     if(shadow.size()!=20){error_="Wpisz ponownie haslo Tapo, aby uruchomic TPAP";return false;}
     auto login=[&](cJSON *params,Json &response)->bool{
+        trace_.stage=text(get(params,"sub_method"));trace_.code=0;
         Json request(cJSON_CreateObject());if(!request.v){cJSON_Delete(params);error_="Brak pamieci na logowanie Tapo";return false;}
         cJSON_AddStringToObject(request.v,"method","login");cJSON_AddItemToObject(request.v,"params",params);
         auto body=encoded(request.v);if(body.empty()){error_="Brak pamieci na logowanie Tapo";return false;}
         auto answer=transport_->exchange("/",body,"application/json");
+        trace_.http=answer.status;
         if(answer.status!=200){error_="Brak odpowiedzi logowania TPAP";return false;}
         response.v=cJSON_ParseWithLength(answer.body.data(),answer.body.size());auto *code=get(response.v,"error_code");
+        if(cJSON_IsNumber(code))trace_.code=code->valueint;
         if(!integer(code,0,0)){
             int n=cJSON_IsNumber(code)?code->valueint:0;
             rejected_=n==-2203||n==-2101||n==9999;
-            error_=rejected_?"TPAP: haslo odrzucone lub blokada logowania; proby wstrzymane":"TPAP: odrzucono uzgadnianie sesji";return false;
+            error_="TPAP / "+trace_.stage+": kod "+std::to_string(n)+(rejected_?"; proby wstrzymane":"; uzgadnianie odrzucone");return false;
         }
         if(!cJSON_IsObject(get(response.v,"result"))){error_="Niepelna odpowiedz logowania TPAP";return false;}return true;
     };
@@ -76,19 +83,23 @@ bool Client::handshake(const Bytes &auth,const Bytes &shadow,bool has_klap){
         error_="Nieobslugiwane parametry kryptografii TPAP";return false;
     }
     tapo_tpap::Proof proof;
+    trace_.stage="derive";auto derive_start=clock_();
     if(!tapo_tpap::password_proof(shadow,salt,iterations->valueint,user_random,remote,share,proof,random_,random_context_,yield_)){
+        trace_.derive_ms=clock_()-derive_start;
         error_="Nie przygotowano dowodu TPAP; sprawdz pamiec i klucz urzadzenia";return false;
     }
+    trace_.derive_ms=clock_()-derive_start;
     params=cJSON_CreateObject();if(!params){error_="Brak pamieci na TPAP";return false;}
     cJSON_AddStringToObject(params,"sub_method","pake_share");cJSON_AddStringToObject(params,"user_share",base64(proof.share).c_str());
     cJSON_AddStringToObject(params,"user_confirm",base64(proof.confirm).c_str());Json confirmed;
     if(!login(params,confirmed))return false;
     auto *result=get(confirmed.v,"result");auto token=text(get(result,"stok"));auto *sequence=get(result,"start_seq");
-    if(!proof.verify(decoded(get(result,"dev_confirm"),32,32))){rejected_=true;error_="TPAP: P110 nie potwierdzilo hasla; proby wstrzymane";return false;}
+    trace_.stage="verify";
+    if(!proof.verify(decoded(get(result,"dev_confirm"),32,32))){rejected_=true;error_="TPAP / verify: Tapo nie potwierdzilo hasla; proby wstrzymane";return false;}
     if(token.empty()||token.size()>128||token.find_first_not_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-")!=std::string::npos||
        !integer(sequence,std::numeric_limits<int32_t>::min(),std::numeric_limits<int32_t>::max())){error_="Nieprawidlowa sesja TPAP";return false;}
     if(!cipher_.init(proof.shared,static_cast<uint32_t>(sequence->valueint))){error_="Nie przygotowano szyfrowania TPAP";return false;}
-    path_="/stok="+token+"/ds";ready_=true;expires_=clock_()+900000;return true;
+    path_="/stok="+token+"/ds";ready_=true;expires_=clock_()+900000;trace_.stage="ready";return true;
 }
 std::string Client::send_message(const std::string &message){
     if(!is_ready())return {};

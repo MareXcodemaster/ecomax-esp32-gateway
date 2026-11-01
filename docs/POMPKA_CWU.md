@@ -1,15 +1,31 @@
-# Pompka Cyrkulacyjna CWU Z Tapo P110
+# Cyrkulacja CWU z gniazdkiem Tapo
 
 Funkcja zewnetrznej cyrkulacji wody do kranow. Nie steruje pompa ladujaca
 bojler, nie emuluje modulu C na magistrali PLUM i nie odblokowuje jego
 pozostalych funkcji. Pierwsze wydanie jest testowe, domyslnie nieaktywne.
+
+## Gniazdka
+
+- **P110**: polaczenie TPAP i przelaczanie sprawdzane na rzeczywistym
+  urzadzeniu; pozostale warianty sprzetu/firmware nadal wymagaja weryfikacji.
+- **P100, P105, P110M, P115**: udostepnione wykrywanie i ten sam lokalny
+  odczyt/zapis zasilania przez KLAP v2 lub TPAP. Nie testowano fizycznie
+  wszystkich tych modeli. P100 nie potrzebuje pomiaru zuzycia energii.
+- Podstawa protokolu: [biblioteka Tapo i jej lista modeli](https://github.com/mihai-dinculescu/tapo).
+  Zgodnosc biblioteki nie jest gwarancja przetestowania tego firmware ESP.
+- Starsze gniazdka udostepniajace tylko protokol AES, inne marki, kamery,
+  zarowki i listwy wielogniazdowe nie sa obslugiwane. Sam adres IP nie
+  wystarcza. Panel pokazuje odczytany model; przed przelaczeniem sprawdza
+  zapisany MAC i identyfikator urzadzenia. Nie steruje dowolnym znalezionym
+  urzadzeniem.
 
 ## Polaczenie
 
 1. Skonfiguruj P110 w aplikacji Tapo i podlacz go do tej samej sieci LAN
    co ESP. Nie podlaczaj pompki do wyjscia kotla i gniazdka jednoczesnie.
    Sposob zasilania i obciazalnosc powinien potwierdzic instalator.
-2. W panelu otworz **Pompka CWU > Polaczenie Tapo P110 > Wyszukaj P110**.
+2. W panelu otworz **Cyrkulacja CWU** i zaznacz **Wlacz obsluge cyrkulacji CWU**.
+   Nastepnie otworz **Polaczenie Tapo > Wyszukaj gniazdka**.
    Wybierz model, IP i MAC swojego gniazdka. Mozna tez wpisac lokalny IP.
 3. Od beta.30 ESP automatycznie wykrywa **TPAP** i tworzy lokalna,
    szyfrowana sesje z potwierdzeniem znajomosci hasla po obu stronach.
@@ -22,7 +38,7 @@ pozostalych funkcji. Pierwsze wydanie jest testowe, domyslnie nieaktywne.
    eksportowane ani zapisywane w przegladarce przez aplikacje. ESP zapisuje
    lokalny odcisk uwierzytelniania KLAP i poswiadczenie TPAP password-shadow,
    nie haslo do konta; te odciski nadal
-   jest tajnym poswiadczeniem, a pamiec NVS nie jest szyfrowana.
+   sa tajnymi poswiadczeniami, a pamiec NVS nie jest szyfrowana.
 5. **Polacz lokalnie** wykonuje odczyt, bez zmiany stanu gniazdka.
    Sprawdz nazwe i model przed zapisaniem trybu sterowania.
 
@@ -37,12 +53,38 @@ ESP wstrzymuje kolejne proby logowania do czasu zapisania poprawnych
 danych. Blokada jest zachowywana po restarcie. Nie ponawiaj logowania
 wielokrotnie przy blednym hasle; P110 ma wlasne ograniczenie prob.
 
+Beta.31 poprawia zachowanie jednego polaczenia HTTP podczas logowania.
+Aktualizacja z beta.30 zachowuje zapisane dane i blokade ponawiania
+odrzuconego logowania. Po zapisaniu poprawnych danych panel zachowa
+dokladny etap i kod ewentualnej odmowy. Aktualizacja i zwykly restart
+nie ponawiaja automatycznie odrzuconych danych.
+
 ESP zapamietuje MAC i skrot identyfikatora odczytanego po zalogowaniu.
 Po utracie lacznosci wyszukuje ten sam MAC w swojej podsieci. Przed
 kolejnym przelaczeniem ponownie sprawdza model, MAC i identyfikator.
 Zmiana IP nie powinna wymagac ponownego parowania; izolacja klientow
 Wi-Fi i rozne VLAN-y moga blokowac wyszukiwanie. Rezerwacja DHCP jest
 dodatkowym, przydatnym zabezpieczeniem przed zmiana adresu.
+
+## Proste sterowanie
+
+**Automatycznie**, **Recznie** i **Wylaczona** dzialaja po jednym nacisnieciu, bez
+kolejnego przycisku Zapisz. Ustawiaja trwaly tryb sterowania w ESP.
+Nie zapisuja niedokonczonych zmian progow ani harmonogramu.
+**Ustawienia automatyczne i harmonogram** rozwijaja formularz;
+**Zapisz i wlacz automatyke** zapisuje jego zmiany i uruchamia automatyke.
+
+Animowany kran z woda oznacza potwierdzone wlaczenie gniazdka. Zakrecony
+kran bez wody oznacza potwierdzone wylaczenie. Przy braku aktualnego
+odczytu animacja ustaje i pojawia sie **Stan nieznany**. To symbol
+zasilania pompy: P110 nie mierzy rzeczywistego przeplywu wody.
+
+Funkcja jest opcjonalna i domyslnie wylaczona w nowej instalacji.
+Aktualizacja zachowuje dzialanie wczesniej skonfigurowanego P110.
+Wylaczenie **obslugi cyrkulacji** zatrzymuje wysylanie polecen przez ESP,
+ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
+wybierz **Wylaczona** i poczekaj na potwierdzenie, a potem wylacz obsluge.
+Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.
 
 ## Temperatury I Tryby
 
@@ -52,12 +94,12 @@ dodatkowym, przydatnym zabezpieczeniem przed zmiana adresu.
 - Po starcie w srodku przedzialu ESP czeka na gorny prog zamiast wlaczac
   pompke na podstawie starego stanu. Progi sa ustawiane niezaleznie od
   temperatury zadanej CWU w kotle; zmiana nie zapisuje niczego do kotla.
-- **Wlaczona recznie**: wymuszenie pracy z pominieciem harmonogramu
+- **Recznie**: wymuszenie pracy z pominieciem harmonogramu
   i progow, ale nadal wymaga aktualnego, poprawnego czujnika CWU.
 - **Wylaczona**: polecenie wylaczenia gniazdka. Samo zapisanie pliku
   konfiguracji nie oznacza potwierdzonego przelaczenia.
-- Przerwa po potwierdzonym wylaczeniu wynosi co najmniej 30 sekund,
-  zanim ESP pozwoli ponownie wlaczyc pompke. Wylaczenie nie jest opozniane.
+- W trybie Auto przerwa po potwierdzonym wylaczeniu wynosi co najmniej
+  30 sekund. Tryb **Recznie** pomija te przerwe; wylaczenie nie jest opozniane.
 - Przed kazdym poleceniem i po nim odczytywany jest stan P110.
   Powtorzenie tego samego zadania HTTP nie zapisuje drugi raz konfiguracji.
 

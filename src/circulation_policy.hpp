@@ -39,7 +39,7 @@ struct Policy {
         }
         d.on=r.mode==Mode::on||demand;
         d.reason=r.mode==Mode::on?Reason::manual:d.on?Reason::warm:i.temperature*10<=r.low?Reason::cold:Reason::hysteresis;
-        if(d.on&&(i.now_ms<i.last_off_ms||i.now_ms-i.last_off_ms<30000)){d.on=false;d.reason=Reason::cooldown;}
+        if(r.mode==Mode::automatic&&d.on&&(i.now_ms<i.last_off_ms||i.now_ms-i.last_off_ms<30000)){d.on=false;d.reason=Reason::cooldown;}
         return d;
     }
 };

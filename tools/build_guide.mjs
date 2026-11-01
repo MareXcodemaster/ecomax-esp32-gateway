@@ -3,7 +3,7 @@ import { Marked } from 'marked';
 
 const root = new URL('../', import.meta.url);
 const pages = { START_PL: 'Pelna instrukcja', SZYBKI_START: 'Prosta instalacja',
-  GALERIA: 'Galeria panelu', SPRZET: 'Sprzet i podlaczenie', ZGODNOSC: 'Lista zgodnosci', POMPKA_CWU: 'Pompka cyrkulacyjna CWU' };
+  GALERIA: 'Galeria panelu', SPRZET: 'Sprzet i podlaczenie', ZGODNOSC: 'Lista zgodnosci', POMPKA_CWU: 'Cyrkulacja CWU' };
 const markdown = new Marked({ gfm: true });
 markdown.use({ renderer: { link(token) {
   let href = token.href;

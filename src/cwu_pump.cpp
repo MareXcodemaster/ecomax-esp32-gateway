@@ -37,10 +37,11 @@ struct LegacyConfig {
     char requests[8][33]{};
     uint8_t request_cursor=0;
 };
-struct Config:LegacyConfig {
+struct ConfigV2:LegacyConfig {
     uint8_t shadow[20]{};
     bool has_shadow=false,has_klap=false,auth_blocked=false;
 };
+struct Config:ConfigV2 {char auth_error[128]{},auth_stage[24]{};int auth_http=0,auth_code=0;uint32_t derive_ms=0,auth_ms=0;bool enabled=false;};
 Config config;
 SemaphoreHandle_t mutex,config_mutex;
 TaskHandle_t worker=nullptr;
@@ -68,12 +69,17 @@ std::vector<uint8_t> bytes(const std::string &s){return {s.begin(),s.end()};}
 std::string identity(const std::string &s){return TapoCipher::to_hex_string(TapoCipher::sha256(bytes(s)));}
 bool store(const Config &c){
     nvs_handle_t h;if(nvs_open("cwu_pump",NVS_READWRITE,&h)!=ESP_OK)return false;
-    auto e=nvs_set_blob(h,"config_v2",&c,sizeof(c));if(e==ESP_OK)e=nvs_commit(h);nvs_close(h);return e==ESP_OK;
+    auto e=nvs_set_blob(h,"config_v3",&c,sizeof(c));if(e==ESP_OK)e=nvs_commit(h);nvs_close(h);return e==ESP_OK;
 }
 class Transport:public TapoTransport {
+    esp_http_client_handle_t client_=nullptr;
+    std::string connected_host_;
+    Response *active_=nullptr;
+    bool server_close_=false;
 public:
     std::string host;
-    void reset()override{}
+    ~Transport(){reset();}
+    void reset()override{if(client_){active_=nullptr;esp_http_client_close(client_);esp_http_client_cleanup(client_);client_=nullptr;}connected_host_.clear();}
     Response post(const std::string &path,const std::string &body,const std::string &cookie)override{
         if(path.rfind("/app/",0)!=0)return {};
         return http(path,body,"application/octet-stream",cookie);
@@ -87,17 +93,22 @@ public:
     Response http(const std::string &path,const std::string &body,const char *type,const std::string &cookie){
         Response out;if(!private_ip(host.c_str())||body.size()>8192)return out;
         std::string url="http://"+host+path;
-        esp_http_client_config_t cfg{};cfg.url=url.c_str();cfg.timeout_ms=2500;cfg.disable_auto_redirect=true;cfg.buffer_size=512;
+        if(client_&&connected_host_!=host)reset();
+        esp_http_client_config_t cfg{};cfg.url=url.c_str();cfg.timeout_ms=2500;cfg.disable_auto_redirect=true;cfg.buffer_size=512;cfg.keep_alive_enable=true;
         cfg.event_handler=[](esp_http_client_event_t *event)->esp_err_t{
-            auto *response=static_cast<Response *>(event->user_data);
+            auto *self=static_cast<Transport *>(event->user_data);auto *response=self->active_;if(!response)return ESP_OK;
+            if(event->event_id==HTTP_EVENT_ON_HEADER&&event->header_key&&event->header_value&&!strcasecmp(event->header_key,"Connection")&&!strcasecmp(event->header_value,"close"))self->server_close_=true;
             if(event->event_id==HTTP_EVENT_ON_HEADER&&event->header_key&&event->header_value&&!strcasecmp(event->header_key,"Set-Cookie")){
                 if(response->set_cookie.size()+strlen(event->header_value)+2<384){if(!response->set_cookie.empty())response->set_cookie+="; ";response->set_cookie+=event->header_value;}
             }
             return ESP_OK;
         };
-        cfg.user_data=&out;auto client=esp_http_client_init(&cfg);if(!client)return out;
+        cfg.user_data=this;if(!client_){client_=esp_http_client_init(&cfg);if(!client_)return out;connected_host_=host;}
+        auto client=client_;active_=&out;server_close_=false;
+        if(esp_http_client_set_url(client,url.c_str())!=ESP_OK){reset();return out;}
         esp_http_client_set_method(client,HTTP_METHOD_POST);esp_http_client_set_header(client,"Content-Type",type);
-        if(!cookie.empty())esp_http_client_set_header(client,"Cookie",cookie.c_str());
+        esp_http_client_set_header(client,"Connection","keep-alive");
+        if(!cookie.empty())esp_http_client_set_header(client,"Cookie",cookie.c_str());else esp_http_client_delete_header(client,"Cookie");
         auto deadline=esp_timer_get_time()+5000000;
         if(esp_http_client_open(client,body.size())==ESP_OK){
             int sent=0;while(sent<static_cast<int>(body.size())){int n=esp_http_client_write(client,body.data()+sent,body.size()-sent);if(n<=0)break;sent+=n;}
@@ -106,9 +117,10 @@ public:
                 while(out.body.size()<8192&&esp_timer_get_time()<deadline){int n=esp_http_client_read(client,buffer,std::min(sizeof(buffer),8192-out.body.size()));if(n<0){out.status=-1;break;}if(!n)break;out.body.append(buffer,n);}
                 if(esp_timer_get_time()>=deadline)out.status=-1;
                 if(out.body.size()>=8192)out.status=-1;
+                if(!esp_http_client_is_complete_data_received(client))out.status=-1;
             }
         }
-        esp_http_client_close(client);esp_http_client_cleanup(client);return out;
+        active_=nullptr;if(out.status<=0||server_close_)reset();return out;
     }
 };
 bool call(TapoClient &client,const std::string &message,cJSON *&result){
@@ -120,7 +132,7 @@ bool read(TapoClient &client,const Config &c,std::string &found_id,bool &on,std:
     cJSON *body=nullptr;bool ok=call(client,R"JSON({"method":"get_device_info"})JSON",body);
     const auto *r=get(body,"result"),*state=get(r,"device_on");
     type=text(get(r,"model"));auto id=text(get(r,"device_id"));
-    ok=ok&&type=="P110"&&!id.empty()&&id.size()<160&&cJSON_IsBool(state);
+    ok=ok&&tapo_discovery::supported_model(type)&&!id.empty()&&id.size()<160&&cJSON_IsBool(state);
     found_id=identity(id);if(*c.identity&&found_id!=c.identity)ok=false;
     mac=tapo_discovery::normalize_mac(text(get(r,"mac")));if(mac.empty()||(*c.mac&&mac!=c.mac))ok=false;
     on=cJSON_IsTrue(state);name.clear();auto encoded=text(get(r,"nickname"));
@@ -137,11 +149,12 @@ void run(void *){
         for(const auto &device:found)if(device.mac==c.mac&&device.host!=c.host){
             Lock save(config_mutex);{Lock l(mutex);if(c.revision!=config.revision)return;}
             Config updated=c;snprintf(updated.host,sizeof(updated.host),"%s",device.host.c_str());++updated.revision;
-            updates::FlashGuard flash;if(flash.acquired&&store(updated)){Lock l(mutex);config=updated;status="Odnaleziono P110 po MAC";}return;
+            updates::FlashGuard flash;if(flash.acquired&&store(updated)){Lock l(mutex);config=updated;status="Odnaleziono Tapo po MAC";}return;
         }
     };
     for(;;){
         vTaskDelay(pdMS_TO_TICKS(500));Config c;{Lock l(mutex);c=config;}
+        if(!c.enabled){client.reset();policy.demand=false;Lock l(mutex);known=linked=pending=scan_requested=scan_busy=false;decision={};status="Obsluga cyrkulacji wylaczona";continue;}
         bool scan;{Lock l(mutex);scan=scan_requested;scan_requested=false;if(scan)scan_busy=true;}
         if(scan&&state::network().connected&&!updates::installing()){find(c);next_discovery=now()+60000;}
         else if(scan){Lock l(mutex);scan_busy=false;++scan_sequence;}
@@ -149,7 +162,7 @@ void run(void *){
             client.reset();{Lock l(mutex);linked=false;if(c.credentials)status=updates::installing()?"Aktualizacja ESP":"Brak Wi-Fi ESP";}
             continue;
         }
-        if(c.auth_blocked){client.reset();Lock l(mutex);linked=false;status="Logowanie Tapo wstrzymane. Wpisz poprawne haslo i polacz ponownie";continue;}
+        if(c.auth_blocked){client.reset();Lock l(mutex);linked=false;status=*c.auth_error?c.auth_error:"Logowanie Tapo wstrzymane. Wpisz poprawne haslo i polacz ponownie";continue;}
         if(c.revision!=revision){revision=c.revision;next_read=0;failures=0;if(policy_identity!=c.identity)policy.demand=false;policy_identity=c.identity;client.reset();transport.host=c.host;Lock l(mutex);pending=false;}
         double temperature;uint64_t age;bool sensor=boiler::water_heater_temperature(temperature,age);
         auto seconds=time(nullptr);tm local{};localtime_r(&seconds,&local);
@@ -162,8 +175,13 @@ void run(void *){
         if(!client.is_ready()&&!client.handshake({c.auth,c.auth+32},c.has_shadow?std::vector<uint8_t>(c.shadow,c.shadow+20):std::vector<uint8_t>{},c.has_klap)){
             if(client.credentials_rejected()){
                 Lock save(config_mutex);{Lock l(mutex);if(c.revision!=config.revision)continue;}
-                Config blocked=c;blocked.auth_blocked=true;updates::FlashGuard flash;
+                Config blocked=c;blocked.auth_blocked=true;
+                snprintf(blocked.auth_error,sizeof(blocked.auth_error),"%s",client.error().c_str());snprintf(blocked.auth_stage,sizeof(blocked.auth_stage),"%s",client.trace().stage.c_str());
+                blocked.auth_http=client.trace().http;blocked.auth_code=client.trace().code;blocked.derive_ms=client.trace().derive_ms;blocked.auth_ms=client.trace().total_ms;
+                state::log("Tapo auth stopped: stage=%s http=%d code=%d derive_ms=%lu total_ms=%lu",blocked.auth_stage,blocked.auth_http,blocked.auth_code,(unsigned long)blocked.derive_ms,(unsigned long)blocked.auth_ms);
+                updates::FlashGuard flash;
                 bool persisted=flash.acquired&&store(blocked);{Lock l(mutex);config.auth_blocked=true;linked=false;protocol=client.protocol();status=persisted?client.error():"Logowanie wstrzymane; nie zapisano blokady w pamieci";}
+                {Lock l(mutex);if(config.revision==blocked.revision)config=blocked;}
                 continue;
             }
             if(now()>=next_discovery){find(c);next_discovery=now()+60000;}
@@ -173,7 +191,7 @@ void run(void *){
         std::string found,name,type,mac;bool on=false;
         if(!read(client,c,found,on,name,type,mac)){
             if(now()>=next_discovery){find(c);next_discovery=now()+60000;}
-            client.reset();Lock l(mutex);linked=false;status=client.error().empty()?"Brak potwierdzonego odczytu P110 lub inne urzadzenie pod tym IP":client.error();
+            client.reset();Lock l(mutex);linked=false;status=client.error().empty()?"Brak potwierdzonego odczytu Tapo lub inne urzadzenie pod tym IP":client.error();
             next_read=now()+std::min(60000U,5000U<<std::min(failures++,3U));continue;
         }
         {Lock l(mutex);if(c.revision!=config.revision)continue;if(!on&&(!known||actual_on))last_off_ms=now();linked=known=true;actual_on=on;verified_ms=now();alias=name;model=type;protocol=client.protocol();status="Polaczono lokalnie / "+protocol;input.last_off_ms=last_off_ms;}
@@ -192,7 +210,7 @@ void run(void *){
             Lock save(config_mutex);{Lock l(mutex);if(c.revision!=config.revision)continue;}
             snprintf(c.identity,sizeof(c.identity),"%s",found.c_str());
             snprintf(c.mac,sizeof(c.mac),"%s",mac.c_str());
-            updates::FlashGuard flash;if(flash.acquired&&store(c)){Lock l(mutex);config=c;}else{Lock l(mutex);status="Nie zapisano powiazania P110";}
+            updates::FlashGuard flash;if(flash.acquired&&store(c)){Lock l(mutex);config=c;}else{Lock l(mutex);status="Nie zapisano powiazania Tapo";}
             next_read=now()+10000;continue;
         }
         if(d.manage&&on!=d.on){
@@ -203,7 +221,7 @@ void run(void *){
             bool observed=false;std::string check_id,check_name,check_type,check_mac;
             bool checked=read(client,c,check_id,observed,check_name,check_type,check_mac);
             {Lock l(mutex);linked=checked;if(checked){known=true;actual_on=observed;verified_ms=now();if(!observed)last_off_ms=now();}
-             pending=!checked||observed!=d.on;status=checked&&observed==d.on?"Stan potwierdzony w P110":"Zmiana niepotwierdzona; oczekiwanie na odczyt";}
+             pending=!checked||observed!=d.on;status=checked&&observed==d.on?"Stan potwierdzony w Tapo":"Zmiana niepotwierdzona; oczekiwanie na odczyt";}
             if(!acknowledged||!checked)client.reset();
         }else{Lock l(mutex);pending=false;}
         next_read=now()+10000;
@@ -217,13 +235,17 @@ const char *reason(circulation::Reason r){
 }
 void start(){
     mutex=xSemaphoreCreateMutex();config_mutex=xSemaphoreCreateMutex();configASSERT(mutex&&config_mutex);
-    nvs_handle_t h;if(nvs_open("cwu_pump",NVS_READONLY,&h)==ESP_OK){Config saved;size_t size=sizeof(saved);auto e=nvs_get_blob(h,"config_v2",&saved,&size);
-        if(e==ESP_ERR_NVS_NOT_FOUND){LegacyConfig legacy;size_t old_size=sizeof(legacy);e=nvs_get_blob(h,"config_v1",&legacy,&old_size);if(e==ESP_OK&&old_size==sizeof(legacy)){static_cast<LegacyConfig&>(saved)=legacy;saved.has_klap=legacy.credentials;size=sizeof(saved);}else e=ESP_FAIL;}nvs_close(h);
+    bool migrate=false;
+    nvs_handle_t h;if(nvs_open("cwu_pump",NVS_READONLY,&h)==ESP_OK){Config saved;size_t size=sizeof(saved);auto e=nvs_get_blob(h,"config_v3",&saved,&size);
+        if(e==ESP_ERR_NVS_NOT_FOUND){ConfigV2 v2;size_t n=sizeof(v2);e=nvs_get_blob(h,"config_v2",&v2,&n);if(e==ESP_OK&&n==sizeof(v2)){static_cast<ConfigV2&>(saved)=v2;size=sizeof(saved);migrate=true;}else if(e!=ESP_ERR_NVS_NOT_FOUND)e=ESP_FAIL;}
+        if(e==ESP_ERR_NVS_NOT_FOUND){LegacyConfig legacy;size_t old_size=sizeof(legacy);e=nvs_get_blob(h,"config_v1",&legacy,&old_size);if(e==ESP_OK&&old_size==sizeof(legacy)){static_cast<LegacyConfig&>(saved)=legacy;saved.has_klap=legacy.credentials;size=sizeof(saved);migrate=true;}else e=ESP_FAIL;}nvs_close(h);
         saved.host[15]=0;saved.identity[64]=0;saved.mac[12]=0;
+        saved.auth_error[127]=0;saved.auth_stage[23]=0;
         for(auto &id:saved.requests)id[32]=0;
         if(e==ESP_OK&&size==sizeof(saved)&&saved.magic==config.magic&&saved.request_cursor<8&&circulation::valid(saved.rules)&&(!saved.credentials||private_ip(saved.host)))config=saved;}
     setenv("TZ","CET-1CEST,M3.5.0,M10.5.0/3",1);tzset();
-    if(config.credentials&&!start_worker())status="Brak pamieci na sterowanie Tapo";
+    if(migrate){config.enabled=config.credentials;Config next=config;++next.revision;updates::FlashGuard flash;if(flash.acquired&&store(next)){config=next;state::log("Tapo migration: saved credentials, control and authentication stop preserved");}}
+    if(config.enabled&&config.credentials&&!start_worker())status="Brak pamieci na sterowanie Tapo";
 }
 bool self_test(){
     std::vector<uint8_t> local(16),remote(16);for(unsigned i=0;i<16;i++){local[i]=i;remote[i]=16+i;}
@@ -245,11 +267,15 @@ bool configure(const cJSON *request,std::string &error){
     auto request_id=text(get(request,"request_id"));
     if(request_id.size()!=32||request_id.find_first_not_of("0123456789abcdef")!=std::string::npos){error="Brak identyfikatora operacji";return false;}
     for(const auto &seen:next.requests)if(request_id==seen)return true;
+    if(action!="feature"&&!next.enabled){error="Najpierw wlacz obsluge cyrkulacji CWU";return false;}
     if(action=="scan"){
         if(!start_worker()){error="Brak pamieci na wyszukiwanie";return false;}
         Lock l(mutex);if(request_id==scan_request_id)return true;if(scan_busy||scan_requested){error="Wyszukiwanie juz trwa";return false;}scan_request_id=request_id;scan_requested=true;return true;
     }
-    if(action=="connect"){
+    if(action=="feature"){
+        auto *enabled=get(request,"enabled");if(!cJSON_IsBool(enabled)){error="Nieprawidlowy stan funkcji";return false;}
+        next.enabled=cJSON_IsTrue(enabled);
+    }else if(action=="connect"){
         auto host=text(get(request,"host")),user=text(get(request,"username")),password=text(get(request,"password"));
         if(!private_ip(host.c_str())||user.size()>128||password.empty()||password.size()>128){error="Sprawdz IP oraz haslo konta Tapo";return false;}
         {Lock l(mutex);if(config.armed&&(!known||!linked||now()-verified_ms>20000||actual_on)){error="Najpierw wylacz pompke i poczekaj na potwierdzenie";return false;}}
@@ -258,12 +284,12 @@ bool configure(const cJSON *request,std::string &error){
             mbedtls_sha1(reinterpret_cast<const unsigned char *>(password.data()),password.size(),pass_hash)==0;
         std::vector<uint8_t> input(user_hash,user_hash+20);input.insert(input.end(),pass_hash,pass_hash+20);
         auto auth=hashed?TapoCipher::sha256(input):std::vector<uint8_t>{};
-        if(hashed){memcpy(next.shadow,pass_hash,20);next.has_shadow=true;next.has_klap=!user.empty();next.auth_blocked=false;}
+        if(hashed){memcpy(next.shadow,pass_hash,20);next.has_shadow=true;next.has_klap=!user.empty();next.auth_blocked=false;next.auth_error[0]=0;next.auth_stage[0]=0;next.auth_code=next.auth_http=0;next.derive_ms=next.auth_ms=0;}
         mbedtls_platform_zeroize(user_hash,sizeof(user_hash));mbedtls_platform_zeroize(pass_hash,sizeof(pass_hash));
         mbedtls_platform_zeroize(user.data(),user.size());mbedtls_platform_zeroize(password.data(),password.size());
         if(auth.size()!=32){error="Nie przygotowano logowania";return false;}
         auto mac=tapo_discovery::normalize_mac(text(get(request,"mac")));
-        if(!text(get(request,"mac")).empty()&&mac.empty()){error="Nieprawidlowy MAC P110";return false;}
+        if(!text(get(request,"mac")).empty()&&mac.empty()){error="Nieprawidlowy MAC Tapo";return false;}
         memcpy(next.auth,auth.data(),32);next.credentials=true;next.armed=false;next.identity[0]=0;snprintf(next.host,sizeof(next.host),"%s",host.c_str());snprintf(next.mac,sizeof(next.mac),"%s",mac.c_str());
     }else if(action=="settings"){
         auto *low=get(request,"lower"),*high=get(request,"upper"),*mode=get(request,"mode"),*schedule=get(request,"schedule_enabled"),*week=get(request,"week");
@@ -271,23 +297,27 @@ bool configure(const cJSON *request,std::string &error){
         if(!std::isfinite(low->valuedouble)||!std::isfinite(high->valuedouble)||low->valuedouble<5||high->valuedouble>85||high->valuedouble-low->valuedouble<.5||mode->valuedouble!=mode->valueint||mode->valueint<0||mode->valueint>2){error="Dolny prog 5-84,5 C; gorny do 85 C; roznica co najmniej 0,5 C";return false;}
         next.rules.low=std::lround(low->valuedouble*10);next.rules.high=std::lround(high->valuedouble*10);next.rules.mode=static_cast<circulation::Mode>(mode->valueint);next.rules.schedule=cJSON_IsTrue(schedule);
         for(unsigned day=0;day<7;day++){auto *row=cJSON_GetArrayItem(week,day);if(!cJSON_IsArray(row)||cJSON_GetArraySize(row)!=6){error="Nieprawidlowy tydzien";return false;}for(unsigned byte=0;byte<6;byte++){auto *v=cJSON_GetArrayItem(row,byte);if(!cJSON_IsNumber(v)||v->valuedouble!=v->valueint||v->valueint<0||v->valueint>255){error="Nieprawidlowy tydzien";return false;}next.rules.week[day][byte]=v->valueint;}}
-        if(!next.credentials||!*next.identity){error="Najpierw polacz i potwierdz P110";return false;}
+        if(!next.credentials||!*next.identity){error="Najpierw polacz i potwierdz Tapo";return false;}
         next.armed=true;
     }else{error="Nieznane polecenie pompki";return false;}
     if(!circulation::valid(next.rules)){error="Nieprawidlowe progi";return false;}
     snprintf(next.requests[next.request_cursor],33,"%s",request_id.c_str());next.request_cursor=(next.request_cursor+1)%8;
     next.revision++;
     updates::FlashGuard flash;if(!flash.acquired||!store(next)){error="Nie zapisano konfiguracji; trwa aktualizacja lub blad pamieci";return false;}
-    {Lock l(mutex);config=next;if(action=="connect"){known=linked=false;alias.clear();model.clear();protocol.clear();}status="Oczekiwanie na odczyt P110";}
+    {Lock l(mutex);config=next;if(action=="connect"){known=linked=false;alias.clear();model.clear();protocol.clear();}if(!next.enabled){known=linked=pending=false;decision={};}status=next.enabled?"Oczekiwanie na odczyt Tapo":"Obsluga cyrkulacji wylaczona";}
     if(!start_worker()){error="Brak pamieci na zadanie Tapo";return false;}return true;
 }
 cJSON *snapshot(){
     auto *out=cJSON_CreateObject();if(!out)return nullptr;
     double temp;uint64_t age;bool sensor=boiler::water_heater_temperature(temp,age);
     Lock l(mutex);bool fresh=linked&&known&&now()-verified_ms<=20000;
+    cJSON_AddBoolToObject(out,"enabled",config.enabled);
     cJSON_AddBoolToObject(out,"configured",config.credentials);cJSON_AddBoolToObject(out,"paired",*config.identity);cJSON_AddBoolToObject(out,"armed",config.armed);
     cJSON_AddStringToObject(out,"host",config.host);cJSON_AddStringToObject(out,"alias",alias.c_str());cJSON_AddStringToObject(out,"model",model.c_str());
     cJSON_AddStringToObject(out,"protocol",protocol.c_str());cJSON_AddBoolToObject(out,"credentials_need_refresh",config.credentials&&!config.has_shadow);
+    cJSON_AddStringToObject(out,"auth_stage",config.auth_stage);cJSON_AddNumberToObject(out,"auth_http",config.auth_http);cJSON_AddNumberToObject(out,"auth_code",config.auth_code);
+    cJSON_AddNumberToObject(out,"auth_derive_ms",config.derive_ms);cJSON_AddNumberToObject(out,"auth_ms",config.auth_ms);
+    cJSON_AddNumberToObject(out,"task_stack_free_bytes",worker?uxTaskGetStackHighWaterMark(worker):0);
     cJSON_AddStringToObject(out,"mac",config.mac);cJSON_AddBoolToObject(out,"scan_busy",scan_busy||scan_requested);cJSON_AddNumberToObject(out,"scan_sequence",scan_sequence);
     auto *devices=cJSON_AddArrayToObject(out,"devices");for(const auto &device:discovered){auto *v=cJSON_CreateObject();cJSON_AddStringToObject(v,"host",device.host.c_str());cJSON_AddStringToObject(v,"mac",device.mac.c_str());cJSON_AddStringToObject(v,"model",device.model.c_str());cJSON_AddStringToObject(v,"protocol",device.protocol.c_str());cJSON_AddItemToArray(devices,v);}
     cJSON_AddStringToObject(out,"status",status.c_str());cJSON_AddBoolToObject(out,"fresh",fresh);cJSON_AddBoolToObject(out,"pending",pending);

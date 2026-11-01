@@ -27,7 +27,7 @@ std::vector<Device> scan(){
         auto *body=cJSON_ParseWithLength(packet+16,n-16),*r=cJSON_GetObjectItemCaseSensitive(body,"result");
         auto string=[&](const char *key){auto *v=cJSON_GetObjectItemCaseSensitive(r,key);return cJSON_IsString(v)?std::string(v->valuestring):std::string{};};
         Device d;d.model=string("device_model");d.mac=normalize_mac(string("mac"));
-        if((d.model=="P110"||d.model.rfind("P110(",0)==0)&&!d.mac.empty()){
+        if(supported_model(d.model)&&!d.mac.empty()){
             char ip[INET_ADDRSTRLEN];inet_ntop(AF_INET,&from.sin_addr,ip,sizeof(ip));d.host=ip;
             auto *scheme=cJSON_GetObjectItemCaseSensitive(r,"mgt_encrypt_schm"),*type=cJSON_GetObjectItemCaseSensitive(scheme,"encrypt_type");
             if(cJSON_IsString(type))d.protocol=type->valuestring;

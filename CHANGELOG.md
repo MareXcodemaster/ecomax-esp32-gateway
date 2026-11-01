@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.7.0-beta.31 - 2026-11-01
+
+- Cyrkulacja CWU: Automatycznie / Recznie / Wylaczona bez dodatkowego zapisu;
+  przyciski nie zapisuja niedokonczonych zmian formularza.
+- Animowany kran pokazuje potwierdzony stan P110. Po utracie odczytu
+  woda znika, a panel pokazuje Stan nieznany; nie jest to pomiar przeplywu.
+- Opcjonalne wlaczenie obslugi cyrkulacji, domyslnie wylaczone dla nowej
+  instalacji. Migracja zachowuje aktywna konfiguracje dotychczasowego P110.
+- Tryb Recznie pomija 30-sekundowa przerwe automatyki. Formularz progow
+  i harmonogram sa zwijane; zapis formularza uruchamia tryb Auto.
+
+- Wykrywanie i identyfikacja Tapo P100/P105/P110/P110M/P115 z KLAP v2
+  lub TPAP. P110 testowany fizycznie; pozostale modele wymagaja sprawdzenia.
+- Jeden klient i utrzymane polaczenie HTTP podczas uzgadniania TPAP,
+  zamiast zamykania gniazda po kazdej odpowiedzi.
+- Niepelna odpowiedz, blad sieci i zmiana IP wymuszaja zwolnienie klienta.
+- Dokladny etap i kod bledu logowania pozostaja widoczne po wstrzymaniu
+  prob; API podaje tez czas obliczen i wolny stos zadania pompki.
+- Migracja beta.30 zachowuje zapisane dane i wstrzymanie odrzuconego
+  logowania; aktualizacja sama nie ponawia blednych danych.
+
 ## 0.7.0-beta.30 - 2026-11-01
 
 - Lokalna obsluga Tapo P110 przez TPAP: SPAKE2+ / P-256, wzajemne

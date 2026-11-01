@@ -7,7 +7,7 @@ Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 **[Prosta instalacja w 7 krokach](docs/SZYBKI_START.md)** ·
 **[Pobierz firmware i instrukcje](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases)**
 
-**Wersja 0.7.0-beta.30. Projekt niezalezny, nieoficjalny. Nie jest produktem
+**Wersja 0.7.0-beta.31. Projekt niezalezny, nieoficjalny. Nie jest produktem
 PLUM ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
 
@@ -21,9 +21,9 @@ kolejne OTA zachowuja hasla wybrane przez uzytkownika.
 
 ## Jak Wyglada Panel
 
-![Panel ecoMAX Wi-Fi - odczyty i nastawy, przykladowe dane DEMO](docs/images/panel/0.7.0-beta.30/01-odczyty.png)
+![Panel ecoMAX Wi-Fi - odczyty i nastawy, przykladowe dane DEMO](docs/images/panel/0.7.0-beta.31/01-odczyty.png)
 
-![Schemat kotla, mieszacza i CWU z przykladowymi temperaturami](docs/images/panel/0.7.0-beta.30/10-schemat.png)
+![Schemat kotla, mieszacza i CWU z przykladowymi temperaturami](docs/images/panel/0.7.0-beta.31/10-schemat.png)
 
 Siec zmienisz od razu przez **Narzedzia > Zmien siec Wi-Fi** (wyszukiwanie,
 wybor i haslo), bez diagnostyki. Status i nazwa `piec.local` sa w
@@ -31,27 +31,30 @@ wybor i haslo), bez diagnostyki. Status i nazwa `piec.local` sa w
 
 ### Harmonogram Tygodniowy
 
-![Harmonogram CWU: dni tygodnia i godziny, dane DEMO](docs/images/panel/0.7.0-beta.30/02-harmonogram.png)
+![Harmonogram CWU: dni tygodnia i godziny, dane DEMO](docs/images/panel/0.7.0-beta.31/02-harmonogram.png)
 
 ### Historia Temperatur I Pracy Kotla
 
-![Historia temperatur CO i CWU oraz stanow kotla, dane DEMO](docs/images/panel/0.7.0-beta.30/03-historia.png)
+![Historia temperatur CO i CWU oraz stanow kotla, dane DEMO](docs/images/panel/0.7.0-beta.31/03-historia.png)
 
 **[Galeria: harmonogram, wykresy, stany kotla, zmiana nastawy i telefon](docs/GALERIA.md)**
 
-Zrzuty zaktualizowano 01.11.2026 do wersji **0.7.0-beta.30**.
+Zrzuty zaktualizowano 01.11.2026 do wersji **0.7.0-beta.31**.
 
-### Pompka Cyrkulacyjna CWU
+### Cyrkulacja CWU
 
-Zewnetrzna pompka z Tapo P110 moze pracowac wedlug temperatury CWU:
+Opcjonalna cyrkulacja CWU z gniazdkiem Tapo moze pracowac wedlug temperatury CWU:
 wlaczenie przy gornym progu, wylaczenie przy dolnym. Opcjonalna siatka
 tygodnia ogranicza godziny pracy. Sterowanie dziala lokalnie na ESP,
-bez otwartego panelu. Pierwsze wydanie testowe; funkcja domyslnie nieaktywna.
+bez otwartego panelu. Funkcja opcjonalna, domyslnie wylaczona w nowej instalacji.
+Tryby: Automatycznie, Recznie, Wylaczona. Animowany kran pokazuje
+potwierdzony stan zasilania, nie fizyczny przeplyw. P100/P105/P110/P110M/P115
+z KLAP v2 lub TPAP; fizyczny test wykonany na P110, inne modele wymagaja sprawdzenia.
 Nie jest to emulacja modulu C ani sterowanie pompa ladujaca bojler.
 
-![Pompka cyrkulacyjna CWU z progami i harmonogramem, dane DEMO](docs/images/panel/0.7.0-beta.30/18-pompka-cwu.png)
+![Pompka cyrkulacyjna CWU z progami i harmonogramem, dane DEMO](docs/images/panel/0.7.0-beta.31/18-pompka-cwu.png)
 
-**[Podlaczenie Tapo P110 i opis dzialania](docs/POMPKA_CWU.md)**
+**[Gniazdka Tapo, polaczenie i opis dzialania](docs/POMPKA_CWU.md)**
 Przedstawiaja rzeczywisty interfejs z danymi przykladowymi (DEMO),
 w tym pieciokreskowy wskaznik Wi-Fi ESP i zwijana diagnostyke.
 
