@@ -33,6 +33,7 @@ const state = {
     lambdaLevel: 105, lambdaStatus: 1, pumpCOWorks: true, pumpCWUWorks: false,
     mixerPumpWorks1: true, fanWorks: true, feederWorks: false, lighterWorks: false },
   targets: {
+    'rm:8': {id:'rm:8',name:'Tryb pracy pompy CWU',before:1,min:0,max:2,step:1,options:[{value:0,label:'Wyłączony'},{value:1,label:'Priorytet'},{value:2,label:'Bez priorytetu'}],value_kind:'enum',risk:true,generic:true},
     1280: target('Temperatura zadana kotla', 75, 70, 85, 'tempCO'),
     1281: target('Temperatura zadana CWU', 45, 35, 65, 'tempCWU'),
     1287: target('Temperatura mieszacza 1', 40, 20, 70, 'mixerTemp1'),

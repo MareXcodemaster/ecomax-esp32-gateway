@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0-beta.37 - 2026-11-02
+
+- Przycisk Wylacz priorytet / Wlacz priorytet na kafelku temperatury CWU.
+  Przelacza tryb pompy CWU miedzy Priorytet i Bez priorytetu, nie wybiera
+  trybu Wylaczony i nie zmienia zadanej temperatury.
+- Identyfikator i wartosci opcji sa rozpoznawane z katalogu sterownika,
+  zamiast przyjmowac jeden indeks menu dla wszystkich modeli.
+- Stan przycisku wynika z odczytu, takze po zmianie na ekranie kotla.
+  Nieaktualne dane, niejednoznaczne tryby, blokada zapisu lub wylaczone
+  grzanie CWU blokuja przycisk. Brak optymistycznego potwierdzania zapisu.
+- Zapis korzysta z wybranej drogi RS485 / lokalny ecoNET oraz istniejacego
+  potwierdzenia odczytem. Bledna lub nieznana odpowiedz nie ponawia zmiany.
+- Zaktualizowane zdjecia panelu i instrukcja; dopasowanie kafelkow do przycisku.
+
 ## 0.7.0-beta.36 - 2026-11-02
 
 - Cyrkulacja CWU: czytelny schemat zbiornika, zasilania i powrotu wody,

@@ -8,6 +8,11 @@ small,.muted,#read-time,footer{font-family:InterLocal,"Segoe UI",sans-serif;font
 .tile-reading small{font-family:InterLocal,"Segoe UI",sans-serif;font-size:13px;font-weight:500;line-height:18px;color:#38434d}
 .tile-reading small{grid-column:1/-1}
 .tile-reading .tile-target-now{font-size:12px;line-height:17px;color:#58636e}
-.eco-tile{height:229px}
-@media(min-width:1500px){.eco-tile{height:259px}}
+.eco-tile{height:auto;min-height:229px}
+.dhw-priority{display:flex;flex-direction:column;gap:7px;padding:10px 0 12px;border-top:1px solid #dbe3de;margin-top:8px;text-align:center}
+.dhw-priority small{font-size:12px;line-height:17px;color:#38434d}
+.dhw-priority button{width:100%;min-height:38px;justify-content:center;padding:7px 6px;background:#176b67;color:#fff;border-color:#176b67;font-size:13px;line-height:18px;white-space:normal}
+.dhw-priority button:disabled{opacity:.5;cursor:default}
+.eco-tile:has(.dhw-priority) .tile-body{flex:none;min-height:148px;gap:2px}
+@media(min-width:1500px){.eco-tile{min-height:259px}}
 @media(max-width:1100px){.tile-reading small{font-size:12px;line-height:17px}}

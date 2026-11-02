@@ -6,11 +6,11 @@ import {resolve,sep,extname} from 'node:path';
 import {chromium} from 'playwright';
 const root=resolve('src/panel_web'),writes=[],points=[],errors=[];
 const target={name:'CWU DEMO',before:40,effective:40,min:35,max:65,step:1,measured_key:'tempCWU',write_ready:true};
-const state={version:'0.7.0-beta.36',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
+const state={version:'0.7.0-beta.37',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
  system:{controllerID:'ecoMAX DEMO'},values:{},names:{},menu:[],enums:{},units:[],structure:[],category_names:[],tiles:[],endpoints:{},versions:{},tests:[],
  curr:{mode:0,tempCWU:35,tempCWUSet:40,ecoSterMode1:2},targets:{1281:target},controls:{},econet_health:{fresh:true,api_ok:false},
  esp_network:{connected:true,rssi_dbm:-70,ssid:'DEMO',ip:'192.0.2.10',hostname:'piec'},schedules:{ecomaxSchedules:{}},pellet:{}};
-let job=null,readSequence=0;
+let job=null,readSequence=0,rejectPriority=false;
 const server=createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname.startsWith('/api/')){
@@ -22,7 +22,8 @@ const server=createServer(async(req,res)=>{
   else if(url.pathname==='/api/write/save'){
    const chunks=[];for await(const c of req)chunks.push(c);const payload=JSON.parse(Buffer.concat(chunks));writes.push(payload);
    assert.equal(payload.before,undefined);assert.equal(payload.confirm,true);
-   const actual=state.targets[payload.id];actual.before=actual.effective=payload.value;state.curr.tempCWUSet=payload.value;
+   if(rejectPriority&&payload.id==='rm:8'){rejectPriority=false;res.writeHead(503,{'Content-Type':'application/json'}).end(JSON.stringify({message:'Brak odpowiedzi DEMO'}));return;}
+   const actual=state.targets[payload.id];actual.before=actual.effective=payload.value;if(payload.id==='1281')state.curr.tempCWUSet=payload.value;
    job={id:String(writes.length),kind:'save',status:'done',result:{state:'verified',message:'Zapis potwierdzony'}};value={job};
   }else if(url.pathname==='/api/pellet/calibrate'){
    const chunks=[];for await(const c of req)chunks.push(c);const payload=JSON.parse(Buffer.concat(chunks));points.push(payload);
@@ -70,6 +71,21 @@ try{
    state.esp_network.connected=false;await page.evaluate(()=>poll());assert.equal(await page.locator('.wifi-percent').textContent(),'--%');
    assert.equal(await page.locator('.wifi-bars .active').count(),0);state.esp_network.connected=true;
   }
+  const priority={id:'rm:8',name:'Tryb pracy pompy CWU',before:1,min:0,max:2,step:1,options:[{value:0,label:'Wyłączony'},{value:1,label:'Priorytet'},{value:2,label:'Bez priorytetu'}],value_kind:'enum',risk:true,generic:true};
+  const pstart=writes.length,temperatureBefore=target.before;state.targets['rm:8']=priority;await page.evaluate(()=>poll());
+  const toggle=page.locator('#dhw-priority-toggle');assert.equal(await toggle.innerText(),'Wyłącz priorytet');assert.equal(writes.length,pstart,'rendering sends no command');
+  await toggle.click();await page.waitForFunction(()=>document.querySelector('#dhw-priority-toggle').textContent==='Włącz priorytet');
+  assert.equal(writes.length,pstart+1);assert.equal(writes.at(-1).id,'rm:8');assert.equal(writes.at(-1).value,2);assert.equal(writes.at(-1).confirm_installation,true);assert.equal(target.before,temperatureBefore);
+  await toggle.click();await page.waitForFunction(()=>document.querySelector('#dhw-priority-toggle').textContent==='Wyłącz priorytet');assert.equal(writes.at(-1).value,1);
+  priority.before=2;await page.evaluate(()=>poll());assert.equal(await toggle.innerText(),'Włącz priorytet','external setting is reflected');
+  state.targets_fresh=false;await page.evaluate(()=>poll());assert.equal(await toggle.isDisabled(),true);state.targets_fresh=true;
+  priority.before=0;await page.evaluate(()=>poll());assert.equal(await toggle.isDisabled(),true);assert.equal(await page.locator('#dhw-priority-status').innerText(),'Grzanie CWU wyłączone');
+  priority.before=1;await page.evaluate(()=>poll());const failedWrites=writes.length;rejectPriority=true;await toggle.click();await page.locator('#notice.error').waitFor();
+  assert.equal(writes.length,failedWrites+1,'uncertain request is not repeated');assert.equal(priority.before,1);assert.equal(await toggle.innerText(),'Wyłącz priorytet');
+  assert.equal(await page.locator('[data-member=tempCWU]').evaluate(el=>el.querySelector('.dhw-priority').getBoundingClientRect().bottom<=el.getBoundingClientRect().bottom+1),true,'button stays inside the tile');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+  await page.screenshot({path:`test-results/dhw-priority-${width}.png`});
+  delete state.targets['rm:8'];await page.evaluate(()=>poll());assert.equal(await toggle.isDisabled(),true,'disappearing target disables old button');
   const advanced={id:'rm:158',name:'Blokada kot\u0142a od termostatu',before:1,min:0,max:1,step:1,options:[{value:0,label:'Nie'},{value:1,label:'Tak'}],value_kind:'enum',risk:true,advanced:true,generic:true};
   state.targets['rm:158']=advanced;state.menu=[{index:158,name:advanced.name,advanced:true,in_structure:true,locked:false,write_enabled:true,write_id:advanced.id,metadata:{value:1},enum_text:'Tak'}];
   await page.evaluate(()=>poll());await page.evaluate(()=>selectView('service'));
