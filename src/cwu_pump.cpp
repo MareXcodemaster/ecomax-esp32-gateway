@@ -2,6 +2,7 @@
 #include "circulation_policy.hpp"
 #include "tapo_discovery.hpp"
 #include "tapo_energy.hpp"
+#include "tapo_session.hpp"
 #include "third_party/esp_tapo/tapo_client.h"
 #include "smart_tapo.hpp"
 #include "esp_random.h"
@@ -49,6 +50,9 @@ TaskHandle_t worker=nullptr;
 bool known=false,actual_on=false,linked=false,pending=false;
 uint64_t verified_ms=0,last_off_ms=0;
 unsigned writes=0;
+tapo_session::Key session_key;
+unsigned auth_attempts=0,auth_failures=0;
+uint64_t retry_at_ms=0;
 tapo_energy::Usage energy;
 tapo_energy::Days energy_days;
 tapo_energy::Days energy_staging; // Single worker scratch, outside its bounded task stack.
@@ -101,7 +105,7 @@ public:
         Response out;if(!private_ip(host.c_str())||body.size()>8192)return out;
         std::string url="http://"+host+path;
         if(client_&&connected_host_!=host)reset();
-        esp_http_client_config_t cfg{};cfg.url=url.c_str();cfg.timeout_ms=2500;cfg.disable_auto_redirect=true;cfg.buffer_size=512;cfg.keep_alive_enable=true;
+        esp_http_client_config_t cfg{};cfg.url=url.c_str();cfg.timeout_ms=4000;cfg.disable_auto_redirect=true;cfg.buffer_size=512;cfg.keep_alive_enable=true;
         cfg.event_handler=[](esp_http_client_event_t *event)->esp_err_t{
             auto *self=static_cast<Transport *>(event->user_data);auto *response=self->active_;if(!response)return ESP_OK;
             if(event->event_id==HTTP_EVENT_ON_HEADER&&event->header_key&&event->header_value&&!strcasecmp(event->header_key,"Connection")&&!strcasecmp(event->header_value,"close"))self->server_close_=true;
@@ -170,7 +174,7 @@ void run(void *){
             continue;
         }
         if(c.auth_blocked){client.reset();Lock l(mutex);linked=false;status=*c.auth_error?c.auth_error:"Logowanie Tapo wstrzymane. Wpisz poprawne haslo i polacz ponownie";continue;}
-        if(c.revision!=revision){revision=c.revision;next_read=0;failures=0;if(policy_identity!=c.identity){policy.demand=false;next_energy=next_history=0;Lock l(mutex);energy={};energy_days={};energy_epoch=0;energy_ms=energy_history_ms=0;}policy_identity=c.identity;client.reset();transport.host=c.host;Lock l(mutex);pending=false;}
+        if(c.revision!=revision){revision=c.revision;next_read=0;failures=0;if(policy_identity!=c.identity){policy.demand=false;next_energy=next_history=0;Lock l(mutex);energy={};energy_days={};energy_epoch=0;energy_ms=energy_history_ms=0;}policy_identity=c.identity;if(!session_key.matches(c)){client.reset();transport.host=c.host;session_key.capture(c);}Lock l(mutex);pending=false;retry_at_ms=0;}
         double temperature;uint64_t age;bool sensor=boiler::water_heater_temperature(temperature,age);
         auto seconds=time(nullptr);tm local{};localtime_r(&seconds,&local);
         circulation::Input input;input.armed=c.armed&&*c.identity;input.fresh=sensor;input.temperature=temperature;
@@ -179,7 +183,13 @@ void run(void *){
         auto d=policy.step(c.rules,input);{Lock l(mutex);decision=d;}
         bool need_change=d.manage&&current_known&&current_on!=d.on;
         if(now()<next_read&&(!need_change||failures||waiting))continue;
-        if(!client.is_ready()&&!client.handshake({c.auth,c.auth+32},c.has_shadow?std::vector<uint8_t>(c.shadow,c.shadow+20):std::vector<uint8_t>{},c.has_klap)){
+        bool authenticated=client.is_ready();
+        if(!authenticated){
+            {Lock l(mutex);++auth_attempts;}
+            authenticated=client.handshake({c.auth,c.auth+32},c.has_shadow?std::vector<uint8_t>(c.shadow,c.shadow+20):std::vector<uint8_t>{},c.has_klap);
+            {Lock l(mutex);if(!authenticated)++auth_failures;if(c.revision==config.revision){snprintf(config.auth_stage,sizeof(config.auth_stage),"%s",client.trace().stage.c_str());config.auth_http=client.trace().http;config.auth_code=client.trace().code;config.derive_ms=client.trace().derive_ms;config.auth_ms=client.trace().total_ms;}}
+        }
+        if(!authenticated){
             if(client.credentials_rejected()){
                 Lock save(config_mutex);{Lock l(mutex);if(c.revision!=config.revision)continue;}
                 Config blocked=c;blocked.auth_blocked=true;
@@ -191,17 +201,17 @@ void run(void *){
                 {Lock l(mutex);if(config.revision==blocked.revision)config=blocked;}
                 continue;
             }
-            if(now()>=next_discovery){find(c);next_discovery=now()+60000;}
+            if(failures>=2&&now()>=next_discovery){find(c);next_discovery=now()+60000;}
             Lock l(mutex);linked=false;protocol=client.protocol();status=client.error();
-            next_read=now()+std::min(60000U,5000U<<std::min(failures++,3U));continue;
+            next_read=now()+tapo_session::retry_delay(failures++);retry_at_ms=next_read;continue;
         }
         std::string found,name,type,mac;bool on=false;
         if(!read(client,c,found,on,name,type,mac)){
-            if(now()>=next_discovery){find(c);next_discovery=now()+60000;}
+            if(failures>=2&&now()>=next_discovery){find(c);next_discovery=now()+60000;}
             client.reset();Lock l(mutex);linked=false;status=client.error().empty()?"Brak potwierdzonego odczytu Tapo lub inne urzadzenie pod tym IP":client.error();
-            next_read=now()+std::min(60000U,5000U<<std::min(failures++,3U));continue;
+            next_read=now()+tapo_session::retry_delay(failures++);retry_at_ms=next_read;continue;
         }
-        {Lock l(mutex);if(c.revision!=config.revision)continue;if(!on&&(!known||actual_on))last_off_ms=now();linked=known=true;actual_on=on;verified_ms=now();alias=name;model=type;protocol=client.protocol();status="Polaczono lokalnie / "+protocol;input.last_off_ms=last_off_ms;}
+        {Lock l(mutex);if(c.revision!=config.revision)continue;if(!on&&(!known||actual_on))last_off_ms=now();linked=known=true;actual_on=on;verified_ms=now();retry_at_ms=0;alias=name;model=type;protocol=client.protocol();status="Polaczono lokalnie / "+protocol;input.last_off_ms=last_off_ms;}
         if(!input.clock&&now()>=next_clock){
             cJSON *clock=nullptr;if(call(client,R"JSON({"method":"get_device_time"})JSON",clock)){
                 auto *value=get(get(clock,"result"),"timestamp");if(cJSON_IsNumber(value)&&value->valuedouble>=1735689600&&value->valuedouble<=4102444800)panel::set_clock(value->valuedouble);
@@ -337,13 +347,15 @@ bool configure(const cJSON *request,std::string &error){
 cJSON *snapshot(){
     auto *out=cJSON_CreateObject();if(!out)return nullptr;
     double temp;uint64_t age;bool sensor=boiler::water_heater_temperature(temp,age);
-    Lock l(mutex);bool fresh=linked&&known&&now()-verified_ms<=20000;
+    Lock l(mutex);auto sampled_ms=now();bool fresh=linked&&known&&sampled_ms-verified_ms<=20000;
     cJSON_AddBoolToObject(out,"enabled",config.enabled);
     cJSON_AddBoolToObject(out,"configured",config.credentials);cJSON_AddBoolToObject(out,"paired",*config.identity);cJSON_AddBoolToObject(out,"armed",config.armed);
     cJSON_AddStringToObject(out,"host",config.host);cJSON_AddStringToObject(out,"alias",alias.c_str());cJSON_AddStringToObject(out,"model",model.c_str());
     cJSON_AddStringToObject(out,"protocol",protocol.c_str());cJSON_AddBoolToObject(out,"credentials_need_refresh",config.credentials&&!config.has_shadow);
     cJSON_AddStringToObject(out,"auth_stage",config.auth_stage);cJSON_AddNumberToObject(out,"auth_http",config.auth_http);cJSON_AddNumberToObject(out,"auth_code",config.auth_code);
     cJSON_AddNumberToObject(out,"auth_derive_ms",config.derive_ms);cJSON_AddNumberToObject(out,"auth_ms",config.auth_ms);
+    cJSON_AddNumberToObject(out,"auth_attempts",auth_attempts);cJSON_AddNumberToObject(out,"auth_failures",auth_failures);
+    cJSON_AddNumberToObject(out,"retry_in_ms",retry_at_ms>sampled_ms?retry_at_ms-sampled_ms:0);
     cJSON_AddNumberToObject(out,"task_stack_free_bytes",worker?uxTaskGetStackHighWaterMark(worker):0);
     cJSON_AddStringToObject(out,"mac",config.mac);cJSON_AddBoolToObject(out,"scan_busy",scan_busy||scan_requested);cJSON_AddNumberToObject(out,"scan_sequence",scan_sequence);
     auto *devices=cJSON_AddArrayToObject(out,"devices");for(const auto &device:discovered){auto *v=cJSON_CreateObject();cJSON_AddStringToObject(v,"host",device.host.c_str());cJSON_AddStringToObject(v,"mac",device.mac.c_str());cJSON_AddStringToObject(v,"model",device.model.c_str());cJSON_AddStringToObject(v,"protocol",device.protocol.c_str());cJSON_AddItemToArray(devices,v);}

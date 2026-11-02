@@ -6,12 +6,16 @@
  }
  function level(value,fresh){return fresh&&typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=100?value:null;}
  function levelView(value,fresh,calibrating=false){const calibration=!!fresh&&calibrating===true,percent=calibration?null:level(value,fresh);return {percent,calibrating:calibration,label:calibration?'Kalibracja':percent===null?'Brak odczytu':Math.round(percent)+' %'};}
+ function feederView(data,fresh){
+  const on=fresh&&data?.fresh&&typeof data.feeder_on==='boolean'?data.feeder_on:null;
+  return {state:on===null?'unknown':on?'on':'off',label:on===null?'Brak aktualnego odczytu podajnika':on?'Podajnik pracuje':'Podajnik zatrzymany'};
+ }
  function calibrationPayload(point,physical){if(![0,100].includes(point)||physical!==true)throw new Error('Potwierdz rzeczywisty poziom pelletu');return {point,confirm:true,physical_level_confirmed:true};}
  function readings(data,fresh){
   const live=!!(fresh&&data?.fresh),finite=value=>typeof value==='number'&&Number.isFinite(value)?value:null;
   return {level:levelView(data?.level_percent,live,data?.level_calibrating).percent,flow:live?finite(data.flow_kg_h):null,reported:live?finite(data.reported_flow_kg_h):null,consumed:fresh?finite(data?.consumed_kg):null,source:live?data.flow_source:'unavailable'};
  }
- if(typeof module!=='undefined'&&module.exports)module.exports={calibrationRate,readings,level,levelView,calibrationPayload};
+ if(typeof module!=='undefined'&&module.exports)module.exports={calibrationRate,readings,level,levelView,calibrationPayload,feederView};
  if(typeof document==='undefined')return;
  const get=id=>document.getElementById(id);let available=false,saving=false,point=null,initialized=false;
  function gauge(element,value,calibrating=false){
@@ -30,6 +34,9 @@
   tile.querySelector('.tile-value').textContent=view.label;
  }
  function render(data,valid){
+  const feeder=feederView(data,valid),animation=get('pellet-feed-animation');
+  animation.dataset.state=feeder.state;animation.setAttribute('aria-label',feeder.label);
+  get('pellet-feed-status').textContent=feeder.label;get('pellet-feed-status').dataset.state=feeder.state;
   const view=levelView(data?.level_percent,!!(valid&&data?.fresh),data?.level_calibrating);
   document.getElementById('pellet-level').textContent=view.label;
   gauge(document.getElementById('pellet-hopper'),view.percent,view.calibrating);

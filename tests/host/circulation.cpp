@@ -1,8 +1,18 @@
 #include "circulation_policy.hpp"
 #include "tapo_discovery.hpp"
 #include "tapo_energy.hpp"
+#include "tapo_session.hpp"
 #include <cassert>
 void circulation_tests() {
+    {
+        struct Config {char host[16]="192.0.2.20",identity[65]="fixture",mac[13]="021122334455";uint8_t auth[32]{},shadow[20]{};bool credentials=true,has_shadow=true,has_klap=true;circulation::Rules rules;unsigned revision=1;} c;
+        tapo_session::Key key;assert(!key.matches(c));key.capture(c);assert(key.matches(c));
+        c.rules.mode=circulation::Mode::on;c.rules.high=460;c.rules.schedule=true;c.rules.week[1][2]=128;++c.revision;assert(key.matches(c));
+        auto changed=c;changed.host[9]='1';assert(!key.matches(changed));changed=c;changed.identity[0]='x';assert(!key.matches(changed));
+        changed=c;changed.mac[0]='1';assert(!key.matches(changed));changed=c;changed.auth[0]=1;assert(!key.matches(changed));
+        changed=c;changed.shadow[0]=1;assert(!key.matches(changed));changed=c;changed.has_klap=false;assert(!key.matches(changed));
+        assert(tapo_session::retry_delay(0)==1000&&tapo_session::retry_delay(1)==3000&&tapo_session::retry_delay(2)==7000&&tapo_session::retry_delay(100)==30000);
+    }
     assert(tapo_discovery::normalize_mac("02:11:aa:BB:44:55")=="0211AABB4455");
     assert(tapo_discovery::normalize_mac("02-11-AA-BB-44-55")=="0211AABB4455");
     assert(tapo_discovery::normalize_mac("bad").empty());

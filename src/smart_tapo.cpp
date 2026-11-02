@@ -58,7 +58,7 @@ bool Client::handshake(const Bytes &auth,const Bytes &shadow,bool has_klap){
         auto body=encoded(request.v);if(body.empty()){error_="Brak pamieci na logowanie Tapo";return false;}
         auto answer=transport_->exchange("/",body,"application/json");
         trace_.http=answer.status;
-        if(answer.status!=200){error_="Brak odpowiedzi logowania TPAP";return false;}
+        if(answer.status!=200){error_="TPAP / "+trace_.stage+": brak odpowiedzi HTTP ("+std::to_string(answer.status)+")";return false;}
         response.v=cJSON_ParseWithLength(answer.body.data(),answer.body.size());auto *code=get(response.v,"error_code");
         if(cJSON_IsNumber(code))trace_.code=code->valueint;
         if(!integer(code,0,0)){

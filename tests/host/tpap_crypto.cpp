@@ -20,6 +20,11 @@ struct RejectRegister:FakeTransport {
         calls++;return {200,calls==1?reply:R"({"error_code":-2203})",{}};
     }
 };
+struct TimeoutRegister:FakeTransport {
+    Response exchange(const std::string &,const std::string &,const char *)override{
+        calls++;return calls==1?Response{200,reply,{}}:Response{};
+    }
+};
 int main(){
     using namespace tapo_tpap;
     assert(self_test(random_bytes,nullptr));
@@ -46,5 +51,8 @@ int main(){
     assert(!client.handshake(Bytes(32),Bytes(20),true)&&client.credentials_rejected());
     assert(rejection.calls==2&&client.trace().stage=="pake_register"&&client.trace().code==-2203&&client.trace().http==200);
     client.reset();assert(client.trace().code==-2203&&client.error().find("pake_register")!=std::string::npos);
+    TimeoutRegister timeout;client.set_transport(&timeout);assert(!client.handshake(Bytes(32),Bytes(20),true));
+    assert(!client.credentials_rejected()&&client.trace().stage=="pake_register"&&client.trace().http==-1);
+    assert(client.error().find("pake_register")!=std::string::npos);
     puts("PASS TPAP: RFC 9383 proof, PBKDF2, known AES-CCM vector, mutual confirmation, invalid point/parameters/tag/sequence and session reset");
 }

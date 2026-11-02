@@ -56,7 +56,11 @@ autorowi projektu ani na GitHub.</p>
 ESP wstrzymuje kolejne proby logowania do czasu zapisania poprawnych
 danych. Blokada jest zachowywana po restarcie. Nie ponawiaj logowania
 wielokrotnie przy blednym hasle; P110 ma wlasne ograniczenie prob.</p>
-<p>Beta.31 poprawia zachowanie jednego polaczenia HTTP podczas logowania.
+<p>Beta.31 poprawia zachowanie jednego polaczenia HTTP podczas logowania.</p>
+<p>Od beta.35 zmiana trybu, progow i harmonogramu zachowuje dzialajace
+polaczenie z gniazdkiem. Po chwilowym bledzie ESP sam ponawia odczyt
+i logowanie, bez ponownego wpisywania hasla. Gdy nie ma potwierdzenia,
+panel pokazuje <strong>Stan nieznany</strong>, zamiast zgadywac ON lub OFF.
 Aktualizacja z beta.30 zachowuje zapisane dane i blokade ponawiania
 odrzuconego logowania. Po zapisaniu poprawnych danych panel zachowa
 dokladny etap i kod ewentualnej odmowy. Aktualizacja i zwykly restart
@@ -95,7 +99,7 @@ Wylaczenie <strong>obslugi cyrkulacji</strong> zatrzymuje wysylanie polecen prze
 ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz <strong>Wylaczona</strong> i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.</p>
-<p><img src="images/panel/0.7.0-beta.34/19-cyrkulacja-recznie.png" alt="Reczne wlaczanie i wylaczanie pompy, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.35/19-cyrkulacja-recznie.png" alt="Reczne wlaczanie i wylaczanie pompy, dane DEMO"></p>
 <h2>Temperatury I Tryby</h2>
 <ul>
 <li><strong>Automatycznie</strong>: wlaczenie po osiagnieciu gornego progu CWU,
@@ -126,7 +130,7 @@ Niepelna historia oznacza Brak odczytu sumy 7 dni.</p>
 Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
 Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
 oprogramowania gniazdka moga nie udostepniac pelnej historii.</p>
-<p><img src="images/panel/0.7.0-beta.34/20-energia-pompy.png" alt="Zuzycie energii pompy, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.35/20-energia-pompy.png" alt="Zuzycie energii pompy, dane DEMO"></p>
 <h2>Harmonogram</h2>
 <p>Opcja <strong>Uzywaj harmonogramu</strong> jest niezalezna od zapisanej siatki tygodnia.
 Wylaczona: automatyka temperatury dziala przez cala dobe.

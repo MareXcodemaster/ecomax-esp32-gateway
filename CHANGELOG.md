@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.7.0-beta.35 - 2026-11-02
+
+- W zakladce Pellet schemat zasobnika, podajnika slimakowego i kotla.
+  Podczas aktywnego wyjscia podajnika obraca sie slimak i rotor,
+  przesuwa pellet oraz dosypuje go do palnika.
+- Ruch zalezy wylacznie od aktualnego boolowskiego stanu podajnika.
+  OFF zatrzymuje slimak i dosypywanie. Brak lub utrata odczytu pokazuje
+  stan nieznany i zatrzymuje animacje, zamiast sugerowac prace.
+- Lekka grafika SVG/CSS, bez filmu, dodatkowego odpytywania i polecen
+  do kotla. Respektuje ograniczenie ruchu w przegladarce.
+- Widok dopasowany do telefonu i tabletu. Nowe zdjecie Pellet w galerii.
+- Tapo: zmiana trybu, progow i harmonogramu zachowuje sesje. Nowe
+  logowanie jest wymagane po zmianie urzadzenia, adresu lub danych konta.
+- Szybsze ponowne laczenie po przejsciowym bledzie (1/3/7/15/30 s),
+  wyszukiwanie po MAC dopiero po kolejnych niepowodzeniach. Limit czasu
+  odpowiedzi HTTP 4 s; brak slepego ponawiania polecen przelaczania.
+- Diagnostyka polaczenia ma etap, kod HTTP, czas i licznik logowania,
+  takze przy przejsciowym bledzie, bez zapisywania go do flash co probe.
+
 ## 0.7.0-beta.34 - 2026-11-02
 
 - Inny realistyczny, chromowany kran w przezroczystym PNG. Pelny ksztalt

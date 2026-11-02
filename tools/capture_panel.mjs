@@ -45,7 +45,7 @@ const state = {
   schedule_status: { fresh: true, read_epoch: now },
   thermostat_schedule_status: { fresh: true, read_epoch: now },
   schedule_write_indices: { cwuTZ: 0, thermostat1TZ: 1 },
-  pellet: { fresh: true, level_percent: 68 },
+  pellet: { fresh: true, level_percent: 68, feeder_on:false },
   esp_device: deviceInfo,
 };
 const columns = ['time', 'native', 'mode', 'co', 'coSet', 'cwu', 'cwuSet', 'room', 'roomSet'];
@@ -358,9 +358,27 @@ try {
   await page.locator('#tile-layout-edit').click();
   await page.evaluate(() => notice('DEMO - dane przykladowe, nie odczyt prawdziwego kotla.'));
   await page.locator('[data-view="pellet"]').click();
+  await page.evaluate(()=>{clearInterval(espPollTimer);espPollTimer=null;});await page.waitForFunction(()=>!pollBusy);
   assert.equal(await page.locator('#pellet-level').textContent(),'68 %');
   assert.equal(await page.locator('#pellet-hopper .pellet-fill').count(),1);
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  assert.equal(await page.locator('#pellet-feed-animation').getAttribute('data-state'),'off');
+  assert.equal(await page.locator('.auger-spiral').evaluate(el=>getComputedStyle(el).animationPlayState),'paused');
+  assert.equal(await page.locator('.auger-falling').evaluate(el=>getComputedStyle(el).display),'none');
+  state.pellet.feeder_on=true;state.curr.feederWorks=true;await page.evaluate(()=>poll());
+  assert.equal(await page.locator('#pellet-feed-animation').getAttribute('data-state'),'on');
+  assert.equal(await page.locator('.auger-spiral').evaluate(el=>getComputedStyle(el).animationPlayState),'running');
+  assert.equal(await page.locator('.auger-falling').evaluate(el=>getComputedStyle(el).display),'block');
+  const beforeMotion=await page.locator('.auger-spiral').evaluate(el=>getComputedStyle(el).transform);await page.waitForTimeout(180);
+  assert.notEqual(await page.locator('.auger-spiral').evaluate(el=>getComputedStyle(el).transform),beforeMotion,'screw actually moves while feeder output is on');
+  for(const width of [320,390,1280]){await page.setViewportSize({width,height:1080});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'auger graphic fits '+width+'px');}
+  await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.auger-spiral').evaluate(el=>getComputedStyle(el).animationName),'none');await page.emulateMedia({reducedMotion:'no-preference'});
   await screenshot('07-pellet');
+  state.pellet.fresh=false;await page.evaluate(()=>poll());assert.equal(await page.locator('#pellet-feed-animation').getAttribute('data-state'),'unknown');
+  assert.equal(await page.locator('.auger-falling').evaluate(el=>getComputedStyle(el).display),'none');
+  state.pellet.fresh=true;state.fresh=false;await page.evaluate(()=>poll());assert.equal(await page.locator('#pellet-feed-animation').getAttribute('data-state'),'unknown');
+  state.fresh=true;state.pellet.feeder_on=false;state.curr.feederWorks=false;await page.evaluate(()=>poll());
+  assert.equal(await page.locator('#pellet-feed-animation').getAttribute('data-state'),'off');
   state.pellet.level_percent=null;state.pellet.level_calibrating=true;state.curr.fuelLevel=null;state.curr.fuelCalibration=true;
   await page.evaluate(()=>poll());assert.equal(await page.locator('#pellet-level').textContent(),'Kalibracja');
   await screenshot('16-kalibracja-paliwa');
@@ -467,7 +485,7 @@ try {
   await page.locator('#esp-login').waitFor({state:'visible'});
   assert.equal(await tools.getAttribute('open'),null,'logout closes tools and shows login');
   assert.deepEqual(requests.filter(([method]) => method !== 'GET'), [['POST', '/api/panel/clock'],['POST', '/api/panel/clock'],['POST','/api/logout']]);
-  console.log(`PASS twenty panel screenshots for ${version}: CWU automatic schedule and manual switches, continuous water stream, advanced footer navigation/code label, fuel calibration, advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
+  console.log(`PASS twenty panel screenshots for ${version}: fresh feeder ON/OFF/unknown animation, reduced motion and phone fit; CWU automatic schedule and manual switches, continuous water stream, advanced footer navigation/code label, fuel calibration, advanced menu, memory/device parameters, JSON export dialog, five Wi-Fi bars, collapsed diagnostics, direct Wi-Fi scan/save/unknown outcome, schema fresh/stale/pumps, background decoded, named tools, logout last, ordering persisted/reset, pellet states, charts nonblank, 320/390/1280px fit.`);
 } finally {
   await browser.close();
   await new Promise(done => server.close(done));

@@ -54,6 +54,11 @@ danych. Blokada jest zachowywana po restarcie. Nie ponawiaj logowania
 wielokrotnie przy blednym hasle; P110 ma wlasne ograniczenie prob.
 
 Beta.31 poprawia zachowanie jednego polaczenia HTTP podczas logowania.
+
+Od beta.35 zmiana trybu, progow i harmonogramu zachowuje dzialajace
+polaczenie z gniazdkiem. Po chwilowym bledzie ESP sam ponawia odczyt
+i logowanie, bez ponownego wpisywania hasla. Gdy nie ma potwierdzenia,
+panel pokazuje **Stan nieznany**, zamiast zgadywac ON lub OFF.
 Aktualizacja z beta.30 zachowuje zapisane dane i blokade ponawiania
 odrzuconego logowania. Po zapisaniu poprawnych danych panel zachowa
 dokladny etap i kod ewentualnej odmowy. Aktualizacja i zwykly restart
@@ -101,7 +106,7 @@ ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz **Wylaczona** i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.
 
-![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.34/19-cyrkulacja-recznie.png)
+![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.35/19-cyrkulacja-recznie.png)
 
 ## Temperatury I Tryby
 
@@ -137,7 +142,7 @@ Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
 Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
 oprogramowania gniazdka moga nie udostepniac pelnej historii.
 
-![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.34/20-energia-pompy.png)
+![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.35/20-energia-pompy.png)
 
 ## Harmonogram
 
