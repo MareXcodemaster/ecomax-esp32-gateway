@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-beta.38 - 2026-11-02
+
+- Przycisk Wlacz / Wylacz priorytet dostepny rowniez na gorze Cyrkulacji CWU.
+- Stan jest wspolny z kafelkiem Temperatury CWU i potwierdzany odczytem kotla.
+- Zmiana priorytetu nie zmienia trybu, progow ani harmonogramu gniazdka Tapo.
+- Zapis i przywrocenie priorytetu sprawdzone na rzeczywistym kotle przez RS485.
+
 ## 0.7.0-beta.37 - 2026-11-02
 
 - Przycisk Wylacz priorytet / Wlacz priorytet na kafelku temperatury CWU.

@@ -72,6 +72,13 @@ Zmiana IP nie powinna wymagac ponownego parowania; izolacja klientow
 Wi-Fi i rozne VLAN-y moga blokowac wyszukiwanie. Rezerwacja DHCP jest
 dodatkowym, przydatnym zabezpieczeniem przed zmiana adresu.</p>
 <h2>Proste sterowanie</h2>
+<p>Na gorze zakladki jest osobna sekcja <strong>Priorytet grzania CWU</strong> z przyciskiem
+<strong>Wylacz priorytet / Wlacz priorytet</strong>. Dotyczy pierwszenstwa podgrzewania
+bojlera przed CO. Wylaczenie priorytetu pozostawia grzanie CWU wlaczone.
+Zmiana nie przelacza gniazdka Tapo ani nie zmienia progow i harmonogramu
+cyrkulacji. Ta sama nastawa jest dostepna na kafelku Temperatura CWU.
+Przycisk pojawia sie, gdy sterownik udostepnia odpowiednie tryby, i zapisuje
+przez wybrany RS485 lub lokalny ecoNET. Zapis na kotle potwierdzono po RS485.</p>
 <p>Wybierz <strong>Automatycznie</strong>, <strong>Recznie</strong> albo <strong>Wylaczona</strong>. Tryb zapisuje
 sie od razu, bez dodatkowego Zapisz. <strong>Wylaczona</strong> zleca zatrzymanie pompy.</p>
 <p><strong>Recznie</strong> pokazuje osobne przyciski <strong>Wlacz pompe</strong> i <strong>Wylacz pompe</strong>.
@@ -102,7 +109,7 @@ Wylaczenie <strong>obslugi cyrkulacji</strong> zatrzymuje wysylanie polecen prze
 ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz <strong>Wylaczona</strong> i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.</p>
-<p><img src="images/panel/0.7.0-beta.37/19-cyrkulacja-recznie.png" alt="Reczne wlaczanie i wylaczanie pompy, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.38/19-cyrkulacja-recznie.png" alt="Reczne wlaczanie i wylaczanie pompy, dane DEMO"></p>
 <h2>Temperatury I Tryby</h2>
 <ul>
 <li><strong>Automatycznie</strong>: wlaczenie po osiagnieciu gornego progu CWU,
@@ -133,7 +140,7 @@ Niepelna historia oznacza Brak odczytu sumy 7 dni.</p>
 Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
 Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
 oprogramowania gniazdka moga nie udostepniac pelnej historii.</p>
-<p><img src="images/panel/0.7.0-beta.37/20-energia-pompy.png" alt="Zuzycie energii pompy, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.38/20-energia-pompy.png" alt="Zuzycie energii pompy, dane DEMO"></p>
 <h2>Harmonogram</h2>
 <p>Opcja <strong>Uzywaj harmonogramu</strong> jest niezalezna od zapisanej siatki tygodnia.
 Wylaczona: automatyka temperatury dziala przez cala dobe.

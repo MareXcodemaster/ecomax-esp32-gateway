@@ -6,7 +6,7 @@ import {resolve,sep,extname} from 'node:path';
 import {chromium} from 'playwright';
 const root=resolve('src/panel_web'),writes=[],points=[],errors=[];
 const target={name:'CWU DEMO',before:40,effective:40,min:35,max:65,step:1,measured_key:'tempCWU',write_ready:true};
-const state={version:'0.7.0-beta.37',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
+const state={version:'0.7.0-beta.38',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:true,write_transport:'rs485',requires_configuration:false,
  system:{controllerID:'ecoMAX DEMO'},values:{},names:{},menu:[],enums:{},units:[],structure:[],category_names:[],tiles:[],endpoints:{},versions:{},tests:[],
  curr:{mode:0,tempCWU:35,tempCWUSet:40,ecoSterMode1:2},targets:{1281:target},controls:{},econet_health:{fresh:true,api_ok:false},
  esp_network:{connected:true,rssi_dbm:-70,ssid:'DEMO',ip:'192.0.2.10',hostname:'piec'},schedules:{ecomaxSchedules:{}},pellet:{}};
@@ -77,6 +77,21 @@ try{
   await toggle.click();await page.waitForFunction(()=>document.querySelector('#dhw-priority-toggle').textContent==='Włącz priorytet');
   assert.equal(writes.length,pstart+1);assert.equal(writes.at(-1).id,'rm:8');assert.equal(writes.at(-1).value,2);assert.equal(writes.at(-1).confirm_installation,true);assert.equal(target.before,temperatureBefore);
   await toggle.click();await page.waitForFunction(()=>document.querySelector('#dhw-priority-toggle').textContent==='Wyłącz priorytet');assert.equal(writes.at(-1).value,1);
+  await page.evaluate(()=>selectView('pump'));
+  const pumpPriority=page.locator('#pump-dhw-priority-toggle'),pumpWrites=writes.length;
+  assert.equal(await pumpPriority.isVisible(),true);assert.equal(await pumpPriority.innerText(),'Wyłącz priorytet');
+  await pumpPriority.click();await page.waitForFunction(()=>document.querySelector('#pump-dhw-priority-toggle').textContent==='Włącz priorytet');
+  assert.equal(writes.length,pumpWrites+1);assert.equal(writes.at(-1).value,2);assert.equal(await toggle.innerText(),'Włącz priorytet');
+  await pumpPriority.click();await page.waitForFunction(()=>document.querySelector('#pump-dhw-priority-toggle').textContent==='Wyłącz priorytet');
+  assert.equal(writes.length,pumpWrites+2);assert.equal(writes.at(-1).value,1);assert.equal(target.before,temperatureBefore);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+  await page.screenshot({path:`test-results/dhw-priority-pump-${width}.png`});
+  if(width===1280){
+   const direct=await browser.newPage();await direct.goto(origin+'/#pump');
+   await direct.locator('#pump-dhw-priority-toggle').waitFor();assert.equal(await direct.locator('#pump-dhw-priority-toggle').isEnabled(),true,'direct pump entry works without visiting tiles first');
+   assert.equal(await direct.locator('[data-member=tempCWU]').count(),0);await direct.close();
+  }
+  await page.evaluate(()=>selectView('live'));
   priority.before=2;await page.evaluate(()=>poll());assert.equal(await toggle.innerText(),'Włącz priorytet','external setting is reflected');
   state.targets_fresh=false;await page.evaluate(()=>poll());assert.equal(await toggle.isDisabled(),true);state.targets_fresh=true;
   priority.before=0;await page.evaluate(()=>poll());assert.equal(await toggle.isDisabled(),true);assert.equal(await page.locator('#dhw-priority-status').innerText(),'Grzanie CWU wyłączone');

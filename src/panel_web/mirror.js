@@ -178,14 +178,20 @@
    if(actual)actual.textContent=num(curr[key]);const set=el.querySelector('[data-reading=set] .tile-value');if(set){const id=targetIdForTile(key,snapshot),target=id?snapshot.targets?.[id]:null;set.textContent=num(id&&!key.startsWith('ecoSter')?(isFresh&&snapshot.targets_fresh?target?.before:null):curr[tile.setMemberName_]);const active=el.querySelector('.tile-target-now');if(active)active.textContent='Cel teraz: '+degrees(curr[tile.setMemberName_]);const button=el.querySelector('.tile-action');if(button&&id){button.disabled=!isFresh||!snapshot.targets_fresh||!target||target.write_ready===false||actionBusy||snapshot.busy;button.title=target?.write_ready===false?target.write_error||'Zapis zablokowany':'Zmie\u0144 temperatur\u0119 ustawion\u0105: '+labels[key];}}
    if(!actual){const value=el.querySelector('.tile-value,.tile-mode');value.textContent=key==='mode'?(isFresh?EcoSettings.boilerModeLabel(curr.mode,snapshot.write_transport):'---'):key==='lambdaLevel'?(isFresh?(curr.lambdaStatus===0?'STOP':num(curr[key]/10)):'---'):num(curr[key],0)+' %';}
   }
-  EcoTileMotion.render(container,curr.fanPower);renderDhwPriority();
+  EcoTileMotion.render(container,curr.fanPower);
  }
  function renderDhwPriority(){
-  const tile=get('mirror-tiles').querySelector('[data-member=tempCWU]');if(!tile)return;
-  const current=dhwPriority(snapshot,isFresh);let controls=tile.querySelector('.dhw-priority');
+  const current=dhwPriority(snapshot,isFresh),section=document.querySelector('[data-section=pump]');let card=get('pump-dhw-priority');
+  if(section&&!card&&current.available){
+   card=make('div','pump-dhw-priority');card.id='pump-dhw-priority';
+   card.append(make('h3','','Priorytet grzania CWU'),make('p','','Pierwszeństwo podgrzewania bojlera przed ogrzewaniem domu.'));
+   section.querySelector('.pump-feature').after(card);
+  }
+  const hosts=[get('mirror-tiles').querySelector('[data-member=tempCWU]'),card].filter(Boolean);
+  for(const host of hosts){let controls=host.querySelector('.dhw-priority');
   if(!controls&&current.available){
    controls=make('div','dhw-priority');const label=make('small',''),button=make('button','');
-   label.id='dhw-priority-status';button.id='dhw-priority-toggle';button.type='button';button.setAttribute('aria-describedby',label.id);
+   const prefix=host===card?'pump-dhw-priority':'dhw-priority';label.id=prefix+'-status';button.id=prefix+'-toggle';button.type='button';button.setAttribute('aria-describedby',label.id);
    button.onclick=async()=>{
     const selected=dhwPriority(snapshot,isFresh);if(!selected.writable||prioritySaving||actionBusy||snapshot.busy)return;
     prioritySaving=true;renderDhwPriority();
@@ -193,13 +199,14 @@
     catch(error){notice(error.message,true);}
     finally{prioritySaving=false;renderDhwPriority();}
    };
-   controls.append(label,button);tile.append(controls);
+   controls.append(label,button);host.append(controls);
   }
-  if(!controls)return;
+  if(!controls)continue;
   controls.querySelector('small').textContent=current.label;
   const button=controls.querySelector('button');button.textContent=prioritySaving?'Zapisywanie…':current.active?'Wyłącz priorytet':'Włącz priorytet';
   button.disabled=!current.writable||prioritySaving||actionBusy||snapshot.busy;
   button.title=current.active?'Grzanie CWU pozostanie włączone bez pierwszeństwa przed CO':'Nadaj pierwszeństwo podgrzewaniu CWU przed CO';
+  }
  }
  function updatePelletTile(){EcoPellet.decorateLevelTile(get('mirror-tiles').querySelector('[data-member="fuelLevel"]'),snapshot.curr?.fuelLevel,isFresh,snapshot.curr?.fuelCalibration);}
  function reading(kind,set){const row=make('div','tile-reading '+(set?'set':''));row.dataset.reading=kind;const graphic=make('div','tile-symbol'),i=make('i');i.dataset.lucide=set?'thermometer-sun':'thermometer';graphic.append(i);const content=make('div');content.append(make('div','tile-value','---'),make('small','',set?'temp. zadana [\u00b0C]':'temp. aktualna [\u00b0C]'));row.append(graphic,content);return row;}
@@ -263,6 +270,6 @@
   EcoPellet.init();
   EcoTileLayout.init();
  }
- function render(view,data,fresh){if(view!=='live')EcoTileMotion.pause();snapshot=data;isFresh=fresh;EcoSettings.render(data,fresh);updateDialogs();switch(view){case'pellet':EcoPellet.render(data.pellet,fresh);break;case'live':renderTiles();updatePelletTile();break;case'user':case'service':case'advanced':renderTree(view);break;case'schema':renderSchema();break;case'schedule':renderSchedule();break;case'alarms':renderAlarms();break;case'history':renderHistory();break;case'settings':renderSettings();break;case'espwifi':renderEspWifi();break;case'tests':for(const form of document.querySelectorAll('.write-form')){const input=form.querySelector('input[type=number]'),target=data.targets?.[form.dataset.writeId];input.value=input.dataset.dirty==='true'?input.dataset.draft:isFresh&&data.targets_fresh&&target?target.before:'';}break;}}
+ function render(view,data,fresh){if(view!=='live')EcoTileMotion.pause();snapshot=data;isFresh=fresh;EcoSettings.render(data,fresh);updateDialogs();switch(view){case'pellet':EcoPellet.render(data.pellet,fresh);break;case'live':renderTiles();updatePelletTile();break;case'user':case'service':case'advanced':renderTree(view);break;case'schema':renderSchema();break;case'schedule':renderSchedule();break;case'alarms':renderAlarms();break;case'history':renderHistory();break;case'settings':renderSettings();break;case'espwifi':renderEspWifi();break;case'tests':for(const form of document.querySelectorAll('.write-form')){const input=form.querySelector('input[type=number]'),target=data.targets?.[form.dataset.writeId];input.value=input.dataset.dirty==='true'?input.dataset.draft:isFresh&&data.targets_fresh&&target?target.before:'';}break;}renderDhwPriority();}
  root.EcoMirror={init,render,openTemperature,ticketMatches,decodeSchedule,clock};
 })(globalThis);

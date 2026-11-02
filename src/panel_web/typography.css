@@ -14,5 +14,11 @@ small,.muted,#read-time,footer{font-family:InterLocal,"Segoe UI",sans-serif;font
 .dhw-priority button{width:100%;min-height:38px;justify-content:center;padding:7px 6px;background:#176b67;color:#fff;border-color:#176b67;font-size:13px;line-height:18px;white-space:normal}
 .dhw-priority button:disabled{opacity:.5;cursor:default}
 .eco-tile:has(.dhw-priority) .tile-body{flex:none;min-height:148px;gap:2px}
+.pump-dhw-priority{padding:18px;margin:0 0 22px;border:1px solid #b8d8cf;border-radius:8px;background:#edf6f2}
+.pump-dhw-priority h3{margin:0;color:#176b67}
+.pump-dhw-priority p{margin:6px 0 12px;color:#465b63;font-size:14px}
+.pump-dhw-priority .dhw-priority{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;border:0;padding:0;margin:0;gap:12px}
+.pump-dhw-priority .dhw-priority small{font-size:15px;font-weight:600;line-height:22px}
+.pump-dhw-priority .dhw-priority button{width:auto;min-height:44px;padding:10px 18px;font-size:15px;line-height:22px}
 @media(min-width:1500px){.eco-tile{min-height:259px}}
 @media(max-width:1100px){.tile-reading small{font-size:12px;line-height:17px}}

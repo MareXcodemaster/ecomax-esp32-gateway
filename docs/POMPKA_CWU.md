@@ -73,6 +73,14 @@ dodatkowym, przydatnym zabezpieczeniem przed zmiana adresu.
 
 ## Proste sterowanie
 
+Na gorze zakladki jest osobna sekcja **Priorytet grzania CWU** z przyciskiem
+**Wylacz priorytet / Wlacz priorytet**. Dotyczy pierwszenstwa podgrzewania
+bojlera przed CO. Wylaczenie priorytetu pozostawia grzanie CWU wlaczone.
+Zmiana nie przelacza gniazdka Tapo ani nie zmienia progow i harmonogramu
+cyrkulacji. Ta sama nastawa jest dostepna na kafelku Temperatura CWU.
+Przycisk pojawia sie, gdy sterownik udostepnia odpowiednie tryby, i zapisuje
+przez wybrany RS485 lub lokalny ecoNET. Zapis na kotle potwierdzono po RS485.
+
 Wybierz **Automatycznie**, **Recznie** albo **Wylaczona**. Tryb zapisuje
 sie od razu, bez dodatkowego Zapisz. **Wylaczona** zleca zatrzymanie pompy.
 
@@ -109,7 +117,7 @@ ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz **Wylaczona** i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.
 
-![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.37/19-cyrkulacja-recznie.png)
+![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.38/19-cyrkulacja-recznie.png)
 
 ## Temperatury I Tryby
 
@@ -145,7 +153,7 @@ Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
 Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
 oprogramowania gniazdka moga nie udostepniac pelnej historii.
 
-![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.37/20-energia-pompy.png)
+![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.38/20-energia-pompy.png)
 
 ## Harmonogram
 
