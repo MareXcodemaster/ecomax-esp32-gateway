@@ -50,9 +50,13 @@ try{
   assert.doesNotMatch(await page.locator('#pump-message').innerText(),/Oczekiwanie/);
   assert.equal(posts.at(-1).mode,2);assert.equal(await page.locator('#pump-tap').getAttribute('data-state'),'off','a command is not a confirmed relay state');
   state.on=true;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.locator('#pump-tap[data-state="on"]').waitFor();
-  assert.equal(await page.locator('.tap-water').evaluate(el=>getComputedStyle(el).display),'block');
-  assert.equal(await page.locator('.tap-motion').evaluate(el=>getComputedStyle(el).animationName),'pump-current');
-  await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.tap-motion').evaluate(el=>getComputedStyle(el).animationName),'none');await page.emulateMedia({reducedMotion:'no-preference'});
+  assert.equal(await page.locator('.hot-flow').evaluate(el=>getComputedStyle(el).animationPlayState),'running');
+  assert.equal(await page.locator('.return-flow').evaluate(el=>getComputedStyle(el).animationPlayState),'running');
+  assert.equal(await page.locator('.pump-rotor').evaluate(el=>getComputedStyle(el).animationPlayState),'running');
+  const flowBefore=await page.locator('.return-flow').evaluate(el=>getComputedStyle(el).strokeDashoffset);await page.waitForTimeout(180);
+  assert.notEqual(await page.locator('.return-flow').evaluate(el=>getComputedStyle(el).strokeDashoffset),flowBefore,'water visibly moves around the return loop');
+  assert.equal(await page.locator('.tap-stream').count(),0,'circulation does not imply an open household faucet');
+  await page.emulateMedia({reducedMotion:'reduce'});for(const selector of ['.hot-flow','.return-flow','.pump-rotor'])assert.equal(await page.locator(selector).evaluate(el=>getComputedStyle(el).animationName),'none');await page.emulateMedia({reducedMotion:'no-preference'});
   assert.equal(await page.locator('[data-section="pump"] video').count(),0);
   await page.locator('#pump-auto').click();await page.locator('#pump-auto-panel').waitFor();assert.equal(await page.locator('#pump-schedule-enabled').isVisible(),true,'automatic schedule toggle is immediately visible');
   assert.equal(await page.locator('#pump-reset').isHidden(),true,'opening automatic settings has no unsaved changes');
@@ -74,7 +78,7 @@ try{
   await page.locator('#pump-stop').click();await page.waitForTimeout(150);assert.equal(posts.at(-1).mode,3);assert.equal(posts.at(-1).upper,45,'quick action uses saved rules');
   assert.equal(await page.locator('#pump-upper').inputValue(),'47','quick action preserves unsaved rules');
   state.on=false;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.locator('#pump-tap[data-state="off"]').waitFor();
-  assert.equal(await page.locator('.tap-water').evaluate(el=>getComputedStyle(el).display),'none');
+  for(const selector of ['.hot-flow','.return-flow','.pump-rotor'])assert.equal(await page.locator(selector).evaluate(el=>getComputedStyle(el).animationPlayState),'paused');
   assert.equal(await page.locator('#pump-manual').getAttribute('aria-pressed'),'true','manual OFF remains in manual mode');
   await page.locator('#pump-off').click();await page.waitForTimeout(150);assert.equal(posts.at(-1).mode,0);assert.equal(await page.locator('#pump-manual-controls').isHidden(),true);
   await page.locator('#pump-auto').click();await page.locator('#pump-auto-panel').waitFor();await page.locator('#pump-reset').click();await page.waitForTimeout(150);assert.equal(posts.at(-1).mode,1);
@@ -96,7 +100,10 @@ try{
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   state.energy.fresh=false;state.energy.history_fresh=false;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.locator('#pump-power').getByText('Brak odczytu').waitFor();assert.equal(await page.locator('#pump-energy-week').innerText(),'Brak odczytu');
   state.energy.supported=false;state.model='P100';await page.evaluate(()=>EcoCwuPump.refresh(true));await page.locator('#pump-energy').waitFor({state:'hidden'});
-  failGet=true;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.locator('#pump-tap[data-state="unknown"]').waitFor();assert.equal(await page.locator('.tap-water').evaluate(el=>getComputedStyle(el).display),'none');failGet=false;
+  state.fresh=false;state.on=true;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.locator('#pump-tap[data-state="unknown"]').waitFor();
+  for(const selector of ['.hot-flow','.return-flow','.pump-rotor'])assert.equal(await page.locator(selector).evaluate(el=>getComputedStyle(el).animationPlayState),'paused');
+  state.fresh=true;state.on=false;
+  failGet=true;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.locator('#pump-tap[data-state="unknown"]').waitFor();assert.equal(await page.locator('.return-flow').evaluate(el=>getComputedStyle(el).animationPlayState),'paused');failGet=false;
   await page.locator('#pump-enabled').uncheck();await page.locator('#pump-content').waitFor({state:'hidden'});assert.equal(posts.at(-1).action,'feature');assert.equal(state.on,false,'disabling feature does not send a relay command');
   state={...state,enabled:false,configured:false,paired:false,armed:false,host:'',mac:'',fresh:false,on:null,status:'Nie skonfigurowano',mode:0,schedule_enabled:false,week:Array.from({length:7},()=>Array(6).fill(0))};
  }

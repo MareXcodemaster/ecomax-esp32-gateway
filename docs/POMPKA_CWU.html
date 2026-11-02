@@ -87,10 +87,13 @@ Bez harmonogramu automatyka temperatury dziala przez cala dobe.</p>
 <p><strong>Anuluj zmiany</strong> pojawia sie tylko wtedy, gdy progi lub harmonogram
 roznia sie od zapisanych. Znika po anulowaniu, zapisie i recznym
 przywroceniu zapisanych wartosci. Samo odswiezenie danych go nie pokazuje.</p>
-<p>Realistyczny kran to przezroczysty PNG, bez tla. Woda jest lekka
-animacja SVG/CSS, wlaczana po potwierdzonym wlaczeniu gniazdka. Po
-wylaczeniu jej nie ma; utrata odczytu oznacza <strong>Stan nieznany</strong>.
-To symbol zasilania pompy, nie pomiar fizycznego przeplywu. W ESP nie
+<p>Schemat pokazuje zbiornik CWU, cieple zasilanie, chlodniejszy powrot,
+pompe i odgalezienie do realistycznego kranu w PNG. Niebieska rura
+to powrot CWU, nie doplyw zimnej wody wodociagowej. Lekka animacja
+SVG/CSS w rurach i pompie rusza po potwierdzonym wlaczeniu gniazdka.
+Po wylaczeniu zatrzymuje sie; utrata odczytu oznacza <strong>Stan nieznany</strong>.
+Kran jest symbolem punktu poboru: panel nie zna jego otwarcia.
+Ruch w rurach obrazuje zasilanie pompy, nie pomiar przeplywu. W ESP nie
 ma filmu ani odtwarzacza; pliki dzialaja lokalnie. Respektowane jest
 ustawienie przegladarki ograniczajace ruch.</p>
 <p>Funkcja jest opcjonalna i domyslnie wylaczona w nowej instalacji.
@@ -99,7 +102,7 @@ Wylaczenie <strong>obslugi cyrkulacji</strong> zatrzymuje wysylanie polecen prze
 ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz <strong>Wylaczona</strong> i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.</p>
-<p><img src="images/panel/0.7.0-beta.35/19-cyrkulacja-recznie.png" alt="Reczne wlaczanie i wylaczanie pompy, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.36/19-cyrkulacja-recznie.png" alt="Reczne wlaczanie i wylaczanie pompy, dane DEMO"></p>
 <h2>Temperatury I Tryby</h2>
 <ul>
 <li><strong>Automatycznie</strong>: wlaczenie po osiagnieciu gornego progu CWU,
@@ -130,7 +133,7 @@ Niepelna historia oznacza Brak odczytu sumy 7 dni.</p>
 Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
 Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
 oprogramowania gniazdka moga nie udostepniac pelnej historii.</p>
-<p><img src="images/panel/0.7.0-beta.35/20-energia-pompy.png" alt="Zuzycie energii pompy, dane DEMO"></p>
+<p><img src="images/panel/0.7.0-beta.36/20-energia-pompy.png" alt="Zuzycie energii pompy, dane DEMO"></p>
 <h2>Harmonogram</h2>
 <p>Opcja <strong>Uzywaj harmonogramu</strong> jest niezalezna od zapisanej siatki tygodnia.
 Wylaczona: automatyka temperatury dziala przez cala dobe.

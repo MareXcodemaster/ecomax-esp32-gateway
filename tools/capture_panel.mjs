@@ -368,6 +368,8 @@ try {
   state.pellet.feeder_on=true;state.curr.feederWorks=true;await page.evaluate(()=>poll());
   assert.equal(await page.locator('#pellet-feed-animation').getAttribute('data-state'),'on');
   assert.equal(await page.locator('.auger-spiral').evaluate(el=>getComputedStyle(el).animationPlayState),'running');
+  assert.equal(await page.locator('.auger-grains').first().evaluate(el=>getComputedStyle(el).animationDuration),'9.6s');
+  assert.equal(await page.locator('.auger-spiral').evaluate(el=>getComputedStyle(el).animationDuration),'2.4s');
   assert.equal(await page.locator('.auger-falling').evaluate(el=>getComputedStyle(el).display),'block');
   const beforeMotion=await page.locator('.auger-spiral').evaluate(el=>getComputedStyle(el).transform);await page.waitForTimeout(180);
   assert.notEqual(await page.locator('.auger-spiral').evaluate(el=>getComputedStyle(el).transform),beforeMotion,'screw actually moves while feeder output is on');
@@ -395,6 +397,7 @@ try {
   await screenshot('02-harmonogram');
   await page.getByRole('button',{name:'Cyrkulacja CWU',exact:true}).click();
   await page.locator('#pump-on').getByText('Pracuje',{exact:true}).waitFor();
+  assert.equal(await page.locator('.return-flow').evaluate(el=>getComputedStyle(el).animationPlayState),'running');
   assert.equal(await page.locator('#pump-week button').count(),336);
   await screenshot('18-pompka-cwu');
   pump.mode=2;pump.reason='Wlaczenie reczne';await page.evaluate(()=>EcoCwuPump.refresh(true));

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.0-beta.36 - 2026-11-02
+
+- Cyrkulacja CWU: czytelny schemat zbiornika, zasilania i powrotu wody,
+  poprawiona grafika pompy oraz realistyczny kran bez tla.
+- Animowany obieg i rotor ruszaja tylko przy aktualnym, potwierdzonym
+  stanie ON gniazdka. OFF lub utrata odczytu zatrzymuja ruch.
+  Schemat nie sugeruje, ze kran w domu zostal otwarty.
+- Pellet: prostszy podajnik slimakowy i spokojniejszy ruch granulek:
+  przejazd 9,6 s, cykl slimaka 2,4 s, opadanie 1,6 s.
+- Oba widoki dopasowuja geometrie do telefonu i respektuja ograniczenie
+  ruchu. Bez filmow, nowych zapytan sieciowych lub zmian automatyki.
+- Zaktualizowana galeria i instrukcja z obrazami interfejsu beta.36.
+
 ## 0.7.0-beta.35 - 2026-11-02
 
 - W zakladce Pellet schemat zasobnika, podajnika slimakowego i kotla.

@@ -46,6 +46,17 @@
   if(initialized)get('pellet-point-submit').disabled=!available||saving||!get('pellet-point-confirm').checked;
  }
  function init(){
+  const animation=get('pellet-feed-animation'),svg=animation.querySelector('svg');
+  const set=(selector,attrs)=>{const el=animation.querySelector(selector);for(const [key,value]of Object.entries(attrs))el.setAttribute(key,value);};
+      function draw(){
+        const w=Math.max(240,Math.round(animation.clientWidth)),end=w-112;
+        svg.setAttribute('viewBox',`0 0 ${w} 190`);animation.style.setProperty('--travel',`${end+22}px`);
+        set('.tube',{width:end-14});set('.clip-box',{width:end-14});set('.shaft',{d:`M14 71H${end}`});
+        let d='M-80 47';for(let x=-80;x<w+80;x+=40)d+=`C${x+10} 47 ${x+10} 95 ${x+20} 95S${x+30} 47 ${x+40} 47`;
+        set('.helix',{d});set('.outlet',{d:`M${end} 71h28v37`});set('.inlet',{d:`M${end+5} 132v35h83v-35`});
+        for(const el of animation.querySelectorAll('.auger-drop')){el.setAttribute('x',end+22);el.setAttribute('y',108);}
+      }
+  new ResizeObserver(draw).observe(animation);draw();
   const dialog=document.createElement('dialog');dialog.id='pellet-point-dialog';dialog.innerHTML='<form id="pellet-point-form"><h2 id="pellet-point-title"></h2><p>To czynno&#347;&#263; kalibracji sterownika, nie wpisanie ilo&#347;ci kilogram&#243;w. Samo przyj&#281;cie polecenia nie potwierdza poprawno&#347;ci ca&#322;ej kalibracji.</p><label class="check"><input type="checkbox" id="pellet-point-confirm"><span id="pellet-point-label"></span></label><p id="pellet-point-error" class="error" role="alert"></p><div class="actions"><button id="pellet-point-cancel" type="button">Anuluj</button><button id="pellet-point-submit" class="primary" type="submit" disabled><i data-lucide="check"></i>Potwierd&#378; punkt</button></div></form>';document.body.append(dialog);
   const open=value=>{if(!available||saving)return;point=value;get('pellet-point-title').textContent='Poziom paliwa '+value+'%';get('pellet-point-confirm').checked=false;get('pellet-point-submit').disabled=true;get('pellet-point-error').textContent='';get('pellet-point-label').textContent=value===100?'Potwierdzam, \u017ce zasobnik jest rzeczywi\u015bcie pe\u0142ny':'Potwierdzam, \u017ce zasobnik jest rzeczywi\u015bcie pusty';dialog.showModal();};
   initialized=true;get('pellet-full').onclick=()=>open(100);get('pellet-empty').onclick=()=>open(0);

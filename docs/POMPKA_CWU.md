@@ -92,10 +92,13 @@ Bez harmonogramu automatyka temperatury dziala przez cala dobe.
 roznia sie od zapisanych. Znika po anulowaniu, zapisie i recznym
 przywroceniu zapisanych wartosci. Samo odswiezenie danych go nie pokazuje.
 
-Realistyczny kran to przezroczysty PNG, bez tla. Woda jest lekka
-animacja SVG/CSS, wlaczana po potwierdzonym wlaczeniu gniazdka. Po
-wylaczeniu jej nie ma; utrata odczytu oznacza **Stan nieznany**.
-To symbol zasilania pompy, nie pomiar fizycznego przeplywu. W ESP nie
+Schemat pokazuje zbiornik CWU, cieple zasilanie, chlodniejszy powrot,
+pompe i odgalezienie do realistycznego kranu w PNG. Niebieska rura
+to powrot CWU, nie doplyw zimnej wody wodociagowej. Lekka animacja
+SVG/CSS w rurach i pompie rusza po potwierdzonym wlaczeniu gniazdka.
+Po wylaczeniu zatrzymuje sie; utrata odczytu oznacza **Stan nieznany**.
+Kran jest symbolem punktu poboru: panel nie zna jego otwarcia.
+Ruch w rurach obrazuje zasilanie pompy, nie pomiar przeplywu. W ESP nie
 ma filmu ani odtwarzacza; pliki dzialaja lokalnie. Respektowane jest
 ustawienie przegladarki ograniczajace ruch.
 
@@ -106,7 +109,7 @@ ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz **Wylaczona** i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.
 
-![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.35/19-cyrkulacja-recznie.png)
+![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.36/19-cyrkulacja-recznie.png)
 
 ## Temperatury I Tryby
 
@@ -142,7 +145,7 @@ Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
 Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
 oprogramowania gniazdka moga nie udostepniac pelnej historii.
 
-![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.35/20-energia-pompy.png)
+![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.36/20-energia-pompy.png)
 
 ## Harmonogram
 
