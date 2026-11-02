@@ -1,3 +1,6 @@
+Historical notice: retired beta.33 asset, replaced in beta.34.
+The current firmware does not include this Pexels-derived image.
+
 Photographic faucet PNG status artwork
 Author of source: Monsieur Sylvain (Pexels)
 Original: Video of a Faucet with Flowing Water, video 5571843

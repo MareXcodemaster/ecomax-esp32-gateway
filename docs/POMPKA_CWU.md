@@ -83,7 +83,11 @@ Po jej zaznaczeniu pojawia sie siatka godzin. Ustaw progi, opcjonalnie
 zaznacz dni i godziny, a nastepnie **Zapisz i wlacz automatyke**.
 Bez harmonogramu automatyka temperatury dziala przez cala dobe.
 
-Fotograficzny kran to przezroczysty PNG, bez tla. Woda jest lekka
+**Anuluj zmiany** pojawia sie tylko wtedy, gdy progi lub harmonogram
+roznia sie od zapisanych. Znika po anulowaniu, zapisie i recznym
+przywroceniu zapisanych wartosci. Samo odswiezenie danych go nie pokazuje.
+
+Realistyczny kran to przezroczysty PNG, bez tla. Woda jest lekka
 animacja SVG/CSS, wlaczana po potwierdzonym wlaczeniu gniazdka. Po
 wylaczeniu jej nie ma; utrata odczytu oznacza **Stan nieznany**.
 To symbol zasilania pompy, nie pomiar fizycznego przeplywu. W ESP nie
@@ -97,7 +101,7 @@ ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz **Wylaczona** i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.
 
-![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.33/19-cyrkulacja-recznie.png)
+![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.34/19-cyrkulacja-recznie.png)
 
 ## Temperatury I Tryby
 
@@ -133,7 +137,7 @@ Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
 Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
 oprogramowania gniazdka moga nie udostepniac pelnej historii.
 
-![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.33/20-energia-pompy.png)
+![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.34/20-energia-pompy.png)
 
 ## Harmonogram
 

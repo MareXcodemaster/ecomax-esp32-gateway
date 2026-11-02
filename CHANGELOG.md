@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0-beta.34 - 2026-11-02
+
+- Inny realistyczny, chromowany kran w przezroczystym PNG. Pelny ksztalt
+  z zaokraglona wylewka, bez tla i bez plikow filmowych.
+- Wyraznie niebieski strumien z ciagla animacja i ruchomymi refleksami,
+  czytelny na jasnym tle. Woda nadal pokazuje potwierdzony stan gniazdka.
+- Anuluj zmiany widoczne tylko po zmianie progow lub harmonogramu.
+  Przycisk znika po anulowaniu, zapisie i recznym przywroceniu zapisanych
+  wartosci. Odswiezanie zachowuje niedokonczone zmiany formularza.
+- Mniejsze pola temperatury i osobny odstep przed przyciskami formularza,
+  takze na telefonie. Przyciski nie stykaja sie z polami.
+- Nowe zrzuty panelu i instrukcje, zachowana konfiguracja cyrkulacji,
+  polaczenie Tapo, domowe Wi-Fi oraz nastawy kotla.
+
 ## 0.7.0-beta.33 - 2026-11-02
 
 - Fotograficzny kran w przezroczystym PNG zamiast rysunku lub filmu.

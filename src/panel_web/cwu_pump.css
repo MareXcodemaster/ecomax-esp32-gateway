@@ -3,7 +3,7 @@
 .pump-hero{display:block;min-width:0}.pump-hero h3{margin:0;font-size:20px}.pump-hero strong{font-size:28px;color:#176b67}.pump-hero p{font-size:13px;line-height:1.5;margin:6px 0;overflow-wrap:anywhere}.pump-alias{color:#52646a}
 .pump-tap{position:relative;width:100%;max-width:300px;aspect-ratio:400/336;display:block;overflow:hidden;background:transparent}
 .pump-tap img,.pump-tap svg{display:block;width:100%;height:100%;object-fit:contain;position:absolute;inset:0}.pump-tap img{z-index:1}.pump-tap .tap-water,.pump-tap .tap-unknown{display:none}.pump-tap[data-state=on] .tap-water,.pump-tap[data-state=unknown] .tap-unknown{display:block}.pump-tap .tap-unknown{z-index:2;position:absolute;right:12px;top:12px;border-radius:50%;background:#fff;color:#647c72;border:1px solid #aabcb4;width:32px;height:32px;text-align:center;line-height:30px;font-size:22px}
-.tap-motion{animation:pump-current .8s linear infinite}@keyframes pump-current{to{transform:translateY(24px)}}
+.tap-motion{animation:pump-current .65s linear infinite}@keyframes pump-current{to{transform:translateY(24px)}}
 .pump-tap[data-state=unknown]{filter:grayscale(1);opacity:.75}
 .pump-controls{display:flex;gap:10px;flex-wrap:wrap}.pump-controls button{min-width:115px;justify-content:center}.pump-controls [aria-pressed=true]{background:#176b67;border-color:#176b67;color:#fff}
 .pump-caption{font-size:12px;line-height:1.5;color:#52646a}.pump-rules{margin-top:20px;border-top:1px solid #dbe3de}.pump-rules>h3{padding:18px 0 0;font-size:17px;color:#176b67}
@@ -13,7 +13,7 @@
 .pump-status small{display:block;font-size:12px;line-height:1.5;color:#59616b}
 .pump-settings{padding:24px 0;border-bottom:1px solid #dbe3de}.pump-settings h3{margin:0 0 16px}
 .pump-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;max-width:780px}
-.pump-thresholds{grid-template-columns:repeat(2,minmax(0,1fr));max-width:560px}.pump-settings .actions{flex-wrap:wrap}
+.pump-thresholds{grid-template-columns:repeat(2,minmax(0,1fr));max-width:480px}.pump-thresholds input{max-width:160px;min-height:40px;height:40px;padding:7px 10px}.pump-settings .actions{flex-wrap:wrap;gap:12px;margin-top:20px}
 .pump-schedule-toggle{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px;margin:0 0 22px;max-width:680px;background:#eef6f3;border:1px solid #bed8ce;border-radius:7px;cursor:pointer}.pump-schedule-toggle strong{display:block;font-size:16px;color:#174d45}.pump-schedule-toggle small{display:block;font-size:13px;line-height:1.5;margin-top:4px;color:#52646a}
 .pump-schedule-toggle input[type=checkbox]{appearance:none;position:relative;width:52px;height:30px;flex:0 0 52px;margin:0;border:1px solid #97aaa3;border-radius:18px;background:#a6b3ad;cursor:pointer}.pump-schedule-toggle input::after{content:'';position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002}.pump-schedule-toggle input:checked{background:#176b67;border-color:#176b67}.pump-schedule-toggle input:checked::after{left:25px}.pump-schedule-toggle:has(input:checked){background:#e0f1e9;border-color:#176b67}.pump-schedule-toggle input:focus-visible{outline:3px solid #69b8ac;outline-offset:3px}
 .pump-fields label{display:flex;flex-direction:column;gap:6px;font-size:13px}.pump-fields input,.pump-fields select{width:100%;min-width:0}

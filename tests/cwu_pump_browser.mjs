@@ -6,7 +6,7 @@ import {chromium} from 'playwright';
 const root=resolve('src/panel_web'),posts=[],external=[],errors=[];
 const applied=new Set();
 let state={enabled:false,configured:false,paired:false,armed:false,host:'',mac:'',alias:'',model:'',fresh:false,on:null,temperature:46,sensor_fresh:true,lower:40,upper:45,mode:0,schedule_enabled:false,week:Array.from({length:7},()=>Array(6).fill(0)),reason:'Sterowanie nieaktywne',status:'Nie skonfigurowano',devices:[],scan_busy:false};
-let failPost=false,failGet=false;
+let failPost=false,failGet=false,settingsResponseUpper=null;
 const server=createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname==='/api/cwu-pump'){
@@ -17,7 +17,7 @@ const server=createServer(async(req,res)=>{
    if(body.action==='scan')state.devices=[{host:'192.168.1.222',mac:'021122334455',model:'P110',protocol:'KLAP'}];
    if(body.action==='feature')state={...state,enabled:body.enabled};
    if(body.action==='connect')state={...state,host:body.host,mac:body.mac,configured:true,paired:true,model:'P110',protocol:'TPAP',alias:'Pompa DEMO',fresh:true,on:false,status:'Polaczono lokalnie',energy:{supported:true,fresh:true,history_fresh:true,power_w:4,today_kwh:.01,month_kwh:.12,week_kwh:.07,days:Array.from({length:7},(_,i)=>({date:'2026-01-0'+(i+1),kwh:.01}))}};
-   if(body.action==='settings'){state={...state,...body,armed:true};if(failPost){failPost=false;res.destroy();return;}}
+   if(body.action==='settings'){state={...state,...body,armed:true};if(settingsResponseUpper!==null){state.upper=settingsResponseUpper;settingsResponseUpper=null;}if(failPost){failPost=false;res.destroy();return;}}
   }
   res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(state));return;
  }
@@ -55,6 +55,19 @@ try{
   await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.tap-motion').evaluate(el=>getComputedStyle(el).animationName),'none');await page.emulateMedia({reducedMotion:'no-preference'});
   assert.equal(await page.locator('[data-section="pump"] video').count(),0);
   await page.locator('#pump-auto').click();await page.locator('#pump-auto-panel').waitFor();assert.equal(await page.locator('#pump-schedule-enabled').isVisible(),true,'automatic schedule toggle is immediately visible');
+  assert.equal(await page.locator('#pump-reset').isHidden(),true,'opening automatic settings has no unsaved changes');
+  assert.equal(await page.locator('#pump-upper').evaluate(el=>el.getBoundingClientRect().width<=160),true,'temperature input stays compact');
+  assert.equal(await page.locator('#pump-settings').evaluate(el=>el.querySelector('.actions').getBoundingClientRect().top-el.querySelector('.pump-thresholds').getBoundingClientRect().bottom>=16),true,'actions have a clear gap below temperature inputs');
+  settingsResponseUpper=46;await page.locator('#pump-auto').click();await page.waitForFunction(()=>document.getElementById('pump-upper').value==='46');
+  assert.equal(await page.locator('#pump-reset').isHidden(),true,'a saved value returned during a mode response is not a user edit');
+  state.upper=45;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.waitForFunction(()=>document.getElementById('pump-upper').value==='45');
+  state.upper=46;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.waitForFunction(()=>document.getElementById('pump-upper').value==='46');
+  assert.equal(await page.locator('#pump-reset').isHidden(),true,'a refreshed saved value is not a user edit');
+  state.upper=45;await page.evaluate(()=>EcoCwuPump.refresh(true));await page.waitForFunction(()=>document.getElementById('pump-upper').value==='45');
+  await page.locator('#pump-upper').fill('46');assert.equal(await page.locator('#pump-reset').isVisible(),true);
+  await page.locator('#pump-upper').fill('45');assert.equal(await page.locator('#pump-reset').isHidden(),true,'typing back the saved temperature clears changes');
+  await page.locator('#pump-schedule-enabled').check();assert.equal(await page.locator('#pump-reset').isVisible(),true);
+  await page.locator('#pump-schedule-enabled').uncheck();assert.equal(await page.locator('#pump-reset').isHidden(),true,'restoring the saved switch clears changes');
   assert.equal(await page.locator('#pump-schedule-enabled').evaluate(el=>el.getBoundingClientRect().width>=48),true,'schedule switch has a visible touch target');
   await page.locator('#pump-upper').fill('47');await page.locator('#pump-manual').click();await page.locator('#pump-manual-controls').waitFor();
   assert.equal(posts.at(-1).mode,2,'entering manual while ON preserves ON');
@@ -65,12 +78,16 @@ try{
   assert.equal(await page.locator('#pump-manual').getAttribute('aria-pressed'),'true','manual OFF remains in manual mode');
   await page.locator('#pump-off').click();await page.waitForTimeout(150);assert.equal(posts.at(-1).mode,0);assert.equal(await page.locator('#pump-manual-controls').isHidden(),true);
   await page.locator('#pump-auto').click();await page.locator('#pump-auto-panel').waitFor();await page.locator('#pump-reset').click();await page.waitForTimeout(150);assert.equal(posts.at(-1).mode,1);
+  assert.equal(await page.locator('#pump-reset').isHidden(),true,'cancel restores saved rules and hides itself');
   await page.locator('#pump-schedule-enabled').check();
   assert.equal(await page.locator('#pump-week button').count(),336);
   await page.locator('#pump-week button[data-row="0"][data-slot="0"]').click();
   assert.equal(await page.locator('#pump-week button').first().getAttribute('aria-checked'),'true');
   await page.locator('#pump-save').click();await page.locator('#pump-message').filter({hasText:'Ustawienia zapisane'}).waitFor();
   const saved=posts.at(-1);assert.equal(saved.action,'settings');assert.equal(saved.schedule_enabled,true);assert.equal(saved.week[0][0],128);assert.equal(saved.mode,1);
+  assert.equal(await page.locator('#pump-reset').isHidden(),true,'successful save clears changes');
+  await page.locator('#pump-week button').first().click();assert.equal(await page.locator('#pump-reset').isVisible(),true);
+  await page.locator('#pump-week button').first().click();assert.equal(await page.locator('#pump-reset').isHidden(),true,'restoring a schedule cell clears changes');
   await page.locator('#pump-schedule-enabled').uncheck();await page.locator('#pump-save').click();await page.locator('#pump-message').filter({hasText:'Ustawienia zapisane'}).waitFor();
   assert.equal(posts.at(-1).schedule_enabled,false);assert.equal(posts.at(-1).week[0][0],128);
   await page.locator('#pump-upper').fill('47');await page.evaluate(()=>EcoCwuPump.refresh(true));await page.waitForTimeout(150);

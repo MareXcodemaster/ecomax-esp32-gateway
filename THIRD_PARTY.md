@@ -111,16 +111,13 @@ which the panel fills from the current controller data.
 
 Brand names describe compatibility, not affiliation or endorsement.
 
-## Photographic faucet PNG
+## Realistic faucet PNG
 
-The local src/panel_web/assets/faucet-real.png is adapted from a still
-at 18 seconds in "Video of a Faucet with Flowing Water" by Monsieur
-Sylvain on Pexels (video 5571843).
-Source: https://www.pexels.com/video/video-of-a-faucet-with-flowing-water-5571843/
-License: https://www.pexels.com/license/
-Adaptations: background extraction with the built-in image editing tool,
-alpha-bound crop, resizing and palette optimization to a transparent
-400x336 PNG. The surrounding water animation is project SVG/CSS code.
-The photographic asset remains under the Pexels License, not MIT.
-The original video and movie player are not bundled in the firmware.
-Source notice: LICENSES/pexels-faucet/NOTICE.txt.
+The local src/panel_web/assets/faucet-real.png is a new generic faucet
+generated with the built-in image generation tool, on 2026-11-02.
+It has no brand markings and is not a photograph of a specific product.
+The transparent source was alpha-cropped, resized and palette-optimized
+to 400x336 PNG. Its continuous blue water is project SVG/CSS code.
+No movie, player, external media service or Pexels asset is bundled.
+The notice under LICENSES/pexels-faucet describes the retired beta.33
+asset only and is kept for the earlier release's provenance.
