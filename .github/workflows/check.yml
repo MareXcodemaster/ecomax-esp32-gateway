@@ -63,6 +63,8 @@ jobs:
         run: node tests/cwu_pump_browser.mjs
       - name: Read-only analysis JSON download and cancellation browser tests
         run: node tests/analysis_export_browser.mjs
+      - name: Read-only compatibility report browser tests
+        run: node tests/compatibility_browser.mjs
       - name: ESP memory, hardware parameters and stale state browser tests
         run: node tests/device_info_browser.mjs
       - uses: actions/upload-artifact@v4

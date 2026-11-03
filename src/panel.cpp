@@ -11,6 +11,8 @@
 #include "panel_catalog.hpp"
 #include "econet_defaults.hpp"
 #include "identity_guard.hpp"
+#include "compatibility_report.hpp"
+#include <cstdlib>
 #include "advanced_menu.hpp"
 #include "pellet_commands.hpp"
 #include "esp_http_client.h"
@@ -37,6 +39,8 @@ using J = cJSON;
 struct Config { char host[16]{}, user[64]{}, password[96]{}; } config;
 SemaphoreHandle_t mutex;
 J *data, *raw, *ticket;
+J *compatibility_cache=nullptr;
+uint64_t compatibility_started=0;
 std::string uid, error_text, queued_kind, queued_owner, ticket_owner;
 J *queued_payload;
 std::atomic<bool> busy{false};
@@ -144,7 +148,12 @@ bool read(const char *endpoint, bool language=false) {
 }
 bool remember_identity(const char *identity,bool supported_model=true) {
     auto action=identity_guard::decide(uid.c_str(),identity,supported_model);
-    if(action==identity_guard::Action::reject) return fail("Niezgodna tozsamosc lub model kotla. Zapis zablokowany");
+    const char *reason=identity_guard::rejection(uid.c_str(),identity,supported_model);
+    { Lock lock; text(data,"identity_status",reason?reason:"verified"); }
+    if(action==identity_guard::Action::reject) return fail(!strcmp(reason,"unsupported_model")?
+        "Ten model kotla nie ma jeszcze profilu zapisu. Pobierz Raport zgodnosci kotla w Narzedziach":
+        !strcmp(reason,"identity_mismatch")?"ESP jest przypisane do innego kotla. Zapis zablokowany; pobierz Raport zgodnosci kotla":
+        "Niepoprawny identyfikator kotla. Pobierz Raport zgodnosci kotla");
     if(action==identity_guard::Action::enroll) {
         nvs_handle_t h; if(nvs_open("eco_panel",NVS_READWRITE,&h)!=ESP_OK) return fail("Nie utrwalono tozsamosci kotla");
         auto result=nvs_set_str(h,"identity",identity); if(result==ESP_OK) result=nvs_commit(h); nvs_close(h);
@@ -157,6 +166,7 @@ bool identify() {
     if (!read("sysParams")) return false;
     auto *sys=get(raw,"sysParams"); const char *identity=str(get(sys,"uid"));
     if (!*identity || strlen(identity)>160 || !cJSON_IsString(get(sys,"controllerID"))) return fail("Brak identyfikacji sterownika");
+    { Lock lock; copy(data,"observed_controller",get(sys,"controllerID")); }
     if(!remember_identity(identity)) return false;
     { Lock lock; auto *s=cJSON_CreateObject(); for (auto k:{"controllerID","softVer","moduleASoftVer","modulePanelSoftVer","remoteMenu","schemaID"}) copy(s,k,get(sys,k)); put(data,"system",s);
       copy(data,"alarms",get(sys,"alarms")); copy(data,"schedules",get(sys,"schedules"));
@@ -695,6 +705,7 @@ bool rs_identify() {
     }
     at+=4; size_t model_length=p[at++];
     bool supported=at+model_length==size&&model_length==strlen("ecoMAX860P-LZ TOUCH")&&!memcmp(p+at,"ecoMAX860P-LZ TOUCH",model_length);
+    if(at+model_length==size){Lock lock;text(data,"observed_controller",std::string(reinterpret_cast<const char *>(p+at),model_length));}
     if(!remember_identity(identity.c_str(),supported)) { native_identity=false; return false; }
     text(get(raw,"sysParams"),"uid",uid);
     native_identity=true; native_identity_ms=now(); return true;
@@ -1436,6 +1447,66 @@ J *calibrate_pellet(const J *payload) {
     if(!journal())text(result,"journal_warning","Nie utrwalono wyniku operacji w dzienniku ESP");
     return result;
 }
+J *collect_compatibility(const J *payload){
+    {Lock lock;cJSON_Delete(compatibility_cache);compatibility_cache=nullptr;}
+    auto *report=cJSON_CreateObject();if(!report){fail("Brak pamieci na raport zgodnosci");return nullptr;}
+    text(report,"format","ecomax-compatibility");number(report,"schema",1);text(report,"firmware",board::version);
+    text(report,"created_at_utc",timestamp());text(report,"transport",selected_mode);flag(report,"read_only",true);
+    std::string report_id;{Lock lock;report_id=str(get(get(data,"job"),"id"));copy(report,"identity_status",get(data,"identity_status"));copy(report,"observed_controller",get(data,"observed_controller"));}
+    text(report,"report_id",report_id);
+    auto *reference=cJSON_CreateObject();text(reference,"model","ecoMAX860P-LZ TOUCH");text(reference,"module_a","8.41.38.L0");text(reference,"panel","8.30.28");
+    text(reference,"meaning","Firmware reference profile, not the detected controller");put(report,"reference_profile",reference);
+    auto *warnings=cJSON_AddArrayToObject(report,"warnings"),*frames=cJSON_AddArrayToObject(report,"passive_frames"),*results=cJSON_AddArrayToObject(report,"read_results");
+    auto warn=[&](const char *s){cJSON_AddItemToArray(warnings,cJSON_CreateString(s));};
+    Owned sensor{boiler::snapshot()};auto *observed=cJSON_CreateObject();
+    for(auto key:{"available","fresh","age_ms","accepted_frames","decode_errors","sensors","outputs","modules","frame_versions","mixers","thermostats"})copy(observed,key,get(sensor.p,key));
+    put(report,"sensor_observation",observed);put(report,"traffic",state::frame_stats());
+    // Bounded passive samples. Never copy raw /api/state, network settings, logs or product UID.
+    for(int type:{185,192,53,213,214}){
+        Owned latest{state::latest_frames(-1,type,0,2,false)};J *record;
+        cJSON_ArrayForEach(record,get(latest.p,"records")){
+            const char *p=str(get(record,"hex"));uint8_t bytes[1000]{};size_t count=0;
+            while(*p&&count<sizeof(bytes)){while(*p==' ')++p;if(!*p)break;char *end=nullptr;auto n=strtoul(p,&end,16);if(end==p||n>255)break;bytes[count++]=n;p=end;}
+            auto *safe=compatibility_report::frame(bytes,count);if(!safe)continue;
+            number(safe,"age_ms",now()-num(get(record,"ms"),now()));cJSON_AddItemToArray(frames,safe);
+        }
+    }
+    bool active=cJSON_IsTrue(get(payload,"active_reads"))&&selected_mode=="rs485"&&transport::enabled()&&!transport::conflict();
+    flag(report,"active_reads",active);number(report,"baud",board::baud);
+    if(!active)warn("Tylko dane odebrane pasywnie. Aktywny odczyt wymaga trybu RS485 i wolnego adresu magistrali; raport nie zmienia trybu polaczenia.");
+    unsigned replies=0,failures=0,consecutive=0;const auto started=now();std::string first_identity,last_identity;
+    auto read_query=[&](const compatibility_report::Query &q,bool last=false){
+        {Lock lock;text(get(data,"job"),"step",std::string("Raport: ")+q.name);}
+        auto *entry=cJSON_CreateObject();text(entry,"query",q.name);number(entry,"request_type",q.type);number(entry,"response_type",q.response);
+        transport::Reply reply;bool ok=transport::request_readonly(q.type,q.size?q.payload:nullptr,q.size,q.response,reply);
+        flag(entry,"received",ok);flag(entry,"request_sent",reply.sent);number(entry,"latency_ms",reply.latency_ms);
+        if(ok){auto *safe=compatibility_report::frame(reply.bytes,reply.length);if(safe){put(entry,"response",safe);++replies;consecutive=0;}else{ok=false;flag(entry,"received",false);}}
+        if(ok&&q.type==57){Owned decoded{protocol::describe(reply.bytes,reply.length)};auto *product=get(decoded.p,"data");
+            (last?last_identity:first_identity)=str(get(product,"uid"));
+            if(!last){copy(report,"observed_controller",get(product,"model"));auto *details=cJSON_CreateObject();for(auto k:{"model","product_type","product_id","logo_id","image_id"})copy(details,k,get(product,k));put(report,"product",details);}
+        }
+        if(!ok){++failures;++consecutive;text(entry,"error","Brak poprawnej odpowiedzi w limicie czasu");}
+        cJSON_AddItemToArray(results,entry);
+    };
+    if(active){
+        for(const auto &q:compatibility_report::queries){
+            if(now()-started>45000||(consecutive>=2&&replies==0)||!transport::enabled()||transport::conflict()){warn("Odczyt przerwany: limit czasu, brak odpowiedzi lub konflikt magistrali. Raport jest czesciowy.");break;}
+            read_query(q);vTaskDelay(pdMS_TO_TICKS(80));
+        }
+        if(!first_identity.empty()&&transport::enabled()&&!transport::conflict()&&now()-started<50000)read_query(compatibility_report::queries[0],true);
+    }
+    if(!first_identity.empty()&&!last_identity.empty())flag(report,"same_controller_at_end",first_identity==last_identity);
+    else put(report,"same_controller_at_end",nullptr);
+    if(first_identity.empty()||last_identity.empty()||first_identity!=last_identity)warn("Nie potwierdzono tego samego sterownika na poczatku i koncu odczytu; nie lacz tych danych automatycznie w profil zapisu.");
+    if(!cJSON_IsTrue(get(sensor.p,"fresh")))warn("Brak swiezej, rozpoznanej ramki czujnikow. Stan nie jest potwierdzeniem dzialania wszystkich pomiarow.");
+    warn("Raport nie odblokowuje zapisu. Nazwy, jednostki, opcje i komendy nowego modelu wymagaja weryfikacji; nie uzyto nazw z profilu referencyjnego jako danych obcego kotla.");
+    number(report,"received_replies",replies);number(report,"failed_queries",failures);number(report,"duration_ms",now()-started);
+    flag(report,"partial",!active||failures||replies<sizeof(compatibility_report::queries)/sizeof(compatibility_report::queries[0])+1||first_identity.empty()||first_identity!=last_identity);
+    auto *result=cJSON_CreateObject();text(result,"state","ready");text(result,"report_id",report_id);text(result,"message","Raport gotowy do pobrania. Nastaw nie zmieniano.");
+    copy(result,"partial",get(report,"partial"));number(result,"received_replies",replies);
+    {Lock lock;cJSON_Delete(compatibility_cache);compatibility_cache=report;}
+    return result;
+}
 void worker(void *) {
     bool initial=true; uint64_t next_poll=0;
     for(;;) {
@@ -1451,6 +1522,7 @@ void worker(void *) {
             else if(kind=="control_execute") result=execute_control(payload,owner);
             else if(kind=="transport") result=choose_transport(payload);
             else if(kind=="rs_probe") result=rs_probe(payload);
+            else if(kind=="compatibility") result=collect_compatibility(payload);
             else { ok=kind=="connect"?configure(payload):kind=="scan"?scan():refresh(true); if(ok) { result=cJSON_CreateObject(); text(result,"state","odczytane"); text(result,"message",selected_mode=="rs485"?"Odczytano dane RS485":"Odczytano dane lokalnego ecoNET"); } }
             { Lock lock; auto *job=get(data,"job"); number(job,"finished_ms",now()); if(result) { text(job,"status","done"); put(job,"result",result); } else { text(job,"status","failed"); text(job,"error",error_text); text(data,"error",error_text); } busy=false; }
             next_poll=now()+3000; initial=false;
@@ -1575,9 +1647,15 @@ cJSON *job_snapshot(const char *id) {
     }
     auto *out=cJSON_CreateObject(); copy(out,"job",job); flag(out,"busy",busy); text(out,"version",board::version); return out;
 }
+cJSON *compatibility_snapshot(const char *id){Lock lock;return compatibility_cache&&id&&*id&&!strcmp(id,str(get(compatibility_cache,"report_id")))?cJSON_Duplicate(compatibility_cache,true):nullptr;}
 cJSON *submit(const char *kind, const cJSON *payload, const char *owner, std::string &error) {
     Lock lock;
     if(busy) { error="Trwa operacja. Poczekaj na zakonczenie"; return nullptr; }
+    if(!strcmp(kind,"compatibility")){
+        if(!cJSON_IsObject(payload)||cJSON_GetArraySize(payload)!=1||!cJSON_IsBool(get(payload,"active_reads"))){error="Nieprawidlowe opcje raportu";return nullptr;}
+        if(compatibility_started&&now()-compatibility_started<30000){error="Odczekaj 30 sekund przed kolejnym raportem";return nullptr;}
+        compatibility_started=now();
+    }
     if(!strcmp(kind,"rs_probe")) {
         const char *family=str(get(payload,"family"));
         if(cJSON_GetArraySize(payload)!=1||(strcmp(family,"mixer")&&strcmp(family,"thermostat")&&strcmp(family,"boiler")&&strcmp(family,"menu")&&strcmp(family,"menu_point")&&strcmp(family,"menu_structure")&&strcmp(family,"schedules")&&strcmp(family,"thermostat_schedules")&&strcmp(family,"alarms"))) {

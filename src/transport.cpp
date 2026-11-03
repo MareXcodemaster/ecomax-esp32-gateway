@@ -1,4 +1,5 @@
 #include "transport.hpp"
+#include "compatibility_report.hpp"
 #include "board.hpp"
 #include "frame_parser.hpp"
 #include "state.hpp"
@@ -323,6 +324,7 @@ bool self_test() {
     uint8_t room_request[10]{},room_reply[60]{}; room_request[3]=81;room_request[7]=88;room_reply[3]=86;room_reply[4]=81;room_reply[7]=216;
     reads=reads&&reply_matches(room_request,10,216,room_reply,60); room_reply[4]=69;reads=reads&&!reply_matches(room_request,10,216,room_reply,60);
     room_reply[4]=81;room_reply[3]=69;reads=reads&&!reply_matches(room_request,10,216,room_reply,60);
+    for(const auto &q:compatibility_report::queries)reads=reads&&readonly_allowed(q.type,q.size?q.payload:nullptr,q.size,q.response);
     return guards && reads && count == 16 && parser.valid == 16 && parser.invalid >= 4;
 }
 }

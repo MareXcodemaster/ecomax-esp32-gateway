@@ -15,6 +15,7 @@
 #include <vector>
 void access_tests();
 void diagnostics_tests();
+void compatibility_tests();
 void settings_journal_tests();
 void circulation_tests();
 
@@ -152,6 +153,7 @@ int main() {
     assert(identity_guard::decide("", "", true) == Action::reject);
     protocol::init();
     diagnostics_tests();
+    compatibility_tests();
     for (const auto* frame : {protocol_fixtures::frame_213, protocol_fixtures::frame_8,
                             protocol_fixtures::frame_177, protocol_fixtures::frame_178, protocol_fixtures::frame_212}) {
         const size_t length = frame[1] | (frame[2] << 8);

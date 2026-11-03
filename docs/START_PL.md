@@ -4,7 +4,7 @@
 
 **Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
 
-**Oprogramowanie: 0.7.0-beta.38. Instrukcja: wydanie 37, 02.11.2026.**
+**Oprogramowanie: 0.7.0-beta.39. Instrukcja: wydanie 38, 02.11.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -228,7 +228,7 @@ Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz pon
 `piec.local` lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
 Zmiana nie wymaga diagnostyki ani kasowania pamięci.
 
-![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.38/11-zmiana-wifi.png)
+![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.39/11-zmiana-wifi.png)
 
 **Montaż i zasięg:** moduł można umieścić na szynie DIN 35 mm w odpowiedniej
 szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
@@ -432,3 +432,13 @@ instalacji do publicznego pierwszego startu nie jest potwierdzoną ścieżką mi
 Nie wystawiaj panelu HTTP bezpośrednio do Internetu. Do zdalnego dostępu
 użyj VPN na routerze lub osobnej bramce. ESP nie wymaga chmury do działania
 w domu. Nie publikuj zrzutów z hasłami, UID, numerami seryjnymi ani danymi własnej sieci.
+
+## Raport dla innego modelu kotła
+
+Jeśli zapis jest zablokowany przez model lub identyfikację, otwórz
+**Narzędzia → Raport zgodności kotła → Odczytaj i pobierz JSON**.
+Prześlij autorowi pobrany plik. Odczyt nie zmienia nastaw; raport nie
+zawiera haseł ani UID kotła. Pomaga przygotować obsługę nowego wariantu,
+ale nie włącza niezweryfikowanych zapisów.
+
+**[Instrukcja raportu i znaczenie komunikatów](ZGODNOSC.md#inny-kocioł-lub-blokada-zapisu--raport-zgodności)**

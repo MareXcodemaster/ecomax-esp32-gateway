@@ -1,6 +1,6 @@
 # ecoMAX Wi-Fi: Prosta Instrukcja Instalacji
 
-**Wersja programu 0.7.0-beta.38. Instrukcja 30, 02.11.2026.**
+**Wersja programu 0.7.0-beta.39. Instrukcja 31, 02.11.2026.**
 Nie musisz programowac ani wpisywac komend. Komputer jest potrzebny
 tylko przy pierwszym wgraniu; pozniej korzystasz z telefonu.
 
@@ -143,3 +143,13 @@ Wiecej: [pelna instrukcja ze zdjeciami](START_PL.md),
 [jak wyglada panel](GALERIA.md), [zdjecia sprzetu](SPRZET.md).
 Awaryjna konfiguracja telefonem uzywa sieci **Piec-Setup-XXXX**
 z domyslnym haslem **piecwifi**; opis jest w pelnej instrukcji.
+
+## Raport dla innego modelu kotła
+
+Jeśli zapis jest zablokowany przez model lub identyfikację, otwórz
+**Narzędzia → Raport zgodności kotła → Odczytaj i pobierz JSON**.
+Prześlij autorowi pobrany plik. Odczyt nie zmienia nastaw; raport nie
+zawiera haseł ani UID kotła. Pomaga przygotować obsługę nowego wariantu,
+ale nie włącza niezweryfikowanych zapisów.
+
+**[Instrukcja raportu i znaczenie komunikatów](ZGODNOSC.md#inny-kocioł-lub-blokada-zapisu--raport-zgodności)**

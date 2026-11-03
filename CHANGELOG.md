@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0-beta.39 - 2026-11-03
+
+- Raport zgodności kotła JSON w Narzędziach, Ustawieniach urządzenia i przy blokadzie modelu/tożsamości.
+- Odczyt identyfikacji, modułów i katalogu także bez profilu zapisu; ograniczona lista odczytów RS485, limity czasu i raport częściowy z nasłuchu.
+- Rozdzielone komunikaty nieobsługiwanego modelu i ESP przypisanego do innego kotła. Rzeczywiście wykryty model w nagłówku.
+- Raport pomija hasła, sieć, UID i identyfikatory sprzętowe. Nie wysyła danych automatycznie, nie zmienia nastaw i nie odblokowuje niezweryfikowanego zapisu.
+- Instrukcja zgłaszania nowego wariantu oraz testy anonimizacji, ramkowania i pobierania na telefonie.
+
 ## 0.7.0-beta.38 - 2026-11-02
 
 - Przycisk Wlacz / Wylacz priorytet dostepny rowniez na gorze Cyrkulacji CWU.

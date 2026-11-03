@@ -201,6 +201,14 @@ static esp_err_t history_state(httpd_req_t *req) {
     if(raw>1||(raw&&(!from||!to||to-from>3600)))return message(req,"400 Bad Request","Eksport pelnych probek: maksymalnie 1 godzina na porcje");
     return json(req,panel_history::snapshot(from,to,raw==1));
 }
+static esp_err_t compatibility_state(httpd_req_t *req){
+    if(!authorize(req))return ESP_OK;
+    char query[96]{},id[40]{};
+    if(httpd_req_get_url_query_str(req,query,sizeof(query))!=ESP_OK||httpd_query_key_value(query,"id",id,sizeof(id))!=ESP_OK)
+        return message(req,"400 Bad Request","Brak identyfikatora raportu");
+    auto *report=panel::compatibility_snapshot(id);
+    return report?json(req,report):message(req,"404 Not Found","Raport nie jest dostepny. Odczytaj kociol ponownie.");
+}
 static esp_err_t pellet_state(httpd_req_t *req) {
     if (!authorize(req)) return ESP_OK;
     return json(req, pellet::snapshot());
@@ -241,6 +249,7 @@ static esp_err_t panel_command(httpd_req_t *req) {
     }
     const char *kind=!strcmp(req->uri,"/api/write/save")?"save":!strcmp(req->uri,"/api/rs485/probe")?"rs_probe":!strcmp(req->uri,"/api/transport")?"transport":!strcmp(req->uri,"/api/connect")?"connect":!strcmp(req->uri,"/api/scan")?"scan":!strcmp(req->uri,"/api/refresh")?"refresh":!strcmp(req->uri,"/api/control/prepare")?"control_prepare":!strcmp(req->uri,"/api/control/execute")?"control_execute":!strcmp(req->uri,"/api/write/prepare")?"prepare":"execute";
     if(!strcmp(req->uri,"/api/pellet/calibrate"))kind="pellet_calibrate";
+    if(!strcmp(req->uri,"/api/compatibility/scan"))kind="compatibility";
     int slot=cookie_session(req); std::string error;
     auto *response=panel::submit(kind,payload,slot>=0?sessions[slot].digest:"basic",error); cJSON_Delete(payload);
     if(!response&&error=="Trwa operacja. Poczekaj na zakonczenie") {
@@ -530,7 +539,7 @@ void start() {
     esp_timer_create_args_t timer{}; timer.callback = [](void *) { esp_restart(); }; timer.name = "ota_reboot";
     ESP_ERROR_CHECK(esp_timer_create(&timer, &reboot_timer));
     httpd_config_t config = HTTPD_DEFAULT_CONFIG(); config.stack_size = 16384;
-    config.max_uri_handlers = 57; config.max_open_sockets = 8; config.lru_purge_enable = true;
+    config.max_uri_handlers = 59; config.max_open_sockets = 8; config.lru_purge_enable = true;
     config.uri_match_fn=httpd_uri_match_wildcard;
     config.recv_wait_timeout = 5; config.send_wait_timeout = 12;
     ESP_ERROR_CHECK(httpd_start(&server, &config));
@@ -554,6 +563,7 @@ void start() {
     add("/api/parameters", HTTP_GET, unavailable); add("/api/schedules", HTTP_GET, unavailable);
     add("/ws", HTTP_GET, websocket, true);
     add("/api/state",HTTP_GET,panel_state); add("/api/export",HTTP_GET,panel_state); add("/api/session",HTTP_GET,panel_session);
+    add("/api/compatibility",HTTP_GET,compatibility_state);add("/api/compatibility/scan",HTTP_POST,panel_command);
     add("/api/pellet/calibrate",HTTP_POST,panel_command);
     add("/api/job",HTTP_GET,panel_job);
     add("/api/history",HTTP_GET,history_state);

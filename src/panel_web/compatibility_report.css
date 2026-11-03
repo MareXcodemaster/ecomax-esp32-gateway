@@ -1,0 +1,10 @@
+.compatibility-card{padding:1rem 1.25rem;border:1px solid #bad7d3;background:#eef6f4;margin:1rem 0;color:#244842}
+.compatibility-card p{margin:.6rem 0 1rem;line-height:1.5}
+#compatibility-dialog{width:min(560px,calc(100vw - 32px));box-sizing:border-box;max-height:calc(100dvh - 32px);overflow:auto}
+#compatibility-dialog h2{font-size:1.25rem;line-height:1.4;margin:0 0 1rem}
+#compatibility-dialog p{line-height:1.5}
+#compatibility-dialog .check{display:flex;align-items:flex-start;gap:.7rem;margin:1.25rem 0}
+#compatibility-dialog input[type=checkbox]{flex:0 0 auto;width:20px;height:20px;margin-top:2px}
+#compatibility-dialog .actions{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1rem}
+#compatibility-dialog button{white-space:normal}
+#compatibility-status{min-height:3em;overflow-wrap:anywhere}

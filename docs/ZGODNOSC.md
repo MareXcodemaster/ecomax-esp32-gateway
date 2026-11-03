@@ -26,6 +26,60 @@ metadanych oraz struktury i uprawnien sa sprawdzane przed udostepnieniem
 edycji. Nieznany wariant ma pozostac zablokowany, nie otrzymac zgadywanych
 indeksow. Odczyt danych i mozliwosc zapisu to dwie osobne kwestie.
 
+## Inny kocioł lub blokada zapisu — raport zgodności
+
+Od **0.7.0-beta.39** panel ma **Narzędzia → Raport zgodności kotła**.
+Ten sam przycisk jest w **Ustawieniach urządzenia** oraz przy komunikacie
+o nieobsługiwanym modelu lub innej tożsamości kotła.
+
+1. Podłącz ESP do magistrali regulatora zgodnie z instrukcją i otwórz panel.
+2. Wybierz **Narzędzia → Raport zgodności kotła**.
+3. Pozostaw zaznaczone **Uzupełnij zapytaniami odczytu RS485** i naciśnij
+   **Odczytaj i pobierz JSON**. Odczyt może potrwać około minuty.
+4. Prześlij autorowi pobrany plik `ecomax-zgodnosc-….json`. Możesz dołączyć
+   model regulatora, wersję z ekranu oraz zdjęcia brakujących pozycji menu.
+
+Nie trzeba włączać palnika ani zmieniać temperatur do wykonania raportu.
+Raport działa również wtedy, gdy model nie ma profilu zapisu. Zawiera
+rzeczywiście odebraną identyfikację modelu, wersje modułów, metadane,
+wartości i strukturę dostępnych parametrów, odczyty czujników oraz wyniki
+poszczególnych zapytań. Nazwy i jednostki nieznanego modelu nie są
+zastępowane nazwami z profilu referencyjnego. `reference_profile` oznacza
+wzorzec firmware, a nie wykryty kocioł. Identyfikacja jest sprawdzana na
+początku i na końcu zbierania danych.
+
+Zapytania korzystają wyłącznie z zamkniętej listy odczytów. Funkcja nie
+zmienia nastaw, przypisania kotła, trybu połączenia ani konfiguracji ESP.
+Przy braku odpowiedzi kończy odczyt po ograniczonej liczbie prób. Gdy działa
+ecoNET, występuje konflikt adresu lub nadawanie RS485 jest niedostępne,
+powstaje **raport częściowy z nasłuchu**. Taki plik także można przesłać;
+zawiera opis brakujących danych. Nie przełączaj połączeń tylko po to,
+aby uzyskać napis o kompletnym raporcie.
+
+Plik pomija hasła, ustawienia sieci, UID kotła i identyfikatory sprzętowe
+modułów. Zawiera temperatury i nastawy, więc przed publicznym udostępnieniem
+możesz go obejrzeć. Nic nie jest automatycznie wysyłane. Ostatni raport
+pozostaje w RAM ESP do następnego raportu lub restartu; nie zapisuje się
+go w pamięci flash.
+
+**Raport pomaga przygotować obsługę nowego wariantu, ale sam jej nie
+odblokowuje.** Część nazw i poleceń może wymagać dalszych porównań z ekranem
+regulatora oraz osobnego testu. Komplet odpowiedzi nie jest potwierdzeniem
+poprawności wszystkich zapisów ani obsługi wszystkich modułów.
+
+### Co oznaczają komunikaty?
+
+| Komunikat | Znaczenie |
+| --- | --- |
+| Ten model kotła nie ma jeszcze profilu zapisu | Nazwa modelu różni się od zweryfikowanego profilu. Pobierz raport. |
+| ESP jest przypisane do innego kotła | To ESP wcześniej zapamiętało identyfikator innego regulatora. Raport nie kasuje przypisania. |
+| Brak zweryfikowanego katalogu RS485 | Odczyt katalogu jest niedostępny albo firmware/struktura nie odpowiada zweryfikowanemu profilowi. Raport pomoże ustalić przyczynę. |
+
+Nowa, czysta instalacja nie zawiera przypisania do kotła autora. Zgodny
+regulator jest zapamiętywany przy pierwszej poprawnej identyfikacji.
+Zmiana modelu lub wersji oprogramowania nie oznacza automatycznie zgodności
+kodów nastaw.
+
 ## Sterowniki: Lista I Status
 
 **Posiadanie ecoNET nie jest potwierdzeniem pelnej zgodnosci tej bety.**

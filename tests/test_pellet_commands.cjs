@@ -7,7 +7,7 @@ test('pellet points require an explicit physical-level confirmation',()=>{
 });
 test('boiler calibration dispatch is bounded, journaled and never retries or claims completed calibration',()=>{
  const cpp=fs.readFileSync('src/panel.cpp','utf8');
- const body=cpp.slice(cpp.indexOf('J *calibrate_pellet('),cpp.indexOf('void worker('));
+ const body=cpp.slice(cpp.indexOf('J *calibrate_pellet('),cpp.indexOf('J *collect_compatibility('));
  for(const guard of ['physical_level_confirmed','rs_identify()','pellet_model','rs_menu_catalog(true)','request_readonly(97','pellet_commands::configuration','journal()','pellet_commands::acknowledged'])assert.ok(body.includes(guard),guard);
  assert.equal(body.match(/transport::request\(112/g).length,1);
  assert.match(body,/flag\(result,"calibration_complete",false\)/);

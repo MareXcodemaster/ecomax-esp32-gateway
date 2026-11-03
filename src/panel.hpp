@@ -5,6 +5,7 @@ namespace panel {
 void start();
 bool is_busy();
 cJSON *snapshot();
+cJSON *compatibility_snapshot(const char *id);
 cJSON *job_snapshot(const char *id);
 cJSON *submit(const char *kind, const cJSON *payload, const char *owner, std::string &error);
 bool self_test();
