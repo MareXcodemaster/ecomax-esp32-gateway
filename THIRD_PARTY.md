@@ -62,7 +62,7 @@ below; its application code and manufacturer JavaScript are not bundled:
 https://github.com/jontofront/ecoNET-300-Home-Assistant-Integration
 commit `d72c76670506906d243d9d2270453ea6c9041ecb`.
 
-Additional numeric protocol facts were independently implemented with the
+Additional numeric and remote-menu text framing facts were independently implemented with the
 reference below. Its program source is NOT redistributed and no license
 for that program is assumed:
 https://gist.github.com/denpamusic/6375c2a57716dc42861350f0eebc1e68

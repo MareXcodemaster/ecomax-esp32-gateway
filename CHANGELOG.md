@@ -1,5 +1,14 @@
 # Changelog
 
+
+## 0.7.0-beta.40
+
+- Profil ecoMAX810P-L TOUCH: moduł A 10.40.186.R5, panel 10.14.50, 169 nastaw na podstawie raportu RS485.
+- Pobieranie własnych nazw, jednostek, opcji i kategorii przez RS485, bez ecoNET. Kontrola wersji i uprawnień przed udostępnieniem edycji użytkownika i serwisu.
+- Niepełne katalogi nie otrzymują nazw i indeksów z ecoMAX860P-LZ. Raport zgodności zawiera status i rzeczywiste odczytane tabele tekstowe.
+- Ograniczenia: zapis na nowym wariancie czeka na test u właściciela; specjalne funkcje, termostat i harmonogramy nie uzyskują zgodności przez samą nazwę modelu.
+
+
 ## 0.7.0-beta.39 - 2026-11-03
 
 - Raport zgodności kotła JSON w Narzędziach, Ustawieniach urządzenia i przy blokadzie modelu/tożsamości.

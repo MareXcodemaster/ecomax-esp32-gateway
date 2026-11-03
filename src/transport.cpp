@@ -1,5 +1,6 @@
 #include "transport.hpp"
 #include "compatibility_report.hpp"
+#include "remote_menu_language.hpp"
 #include "board.hpp"
 #include "frame_parser.hpp"
 #include "state.hpp"
@@ -33,8 +34,8 @@ bool enable() {
 void disable() { active=false; }
 static bool readonly_allowed(uint8_t type,const uint8_t *payload,size_t size,uint8_t response) {
     if(type==86) return response==214&&payload&&
-        ((size==1&&(payload[0]==0||payload[0]==3||payload[0]==9))||(size==3&&payload[0]==4&&
-         ((payload[1]==255&&payload[2]==0)||(payload[1]==1&&payload[2]<168))));
+        (remote_menu_language::allowed(payload,size)||(size==1&&(payload[0]==0||payload[0]==3||payload[0]==9))||(size==3&&payload[0]==4&&
+         ((payload[1]==255&&payload[2]==0)||(payload[1]==1&&payload[2]<169))));
     if(size==0) return (type==57&&response==185)||(type==64&&response==192)||
         (type==84&&response==212)||(type==85&&response==213)||(type==54&&response==182);
     if(size!=2||!payload) return false;
@@ -51,7 +52,7 @@ static bool request_allowed(uint8_t type,const uint8_t *payload,size_t size,uint
         (type==112&&pellet_commands::write_allowed(payload,size,response))||
         (type==93&&size==2&&payload&&payload[0]==1&&(payload[1]&127)<=7&&response==221)||
         (type==55&&size==46&&payload&&response==0&&payload[0]==1&&payload[1]<=9&&payload[2]<=1&&payload[3]<=100)||
-        (type==86&&size==4&&payload&&payload[0]==5&&payload[1]==1&&payload[2]<168&&response==214)||
+        (type==86&&size==4&&payload&&payload[0]==5&&payload[1]==1&&payload[2]<169&&response==214)||
         (type==93&&size==3&&payload&&(payload[0]==2||payload[0]==3||payload[0]==10||payload[0]==11)&&response==221&&
           (payload[1]|(payload[2]<<8))>=100&&(payload[1]|(payload[2]<<8))<=350) ||
         (type==93&&size==3&&payload&&payload[0]==12&&response==221&&
@@ -131,6 +132,8 @@ static bool reply_matches(const uint8_t *request,size_t request_size,uint8_t exp
     bool menu_reply=request[7]==86&&expected==214&&request_size>=11&&length>=11&&bytes[8]==request[8];
     if(menu_reply&&request[8]==5) menu_reply=request_size==14&&length==13&&bytes[9]==1&&bytes[10]==request[10];
     if(menu_reply&&request[8]==4&&request_size==13&&request[9]==1) menu_reply=length==16&&bytes[9]==1&&bytes[10]==request[10];
+    if(menu_reply&&remote_menu_language::allowed(request+8,request_size-10))
+        menu_reply=remote_menu_language::matches(request+8,request_size-10,bytes+8,length-10);
     bool alarm_reply=request[7]==61&&expected==189&&request_size==12&&length>=13&&bytes[9]==request[8]&&bytes[10]<=request[9]&&bytes[9]+bytes[10]<=bytes[8]&&length==13+bytes[10]*9;
     return (bytes[4]==69||((menu_reply||alarm_reply)&&bytes[4]==80))&&(request[7]!=86||menu_reply)&&(request[7]!=61||alarm_reply);
 }
@@ -285,7 +288,7 @@ bool self_test() {
     schedule_write[2]=2; guards=guards&&!request_allowed(55,schedule_write,46,0); schedule_write[2]=1;
     schedule_write[3]=101; guards=guards&&!request_allowed(55,schedule_write,46,0);
     uint8_t bad_menu_write[]={5,2,47,46}; guards=guards&&!request_allowed(86,bad_menu_write,4,214);
-    bad_menu_write[1]=1; bad_menu_write[2]=168; guards=guards&&!request_allowed(86,bad_menu_write,4,214);
+    bad_menu_write[1]=1; bad_menu_write[2]=169; guards=guards&&!request_allowed(86,bad_menu_write,4,214);
     for(unsigned type:{51,52,55,59,87,89,93,96,97,98,99,100,101,102})
         reads=reads&&!readonly_allowed(type,boiler_read,2,type+128)&&!readonly_allowed(type,nullptr,0,type+128);
     const uint8_t pellet_config[]={255,0};uint8_t pellet_point[3]{};
@@ -308,7 +311,7 @@ bool self_test() {
     write_reply[9]=2; guards=guards&&!reply_matches(write_request,14,214,write_reply,13); write_reply[9]=1;
     guards=guards&&!reply_matches(write_request,14,214,write_reply,11);
     uint8_t point[]={4,1,47},point_request[13]{},point_reply[16]{};
-    reads=reads&&readonly_allowed(86,point,3,214); point[2]=168; reads=reads&&!readonly_allowed(86,point,3,214); point[2]=47;
+    reads=reads&&readonly_allowed(86,point,3,214); point[2]=169; reads=reads&&!readonly_allowed(86,point,3,214); point[2]=47;
     point[1]=2; reads=reads&&!readonly_allowed(86,point,3,214); point[1]=1;
     point_request[7]=86; memcpy(point_request+8,point,3); point_reply[4]=80; point_reply[7]=214; memcpy(point_reply+8,point,3);
     reads=reads&&reply_matches(point_request,13,214,point_reply,16);

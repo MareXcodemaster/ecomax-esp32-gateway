@@ -26,6 +26,34 @@ metadanych oraz struktury i uprawnien sa sprawdzane przed udostepnieniem
 edycji. Nieznany wariant ma pozostac zablokowany, nie otrzymac zgadywanych
 indeksow. Odczyt danych i mozliwosc zapisu to dwie osobne kwestie.
 
+## ecoMAX810P-L TOUCH — profil od beta.40
+
+Obsługiwany wariant: **moduł A 10.40.186.R5, panel 10.14.50**.
+Raport użytkownika potwierdził świeże pomiary, 169 pozycji katalogu,
+metadane i strukturę menu. Nie zawierał nazw ani opcji ustawień.
+
+Po aktualizacji ESP automatycznie pobiera przez RS485 polskie nazwy,
+jednostki, opcje wyboru i kategorie **z podłączonego sterownika**.
+**Nie potrzeba modułu ecoNET.** Połączenie z nowym kotłem nie korzysta
+z indeksów ani nazw profilu ecoMAX860P-LZ. Pierwszy odczyt katalogu może
+potrwać kilkadziesiąt sekund; niepełny odczyt jest ponawiany po minucie.
+
+Nastawy tego wariantu zmienia się w **Parametrach użytkownika** i
+**Parametrach serwisowych**. Udostępniane są pozycje obecne w jego
+strukturze menu, odblokowane przez sterownik i z aktualnym zakresem.
+Zapis jest pojedynczy; wynik wymaga ACK i nowego odczytu tej nastawy.
+Menu producenta, kasowanie liczników, kalibracja paliwa, harmonogramy,
+sterowanie pracą kotła i specjalne komendy ecoSTER nie są odblokowywane
+przez samą zgodność nazwy modelu. Skróty edycji temperatur na kafelkach
+tego nowego profilu nie są jeszcze przypisane; użyj jego menu parametrów.
+
+**Status: obsługa eksperymentalna, rzeczywisty zapis na tym wariancie
+czeka na test właściciela.** Raport nie potwierdza wszystkich funkcji.
+W razie braku menu pobierz ponownie raport zgodności po aktualizacji.
+Raport zawiera wtedy wynik pobierania katalogu, a po udanym odczycie
+również rzeczywiste nazwy, jednostki, opcje i kategorie.
+Nie aktualizuje ani nie zmienia nastaw automatycznie.
+
 ## Inny kocioł lub blokada zapisu — raport zgodności
 
 Od **0.7.0-beta.39** panel ma **Narzędzia → Raport zgodności kotła**.
@@ -91,7 +119,7 @@ indeksy nastaw, termostaty i uprawnienia moga sie roznic.
 | --- | --- |
 | ecoMAX860P-LZ TOUCH, modul A 8.41.38.L0, panel 8.30.28 | Profil referencyjny, uzywany w instalacji prywatnej; nie kazdy zapis przetestowany |
 | ecoMAX860P4-LZ | Oznaczenie sprzetowe modulu w tej samej instalacji referencyjnej, nie osobny drugi test |
-| ecoMAX810P-L TOUCH | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |
+| ecoMAX810P-L TOUCH, moduł A 10.40.186.R5, panel 10.14.50 | Profil beta.40 na podstawie raportu RS485; 169 nastaw. Własne nazwy i menu pobierane z kotła. Zapis wymaga testu u właściciela |
 | ecoMAX850R2-X | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |
 | ecoMAX360 | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |
 | ecoMAX860P2-N | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |
@@ -110,7 +138,8 @@ kontrole konkretnego modelu i firmware. Nie nalezy ich odblokowywac
 przez podmiane identyfikatora modelu.
 
 **Bezposredni RS485:** identyfikacja i katalog zapisu sa ograniczone
-do profilu referencyjnego. Inny model nie otrzymuje zgadywanych komend.
+do profilu referencyjnego oraz wskazanego wyżej wariantu ecoMAX810P-L.
+Inny model nie otrzymuje zgadywanych komend.
 Fakt, ze PyPlumIO obsluguje wiecej wariantow protokolu, nie oznacza,
 ze wszystkie jego mozliwosci zostaly przeniesione do tej aplikacji C++.
 

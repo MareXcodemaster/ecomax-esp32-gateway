@@ -424,9 +424,9 @@ Outcome decode(const uint8_t *raw, size_t length, const Schema &context, cJSON *
                     number(entry,"value",value); number(entry,"min",low); number(entry,"max",high); ++fields;
                 }
             } else if(command==5) {
-                unsigned count=r.u8(); if(!r.ok||count>168||r.size!=2+count) return {"payload_mismatch"};
+                unsigned count=r.u8(); if(!r.ok||count>169||r.size!=2+count) return {"payload_mismatch"};
                 number(out,"count",count); auto *indices=array(out,"indices");
-                for(unsigned i=0;i<count;++i) { unsigned index=r.u8(); if(index>=168) return {"payload_mismatch"}; if(indices) cJSON_AddItemToArray(indices,cJSON_CreateNumber(index)); ++fields; }
+                for(unsigned i=0;i<count;++i) { unsigned index=r.u8(); if(index>=169) return {"payload_mismatch"}; if(indices) cJSON_AddItemToArray(indices,cJSON_CreateNumber(index)); ++fields; }
             } else if(command==9) {
                 unsigned count=r.u16(); if(!r.ok||count>493||!count||r.size!=3+count*2) return {"payload_mismatch"};
                 number(out,"wire_count",count); auto *items=array(out,"structure");

@@ -7,9 +7,17 @@ Bez konta w chmurze do codziennej pracy. Interfejs i instrukcje po polsku.
 **[Prosta instalacja w 7 krokach](docs/SZYBKI_START.md)** ·
 **[Pobierz firmware i instrukcje](https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases)**
 
-**Wersja 0.7.0-beta.39. Projekt niezalezny, nieoficjalny. Nie jest produktem
+**Wersja 0.7.0-beta.40. Projekt niezalezny, nieoficjalny. Nie jest produktem
 PLUM ani Waveshare. Nie jest uniwersalnym firmware dla wszystkich
 kotlow.** Nie omija zabezpieczen ani nie zastepuje regulatora kotla.
+
+## Nowy profil: ecoMAX810P-L TOUCH
+
+Beta.40 dodaje wariant **10.40.186.R5 / panel 10.14.50**: własne nazwy,
+jednostki i menu pobierane przez RS485, bez ecoNET. Edycja dostępnych
+pozycji użytkownika i serwisu po sprawdzeniu katalogu. **Zapis wymaga
+jeszcze potwierdzenia na instalacji właściciela.**
+[Zakres obsługi i ograniczenia](docs/ZGODNOSC.md#ecomax810p-l-touch--profil-od-beta40).
 
 ## Raport dla innego modelu kotła
 
@@ -31,9 +39,9 @@ kolejne OTA zachowuja hasla wybrane przez uzytkownika.
 
 ## Jak Wyglada Panel
 
-![Panel ecoMAX Wi-Fi - odczyty i nastawy, przykladowe dane DEMO](docs/images/panel/0.7.0-beta.39/01-odczyty.png)
+![Panel ecoMAX Wi-Fi - odczyty i nastawy, przykladowe dane DEMO](docs/images/panel/0.7.0-beta.40/01-odczyty.png)
 
-![Schemat kotla, mieszacza i CWU z przykladowymi temperaturami](docs/images/panel/0.7.0-beta.39/10-schemat.png)
+![Schemat kotla, mieszacza i CWU z przykladowymi temperaturami](docs/images/panel/0.7.0-beta.40/10-schemat.png)
 
 Siec zmienisz od razu przez **Narzedzia > Zmien siec Wi-Fi** (wyszukiwanie,
 wybor i haslo), bez diagnostyki. Status i nazwa `piec.local` sa w
@@ -41,15 +49,15 @@ wybor i haslo), bez diagnostyki. Status i nazwa `piec.local` sa w
 
 ### Harmonogram Tygodniowy
 
-![Harmonogram CWU: dni tygodnia i godziny, dane DEMO](docs/images/panel/0.7.0-beta.39/02-harmonogram.png)
+![Harmonogram CWU: dni tygodnia i godziny, dane DEMO](docs/images/panel/0.7.0-beta.40/02-harmonogram.png)
 
 ### Historia Temperatur I Pracy Kotla
 
-![Historia temperatur CO i CWU oraz stanow kotla, dane DEMO](docs/images/panel/0.7.0-beta.39/03-historia.png)
+![Historia temperatur CO i CWU oraz stanow kotla, dane DEMO](docs/images/panel/0.7.0-beta.40/03-historia.png)
 
 **[Galeria: harmonogram, wykresy, stany kotla, zmiana nastawy i telefon](docs/GALERIA.md)**
 
-Zrzuty zaktualizowano 03.11.2026 do wersji **0.7.0-beta.39**.
+Zrzuty zaktualizowano 03.11.2026 do wersji **0.7.0-beta.40**.
 
 ### Cyrkulacja CWU
 
@@ -65,7 +73,7 @@ to powrot CWU do zbiornika. Bez plikow filmowych i bez internetu. P100/P105/P110
 z KLAP v2 lub TPAP; fizyczny test wykonany na P110, inne modele wymagaja sprawdzenia.
 Nie jest to emulacja modulu C ani sterowanie pompa ladujaca bojler.
 
-![Pompka cyrkulacyjna CWU z progami i harmonogramem, dane DEMO](docs/images/panel/0.7.0-beta.39/18-pompka-cwu.png)
+![Pompka cyrkulacyjna CWU z progami i harmonogramem, dane DEMO](docs/images/panel/0.7.0-beta.40/18-pompka-cwu.png)
 
 **[Gniazdka Tapo, polaczenie i opis dzialania](docs/POMPKA_CWU.md)**
 Przedstawiaja rzeczywisty interfejs z danymi przykladowymi (DEMO),
@@ -86,7 +94,7 @@ aktywnego wyjscia podajnika. Po zatrzymaniu lub utracie danych ruch staje.
 Wizualizacja nie mierzy obrotow ani ilosci paliwa. Lekka grafika SVG/CSS,
 bez filmu i bez polecen sterujacych podajnikiem.
 
-![Animowany podajnik i dosypywanie pelletu do kotla, dane DEMO](docs/images/panel/0.7.0-beta.39/07-pellet.png)
+![Animowany podajnik i dosypywanie pelletu do kotla, dane DEMO](docs/images/panel/0.7.0-beta.40/07-pellet.png)
 
 ## Co Kupic I Jak Podlaczyc
 

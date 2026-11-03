@@ -19,6 +19,9 @@ def frame(kind, payload):
 
 def generate(profile_path, destination):
     profile = json.loads(Path(profile_path).read_text(encoding="ascii"))
+    model810 = json.loads(Path(profile_path).with_name('ecomax810p_l_touch.json').read_text(encoding='ascii'))
+    Path(destination, 'model810_fixtures.hpp').write_text('#pragma once\n#include <cstdint>\n' + header('model810_metadata_frame', frame(214, bytes.fromhex(model810['metadata_payload']))), encoding='ascii')
+
     schema = bytes.fromhex(profile["schema_payload"])
     count = int.from_bytes(schema[:2], "little")
     assert len(schema) == 2 + count * 3 and count == 194
