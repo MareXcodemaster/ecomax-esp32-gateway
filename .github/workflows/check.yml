@@ -57,6 +57,8 @@ jobs:
         run: node tests/sidebar_diagnostics.mjs
       - name: Multi-client setpoint and Wi-Fi signal browser tests
         run: node tests/live_save_browser.mjs
+      - name: Multiple mixer tiles and independent setpoint browser tests
+        run: node tests/mixer_tiles_browser.mjs
       - name: View refresh and browser history navigation tests
         run: node tests/navigation_browser.mjs
       - name: External CWU pump configuration and schedule browser tests

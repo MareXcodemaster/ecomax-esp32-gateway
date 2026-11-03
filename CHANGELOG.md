@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-beta.44
+
+- Dane bieżące automatycznie dodają kafelki kolejnych odczytanych mieszaczy, z temperaturą zmierzoną i zadaną.
+- Skrót edycji mieszacza korzysta z jednoznacznej nazwy i grupy we własnym katalogu sterownika, jednostki °C oraz istniejącego, zweryfikowanego celu zapisu. Nie kopiuje indeksu nastawy innego modelu.
+- Brak albo niejednoznaczność katalogu pozostawia odczyt celu obiegu. Pojawienie się katalogu odświeża przycisk edycji bez przeładowania strony.
+- Zawiera graficzny schemat obiegów beta.43 i poprawki zgodności beta.42.
+
 ## 0.7.0-beta.43
 
 - Graficzny schemat dla innych konfiguracji: kocioł, CWU, mieszacze z pompami, grzejniki i podłogówka w stylu dotychczasowego widoku. Grafiki SVG działają lokalnie.

@@ -281,6 +281,15 @@ try {
   assert.equal(await page.locator('#lbSchema_fuelLevel').textContent(),'Kalibracja');
   await page.evaluate(()=>EcoHeatingSchema.render({...state,curr:{...state.curr,fuelCalibration:true}},false));
   assert.equal(await page.locator('#lbSchema_fuelLevel').textContent(),'---');
+  const mixerDemoBefore={curr:{...state.curr},targets:{...state.targets},menu:state.menu};
+  state.curr.mixerTemp2=31;state.curr.mixerSetTemp2=35;
+  state.menu=[{name:'Temperatura zadana mieszacza',category:'Ustawienia mieszacza 1',unit_name:'°C',write_id:'rm:62',write_enabled:true},{name:'Temperatura zadana mieszacza',category:'Ustawienia mieszacza 2',unit_name:'°C',write_id:'rm:91',write_enabled:true}];
+  state.targets['rm:62']={...target('Temperatura zadana mieszacza 1',40,20,65,'mixerTemp1'),generic:true,value_kind:'number',unit:'°C'};
+  state.targets['rm:91']={...target('Temperatura zadana mieszacza 2',35,20,50,'mixerTemp2'),generic:true,value_kind:'number',unit:'°C'};
+  await page.evaluate(()=>poll());await page.locator('[data-view="live"]').click();
+  assert.equal(await page.locator('[data-member="mixerTemp2"] [data-reading="set"] .tile-value').textContent(),'35,0');
+  await page.setViewportSize({width:1600,height:1150});await screenshot('22-dwa-mieszacze');await page.setViewportSize({width:1280,height:1080});
+  Object.assign(state,mixerDemoBefore);await page.evaluate(()=>poll());await page.locator('[data-view="schema"]').click();
   await page.evaluate(()=>EcoHeatingSchema.render(state,true));
   await page.locator('#update-open').click();
   await page.locator('#update-current').getByText(version,{exact:true}).waitFor();

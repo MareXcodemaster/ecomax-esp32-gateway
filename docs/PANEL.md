@@ -237,3 +237,7 @@ byc uzywane do obchodzenia zabezpieczen. Ocen stan samego kotla.
 Od beta.43 inne konfiguracje pokazują graficznie kocioł, CWU i odczytane mieszacze. Pierwszy mieszacz ma domyślnie symbol grzejnika, drugi — podłogówki. W „Opis obiegów na schemacie” można zmienić te symbole zgodnie z instalacją. Wybór jest zapisywany tylko w tej przeglądarce, nie zmienia konfiguracji ani nastaw kotła.
 
 Temperatury zmierzone i zadane oraz stany pomp pochodzą z aktualnych danych. Pod rysunkiem są dostępne pozostałe temperatury: spaliny, podajnik, powrót, otoczenie, pomieszczenia, bufor, solary i inne obsługiwane czujniki, jeśli sterownik udostępnia pomiar. Przy utracie odczytu pojawia się „---”. Połączenia rur są poglądowe. Dotychczasowy schemat 23 pozostaje bez zmian.
+
+## Kafelki kilku mieszaczy
+
+Od beta.44 w Danych bieżących pojawiają się osobne kafelki kolejnych mieszaczy, jeśli sterownik przesyła ich temperatury. Pokazują pomiar oraz zadaną temperaturę obiegu. Po odczytaniu własnego katalogu menu ołówek otwiera odpowiednią nastawę mieszacza. Nazwa, numer obiegu i jednostka muszą być jednoznaczne; nie dobieramy numeru parametru na podstawie innego kotła. Jeśli katalog jest niepełny lub niejednoznaczny, pozostaje odczyt i szczegóły.

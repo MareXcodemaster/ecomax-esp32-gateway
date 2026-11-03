@@ -117,7 +117,7 @@ ale nie zmienia stanu gniazdka. Jesli pompa ma sie zatrzymac, najpierw
 wybierz **Wylaczona** i poczekaj na potwierdzenie, a potem wylacz obsluge.
 Ponowne wlaczenie obslugi przywraca zapisany tryb, progi i harmonogram.
 
-![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.43/19-cyrkulacja-recznie.png)
+![Reczne wlaczanie i wylaczanie pompy, dane DEMO](images/panel/0.7.0-beta.44/19-cyrkulacja-recznie.png)
 
 ## Temperatury I Tryby
 
@@ -153,7 +153,7 @@ Odczyt jest dodatkowy: polecenie wlaczenia/wylaczenia ma pierwszenstwo.
 Restart ESP nie kasuje historii zapisanej przez gniazdko. Starsze wersje
 oprogramowania gniazdka moga nie udostepniac pelnej historii.
 
-![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.43/20-energia-pompy.png)
+![Zuzycie energii pompy, dane DEMO](images/panel/0.7.0-beta.44/20-energia-pompy.png)
 
 ## Harmonogram
 

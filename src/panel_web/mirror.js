@@ -81,7 +81,34 @@
   if(!draft.dirty)return {value:String(current),baseline:current,dirty:false,changed:false};
   return {...draft,changed:current!==draft.baseline};
  }
- function targetIdForTile(key,data){const native=data.write_transport==='rs485',room={1:'STER_TEMP_NIGHT_1',2:'STER_TEMP_DAY_1',5:(native?'':'legacy:')+'STER_TEMP_SET_PARTY_1',6:(native?'':'legacy:')+'STER_TEMP_SET_SUMMER_1',7:'legacy:STER_TEMP_ANTIFREEZ_1'},mode=Number.isInteger(data.curr?.ecoSterMode1)?data.curr.ecoSterMode1&127:null;return {tempCO:'1280',tempCWU:'1281',mixerTemp1:'1287',ecoSterTemp1:room[mode]||'legacy:STER_TEMP_DAY_1'}[key]||null;}
+ const finite=v=>typeof v==='number'&&Number.isFinite(v);
+ const normalized=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/\s+/g,' ').trim();
+ function liveTiles(data){
+  const tiles=(data.tiles?.length?data.tiles:fallbackTiles).map(t=>({...t}));
+  for(let i=1;i<=16;i++){
+   const key='mixerTemp'+i;if(!finite(data.curr?.[key]))continue;
+   const existing=tiles.find(t=>t.memberName_===key);if(existing){existing.setMemberName_='mixerSetTemp'+i;continue;}
+   const previous=tiles.map(t=>t.memberName_).lastIndexOf('mixerTemp'+(i-1));
+   tiles.splice(previous>=0?previous+1:tiles.length,0,{memberName_:key,setMemberName_:'mixerSetTemp'+i});
+  }
+  return tiles.map((t,i)=>({...t,seqNo_:i}));
+ }
+ function mixerTargetId(key,data){
+  const match=/^mixerTemp([1-9]|1[0-6])$/.exec(key);if(!match||!finite(data.curr?.[key]))return null;
+  const index=Number(match[1]),found=[];
+  for(const row of data.menu||[]){
+   const id=row.write_id,t=data.targets?.[id];
+   if(!row.write_enabled||!/^rm:\d+$/.test(id||'')||!t||t.generic!==true||t.value_kind!=='number'||t.write_ready===false||!finite(t.before)||!finite(t.min)||!finite(t.max)||t.before<t.min||t.before>t.max)continue;
+   if(!['°c','c','℃'].includes(normalized(t.unit||row.unit_name)))continue;
+   const name=normalized(row.name),explicit=/^temperatura zadana mieszacza (\d+)$/.exec(name);
+   const category=normalized(Array.isArray(row.category)?row.category.join(' / '):row.category);
+   const groups=[...category.matchAll(/(?:^|[/>›|])\s*(?:ustawienia )?mieszacza? (\d+)\s*(?=$|[/>›|])/g)].map(m=>Number(m[1]));
+   if(groups.some(n=>n!==index))continue;
+   if(explicit?Number(explicit[1])===index:['temperatura zadana mieszacza','temperatura zadana'].includes(name)&&groups.length===1&&groups[0]===index)found.push(id);
+  }
+  return found.length===1?found[0]:null;
+ }
+ function targetIdForTile(key,data){const mixer=mixerTargetId(key,data);if(mixer)return mixer;const native=data.write_transport==='rs485',room={1:'STER_TEMP_NIGHT_1',2:'STER_TEMP_DAY_1',5:(native?'':'legacy:')+'STER_TEMP_SET_PARTY_1',6:(native?'':'legacy:')+'STER_TEMP_SET_SUMMER_1',7:'legacy:STER_TEMP_ANTIFREEZ_1'},mode=Number.isInteger(data.curr?.ecoSterMode1)?data.curr.ecoSterMode1&127:null;return {tempCO:'1280',tempCWU:'1281',mixerTemp1:'1287',ecoSterTemp1:room[mode]||'legacy:STER_TEMP_DAY_1'}[key]||null;}
  function writeIdForEntry(item){return item?.write_enabled&&item?.write_id?item.write_id:null;}
  function advancedEntries(menu){return menu.filter(item=>item.advanced&&item.in_structure&&!item.locked).map(item=>({kind:'parameter',index:item.index}));}
  function isThermostatMenu(item){return item.source==='editParams'||item.source==='RS485_THERMOSTAT_PARAMETERS_220';}
@@ -113,7 +140,7 @@
   const writable=!!(valid&&(active||inactive)&&t.write_ready!==false&&!t.advanced&&Number.isInteger(on)&&Number.isInteger(off)&&on!==off&&next>=t.min&&next<=t.max);
   return {available:true,id,writable,active,next,label:!valid?'Priorytet CWU: brak odczytu':active?'Priorytet CWU włączony':inactive?'CWU bez priorytetu':offHeating?'Grzanie CWU wyłączone':'Priorytet CWU: nieznany tryb'};
  }
- if(typeof module!=='undefined'&&module.exports)module.exports={decodeSchedule,buildTree,visibleTree,reconcileDraft,clock,targetIdForTile,writeIdForEntry,ticketMatches,isThermostatMenu,parameterReading,econetNetworkValue,scheduleHelp,advancedEntries,tileRunning,dhwPriority};
+ if(typeof module!=='undefined'&&module.exports)module.exports={liveTiles,mixerTargetId,decodeSchedule,buildTree,visibleTree,reconcileDraft,clock,targetIdForTile,writeIdForEntry,ticketMatches,isThermostatMenu,parameterReading,econetNetworkValue,scheduleHelp,advancedEntries,tileRunning,dhwPriority};
  let snapshot=null,isFresh=false,tempId=null,temperatureDraft=null,parameterSelection=null,treeSignature='',trees={},prioritySaving=false;
  const get=id=>document.getElementById(id);
  const make=(tag,cls,value)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=value;return el;};
@@ -165,17 +192,17 @@
  }
  function renderTiles(){
   if(EcoTileLayout.isDragging())return;
-  const container=get('mirror-tiles'),tiles=EcoTileLayout.order(snapshot.tiles.length?snapshot.tiles:fallbackTiles),signature=JSON.stringify(tiles);
+  const container=get('mirror-tiles'),tiles=EcoTileLayout.order(liveTiles(snapshot)),signature=JSON.stringify([tiles,tiles.map(t=>targetIdForTile(t.memberName_,snapshot))]);
   if(container.dataset.signature!==signature){container.replaceChildren();for(const tile of tiles){const key=tile.memberName_;if(!key)continue;const article=make('article','eco-tile');article.dataset.member=key;
    const heading=make('div','tile-title',labels[key]||currentName(key));article.append(heading);const body=make('div','tile-body');
-   if(tile.setMemberName_){body.append(reading('set',true),reading('actual',false));const id=targetIdForTile(key,snapshot);if(id&&!key.startsWith('ecoSter')){body.querySelector('[data-reading=set] small').textContent='temp. ustawiona [\u00b0C]';body.querySelector('[data-reading=set] .tile-value').parentElement.append(make('small','tile-target-now',''));}const button=icon(id?'pencil':'info',id?'Zmie\u0144 temperatur\u0119 ustawion\u0105: '+labels[key]:'Szczeg\u00f3\u0142y: '+(labels[key]||key));button.classList.add('tile-action');button.onclick=()=>id?openTemperature(targetIdForTile(key,snapshot)):openCurrent(key);article.append(button);}
+   if(tile.setMemberName_){body.append(reading('set',true),reading('actual',false));const id=targetIdForTile(key,snapshot);if(id&&!key.startsWith('ecoSter')){body.querySelector('[data-reading=set] small').textContent='temp. ustawiona [\u00b0C]';body.querySelector('[data-reading=set] .tile-value').parentElement.append(make('small','tile-target-now',''));}const button=icon(id?'pencil':'info',id?'Zmie\u0144 temperatur\u0119 ustawion\u0105: '+(labels[key]||currentName(key)):'Szczeg\u00f3\u0142y: '+(labels[key]||key));button.classList.add('tile-action');button.onclick=()=>id?openTemperature(targetIdForTile(key,snapshot)):openCurrent(key);article.append(button);}
    else if(key.startsWith('temp'))body.append(reading('actual',false));
    else{const graphic=make('div','tile-symbol'),i=make('i');i.dataset.lucide=({mode:'power',boilerPower:'flame',lambdaLevel:'activity',fanPower:'fan',fuelLevel:'wheat'})[key]||'gauge';graphic.append(i);body.append(graphic,make('div',key==='mode'||key==='lambdaLevel'?'tile-mode':'tile-value'));}
    article.append(body);container.append(article);
   }container.dataset.signature=signature;EcoTileLayout.decorate();icons();}
   const curr=isFresh?snapshot.curr:{};
   for(const [i,tile]of tiles.entries()){const el=container.children[i];if(!el)continue;const key=tile.memberName_;el.dataset.stale=String(!isFresh);el.dataset.running=String(tileRunning(key,curr,isFresh));const actual=el.querySelector('[data-reading=actual] .tile-value');
-   if(actual)actual.textContent=num(curr[key]);const set=el.querySelector('[data-reading=set] .tile-value');if(set){const id=targetIdForTile(key,snapshot),target=id?snapshot.targets?.[id]:null;set.textContent=num(id&&!key.startsWith('ecoSter')?(isFresh&&snapshot.targets_fresh?target?.before:null):curr[tile.setMemberName_]);const active=el.querySelector('.tile-target-now');if(active)active.textContent='Cel teraz: '+degrees(curr[tile.setMemberName_]);const button=el.querySelector('.tile-action');if(button&&id){button.disabled=!isFresh||!snapshot.targets_fresh||!target||target.write_ready===false||actionBusy||snapshot.busy;button.title=target?.write_ready===false?target.write_error||'Zapis zablokowany':'Zmie\u0144 temperatur\u0119 ustawion\u0105: '+labels[key];}}
+   if(actual)actual.textContent=num(curr[key]);const set=el.querySelector('[data-reading=set] .tile-value');if(set){const id=targetIdForTile(key,snapshot),target=id?snapshot.targets?.[id]:null;const base=isFresh&&snapshot.targets_fresh&&finite(target?.before);set.textContent=num(id&&!key.startsWith('ecoSter')&&base?target.before:curr[tile.setMemberName_]);el.querySelector('[data-reading=set] small').textContent=base?'temp. ustawiona [°C]':'temp. zadana teraz [°C]';const active=el.querySelector('.tile-target-now');if(active)active.textContent='Cel teraz: '+degrees(curr[tile.setMemberName_]);const button=el.querySelector('.tile-action');if(button&&id){button.disabled=!isFresh||!snapshot.targets_fresh||!target||target.write_ready===false||actionBusy||snapshot.busy;button.title=target?.write_ready===false?target.write_error||'Zapis zablokowany':'Zmie\u0144 temperatur\u0119 ustawion\u0105: '+(labels[key]||currentName(key));}}
    if(!actual){const value=el.querySelector('.tile-value,.tile-mode');value.textContent=key==='mode'?(isFresh?EcoSettings.boilerModeLabel(curr.mode,snapshot.write_transport):'---'):key==='lambdaLevel'?(isFresh?(curr.lambdaStatus===0?'STOP':num(curr[key]/10)):'---'):num(curr[key],0)+' %';}
   }
   EcoTileMotion.render(container,curr.fanPower);
@@ -211,7 +238,7 @@
  function updatePelletTile(){EcoPellet.decorateLevelTile(get('mirror-tiles').querySelector('[data-member="fuelLevel"]'),snapshot.curr?.fuelLevel,isFresh,snapshot.curr?.fuelCalibration);}
  function reading(kind,set){const row=make('div','tile-reading '+(set?'set':''));row.dataset.reading=kind;const graphic=make('div','tile-symbol'),i=make('i');i.dataset.lucide=set?'thermometer-sun':'thermometer';graphic.append(i);const content=make('div');content.append(make('div','tile-value','---'),make('small','',set?'temp. zadana [\u00b0C]':'temp. aktualna [\u00b0C]'));row.append(graphic,content);return row;}
  function openCurrent(key){parameterSelection={key};updateCurrent(key);get('parameter-dialog').showModal();}
- function updateCurrent(key){get('parameter-name').textContent=labels[key]||currentName(key);details('parameter-values',[['Temperatura aktualna',degrees(isFresh?snapshot.curr[key]:null)],['Temperatura zadana',degrees(isFresh?snapshot.curr[{mixerTemp1:'mixerSetTemp1',ecoSterTemp1:'ecoSterSetTemp1'}[key]]:null)],['Dost\u0119p','Tylko odczyt']]);get('parameter-description').textContent='';get('parameter-raw').textContent='';}
+ function updateCurrent(key){get('parameter-name').textContent=labels[key]||currentName(key);details('parameter-values',[['Temperatura aktualna',degrees(isFresh?snapshot.curr[key]:null)],['Temperatura zadana',degrees(isFresh?snapshot.curr[/^mixerTemp\d+$/.test(key)?key.replace('mixerTemp','mixerSetTemp'):{ecoSterTemp1:'ecoSterSetTemp1'}[key]]:null)],['Dost\u0119p','Tylko odczyt']]);get('parameter-description').textContent='';get('parameter-raw').textContent='';}
  function updateTrees(){
   const signature=JSON.stringify([snapshot.structure,snapshot.category_names,snapshot.menu.filter(m=>isThermostatMenu(m)||m.write_id).map(m=>[m.index,m.write_id,m.write_enabled])]);if(treeSignature===signature)return;treeSignature=signature;
   const all=buildTree(snapshot.structure,snapshot.category_names);trees={user:visibleTree(all,false),service:visibleTree(all,true),advanced:{entries:advancedEntries(snapshot.menu)}};
