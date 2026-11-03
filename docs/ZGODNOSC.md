@@ -28,6 +28,10 @@ indeksow. Odczyt danych i mozliwosc zapisu to dwie osobne kwestie.
 
 ## ecoMAX810P-L TOUCH — profil od beta.40
 
+**Użyj beta.41 lub nowszej.** Beta.40 miała zbyt duże żądania tabel
+nazw i opcji. Beta.41 pobiera je małymi porcjami, bez powiększania
+buforów ramek ESP.
+
 Obsługiwany wariant: **moduł A 10.40.186.R5, panel 10.14.50**.
 Raport użytkownika potwierdził świeże pomiary, 169 pozycji katalogu,
 metadane i strukturę menu. Nie zawierał nazw ani opcji ustawień.
@@ -119,7 +123,7 @@ indeksy nastaw, termostaty i uprawnienia moga sie roznic.
 | --- | --- |
 | ecoMAX860P-LZ TOUCH, modul A 8.41.38.L0, panel 8.30.28 | Profil referencyjny, uzywany w instalacji prywatnej; nie kazdy zapis przetestowany |
 | ecoMAX860P4-LZ | Oznaczenie sprzetowe modulu w tej samej instalacji referencyjnej, nie osobny drugi test |
-| ecoMAX810P-L TOUCH, moduł A 10.40.186.R5, panel 10.14.50 | Profil beta.40 na podstawie raportu RS485; 169 nastaw. Własne nazwy i menu pobierane z kotła. Zapis wymaga testu u właściciela |
+| ecoMAX810P-L TOUCH, moduł A 10.40.186.R5, panel 10.14.50 | Profil beta.41 na podstawie raportu RS485; 169 nastaw. Własne nazwy i menu pobierane z kotła. Zapis wymaga testu u właściciela |
 | ecoMAX850R2-X | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |
 | ecoMAX360 | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |
 | ecoMAX860P2-N | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |

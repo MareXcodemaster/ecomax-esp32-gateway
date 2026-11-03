@@ -781,7 +781,7 @@ bool rs_client_catalog() {
         auto *values=cJSON_CreateArray();put(staged.p,pair.second,values);bool finished=false;
         for(unsigned page=0;page<64&&!finished;++page){
             unsigned begin=cJSON_GetArraySize(values);if(begin>255)return abort("Zbyt duzy katalog nazw RS485");
-            uint8_t query[]={uint8_t(pair.first),uint8_t(lang),255,uint8_t(begin)};size_t size=pair.first==6?2:4;
+            uint8_t query[]={uint8_t(pair.first),uint8_t(lang),uint8_t(pair.first==7?1:8),uint8_t(begin)};size_t size=pair.first==6?2:4;
             if(!ask(query,size,reply))return abort("Brak odpowiedzi tabeli nazw RS485; ponowne pobranie za minute");
             bytes_read+=reply.length;if(bytes_read>65536)return abort("Katalog nazw przekroczyl limit pamieci");
             Owned page_data{remote_menu_language::page(query,size,reply.bytes+8,reply.length-10)};
@@ -1058,7 +1058,7 @@ J *rs_probe(const J *payload) {
     } else if(!strcmp(family,"menu")) { const uint8_t version[]={0},configuration[]={3},values[]={4,255,0}; read(86,214,version,1); read(86,214,configuration,1); read(86,214,values,3); }
     else if(!strcmp(family,"menu_text")) {
         const uint8_t language[]={1};read(86,214,language,1);
-        if(text_language>=0)for(unsigned command:{2,6,7,8}){const uint8_t q[]={uint8_t(command),uint8_t(text_language),255,0};read(86,214,q,command==6?2:4);}
+        if(text_language>=0)for(unsigned command:{2,6,7,8}){const uint8_t q[]={uint8_t(command),uint8_t(text_language),uint8_t(command==7?1:8),0};read(86,214,q,command==6?2:4);}
     }
     else if(!strcmp(family,"menu_point")) { const uint8_t query[]={4,1,47}; read(86,214,query,3); }
     else if(!strcmp(family,"menu_structure")) { const uint8_t query[]={9}; read(86,214,query,1); }

@@ -6,16 +6,17 @@
 
 // Independently implemented bounded reader for the remote-menu text tables.
 // Passwords (10), writes (5) and arbitrary caller-selected commands are excluded.
+// Small pages stay within the existing 1000-byte frame/response buffers. No read-all text requests.
 namespace remote_menu_language {
 inline bool allowed(const uint8_t *p,size_t n){
  return p&&((n==1&&p[0]==1)||(n==2&&p[0]==6&&p[1]<32)||
-  (n==4&&(p[0]==2||p[0]==7||p[0]==8)&&p[1]<32&&p[2]==255));
+  (n==4&&p[1]<32&&((p[0]==7&&p[2]==1)||((p[0]==2||p[0]==8)&&p[2]>=1&&p[2]<=8))));
 }
 inline bool matches(const uint8_t *q,size_t qn,const uint8_t *p,size_t n){
  if(!allowed(q,qn)||!p||!n||p[0]!=q[0])return false;
  if(qn==1)return n>=3;
  if(n<3||p[1]!=q[1])return false;
- return qn==2||(n>=4&&p[3]==q[3]&&unsigned(p[2])+p[3]<=256);
+ return qn==2||(n>=4&&p[3]==q[3]&&p[2]<=q[2]&&unsigned(p[2])+p[3]<=256);
 }
 inline bool utf8(const std::string &s){
  for(size_t i=0;i<s.size();){unsigned c=uint8_t(s[i++]),v=c,extra=0,min=0;
@@ -33,7 +34,7 @@ struct Reader {
  unsigned byte(){if(at>=n){ok=false;return 0;}return p[at++];}
  std::string text(){std::string s;bool end=false;while(ok&&s.size()<=384){unsigned c=byte();if(!ok)break;if(!c){end=true;break;}s+=char(c);}
   if(!end||!utf8(s)){ok=false;return {};}
-  size_t pos=0;while((pos=s.find("%%",pos))!=std::string::npos)s.erase(pos,1);
+  size_t pos=0;while((pos=s.find("%%",pos))!=std::string::npos){s.erase(pos,1);++pos;}
   return s;
  }
 };

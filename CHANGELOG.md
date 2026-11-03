@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 0.7.0-beta.41
+
+- Poprawka wykryta podczas testu beta.40 na RS485: nazwy i kategorie pobierane po 8 pozycji, tabele opcji pojedynczo. Usunięto żądanie całej tabeli tekstowej naraz.
+- Zachowano limit 1000 bajtów ramki oraz kontrolę języka, indeksu i liczby elementów odpowiedzi.
+- Profil ecoMAX810P-L nadal wymaga potwierdzenia na instalacji właściciela; beta.41 zastępuje beta.40 w testach nowego menu.
+
 ## 0.7.0-beta.40
 
 - Profil ecoMAX810P-L TOUCH: moduł A 10.40.186.R5, panel 10.14.50, 169 nastaw na podstawie raportu RS485.

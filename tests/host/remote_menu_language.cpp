@@ -19,7 +19,7 @@ void remote_menu_language_tests(){
  assert(language(languages.data(),languages.size())==0);
  for(size_t n=0;n<languages.size();++n)assert(language(languages.data(),n)==-1);
  languages[2]=2;assert(language(languages.data(),languages.size())==-1);languages[2]=1;
- const uint8_t names[]={2,0,255,10};Bytes data={2,0,2,10};text(data,"Test %%");text(data,"Próba °C");
+ const uint8_t names[]={2,0,8,10};Bytes data={2,0,2,10};text(data,"Test %%");text(data,"Próba °C");
  auto *p=page(names,4,data.data(),data.size());assert(p&&cJSON_GetArraySize(p)==2);
  assert(!strcmp(cJSON_GetArrayItem(p,0)->valuestring,"Test %"));cJSON_Delete(p);
  for(size_t n=0;n<data.size();++n)assert(!page(names,4,data.data(),n));
@@ -28,13 +28,17 @@ void remote_menu_language_tests(){
  bad={2,0,1,10,0xc0,0xaf,0};assert(!page(names,4,bad.data(),bad.size()));
  bad={2,0,0,10};p=page(names,4,bad.data(),bad.size());assert(p&&cJSON_GetArraySize(p)==0);cJSON_Delete(p);
  assert(!utf8(std::string("\xed\xa0\x80",3)));assert(!utf8(std::string("\xf4\x90\x80\x80",4)));
- const uint8_t enums[]={7,0,255,0};Bytes e={7,0,1,0,2,3};text(e,"Nie");text(e,"Tak");
+ const uint8_t enums[]={7,0,1,0};Bytes e={7,0,1,0,2,3};text(e,"Nie");text(e,"Tak");
  p=page(enums,4,e.data(),e.size());assert(p&&cJSON_GetArraySize(p)==1);
  auto *entry=cJSON_GetArrayItem(p,0);assert(cJSON_GetObjectItemCaseSensitive(entry,"first")->valueint==3);assert(cJSON_GetArraySize(cJSON_GetObjectItemCaseSensitive(entry,"values"))==2);cJSON_Delete(p);
  e[4]=65;assert(!page(enums,4,e.data(),e.size()));
  const uint8_t units[]={6,0};Bytes u={6,0,2};text(u,"");text(u,"°C");p=page(units,2,u.data(),u.size());assert(p);cJSON_Delete(p);
  for(unsigned cmd:{0,3,4,5,9,10,11,12,13,14,15,255}){uint8_t q[]={uint8_t(cmd),0,255,0};assert(!allowed(q,4));}
  assert(allowed(names,4)&&allowed(units,2));assert(!allowed(nullptr,1));
+ for(unsigned cmd:{2,7,8}){uint8_t all[]={uint8_t(cmd),0,255,0};assert(!allowed(all,4));}
+ uint8_t too_many[]={2,0,8,10};Bytes many={2,0,9,10};assert(!matches(too_many,4,many.data(),many.size()));
+ uint8_t last[]={2,0,8,168};Bytes last_page={2,0,1,168};text(last_page,"Ostatnia");p=page(last,4,last_page.data(),last_page.size());assert(p&&cJSON_GetArraySize(p)==1);cJSON_Delete(p);
+
  assert(model810::matches("ecoMAX810P-L TOUCH","10.40.186.R5","10.14.50"));
  assert(!model810::matches("ecoMAX810P-L TOUCH","10.40.186.R4","10.14.50"));
  assert(!model810::matches("ecoMAX810P-L","10.40.186.R5","10.14.50"));
