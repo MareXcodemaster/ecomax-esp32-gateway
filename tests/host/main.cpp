@@ -17,11 +17,13 @@ void access_tests();
 void diagnostics_tests();
 void compatibility_tests();
 void remote_menu_language_tests();
+void controller_profile_tests();
 void settings_journal_tests();
 void circulation_tests();
 
 int main() {
     remote_menu_language_tests();
+    controller_profile_tests();
     circulation_tests();
     settings_journal_tests();
     for(const auto &entry:advanced_menu::definitions) {

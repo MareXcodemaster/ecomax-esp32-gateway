@@ -320,9 +320,16 @@ try {
   await page.evaluate(()=>EcoHeatingSchema.render(state,false));
   assert.equal(await page.locator('#lbSchema_tempCO').textContent(),'---');
   assert.equal(await page.locator('#schema_pumpMixerA').getAttribute('data-state'),'unknown');
-  await page.evaluate(()=>EcoHeatingSchema.render({...state,system:{schemaID:99}},true));
-  assert.equal(await page.locator('#schema-graphic').isVisible(),false);
-  assert.ok((await page.locator('#schema-readings').textContent()).includes('Brak schematu'));
+  await page.evaluate(()=>EcoHeatingSchema.render({...state,system:{controllerID:'ecoMAX810P-L TOUCH'},curr:{tempCO:65,tempCOSet:70,mode:3,tempCWU:45,tempCWUSet:50,mixerTemp1:31,mixerSetTemp1:35,mixerPumpWorks1:true,mixerTemp2:28,mixerSetTemp2:40,mixerPumpWorks2:false,mixerTemp3:null,mixerSetTemp3:40}},true));
+  assert.equal(await page.locator('#schema-graphic').isVisible(),true);
+  assert.equal(await page.locator('[data-circuit]').count(),3);
+  assert.equal(await page.locator('[data-circuit="mixerTemp2"]').getAttribute('data-pump-state'),'off');
+  assert.equal(await page.locator('[data-circuit="mixerTemp3"]').count(),0);
+  await screenshot('21-schemat-obiegi');
+  await page.evaluate(()=>EcoHeatingSchema.render({system:{controllerID:'ecoMAX810P-L TOUCH'},curr:{}},false));
+  assert.equal(await page.locator('[data-circuit]').count(),3);
+  assert.equal(await page.locator('[data-circuit="mixerTemp2"]').getAttribute('data-pump-state'),'unknown');
+  assert.ok(!(await page.locator('.schema-detected').textContent()).includes('31,0'));
   await page.evaluate(()=>EcoHeatingSchema.render(state,true));
   for(const width of [320,390,1280]){
     await page.setViewportSize({width,height:844});

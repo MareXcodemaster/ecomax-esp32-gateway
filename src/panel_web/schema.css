@@ -1,6 +1,11 @@
 .schema-graphic{overflow-x:auto;scrollbar-gutter:stable}
 .schema-graphic>svg{display:block;width:100%;min-width:720px;height:auto;aspect-ratio:841.66/437.104;min-height:0}
 .schema-graphic[hidden]{display:none}
+.schema-graphic>svg.schema-detected{aspect-ratio:auto;background:#f8fbfa;border-radius:14px;font-family:inherit}
+.schema-detected .schema-title{font-size:22px;font-weight:700;fill:#176b67}.schema-detected .schema-label{font-size:20px;font-weight:700;fill:#243f43}
+.schema-detected .schema-note{font-size:16px;fill:#4e666b}.schema-detected .schema-temperature{font-size:30px;fill:#147fa1;font-weight:600}
+.schema-detected .schema-box{fill:#fff;stroke:#bdcfcb;stroke-width:1.5}.schema-detected .schema-connection{fill:none;stroke:#6a9996;stroke-width:4;stroke-dasharray:8 5}
+.schema-detected .schema-pump{stroke:#53766f;stroke-width:2;fill:#e7efed}.schema-detected .schema-pump.on{fill:#c5efcf;stroke:#298047}.schema-detected .schema-pump.unknown{fill:#eee;stroke:#999}.schema-detected .schema-pump-arrow{fill:#425e59}
 #wifi-dialog{width:480px}#wifi-title{font-size:19px}#wifi-select{width:100%}
 #wifi-form>.check{margin:12px 0}#wifi-form>p{font-size:13px;line-height:1.6;overflow-wrap:anywhere}
 #wifi-result{min-height:22px}#wifi-form [hidden]{display:none}

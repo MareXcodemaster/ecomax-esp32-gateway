@@ -23,40 +23,46 @@ odczytac etykiety obudowy; samo wykrycie ESP32-S3 nie identyfikuje modelu.
 To nie znaczy, ze wszystkie kotly z nazwa ecoMAX860P maja identyczny
 protokol, katalog i mozliwosci zapisu. Wersje nazw, jednostek, enumow,
 metadanych oraz struktury i uprawnien sa sprawdzane przed udostepnieniem
-edycji. Nieznany wariant ma pozostac zablokowany, nie otrzymac zgadywanych
-indeksow. Odczyt danych i mozliwosc zapisu to dwie osobne kwestie.
+edycji. Nowy wariant pobiera własny katalog; nie otrzymuje zgadywanych
+indeksów. Odczyt danych i mozliwosc zapisu to dwie osobne kwestie.
+
+## Wspólny firmware od beta.42
+
+ESP rozpoznaje sterownik ecoMAX-P i odczytuje jego własny katalog przez
+RS485. Nie wymaga identycznego numeru firmware jak model referencyjny.
+Obsługiwany jest protokół zdalnego menu 1.0, do 255 pozycji, mieszczący
+się w ograniczonych buforach i czasie pobierania. Własne nazwy, jednostki,
+opcje, metadane i struktura muszą być kompletne oraz zgodne przed i po
+odczycie. Zmiana wersji katalogu uruchamia ponowne pobranie.
+
+Standardowe START/STOP (59 / 187) nie jest blokowane wyłącznie przez inny
+numer firmware producenta. Nadal wymaga potwierdzonej tożsamości,
+aktualnego rozpoznanego stanu oraz — dla START — braku zgłoszonych alarmów.
+Sam odczyt raportu nie dowodzi wykonania komendy: po ręcznym poleceniu ESP
+sprawdza odpowiedź i nowy stan. Automatycznie nie uruchamia kotła.
+
+Nieznany wariant schematu otrzymuje podgląd obiegów obecnych w odczytach:
+CWU, mieszaczy, bufora lub sprzęgła. To widok poglądowy; protokół nie
+opisuje pełnego fizycznego przebiegu rur. Brak odczytu nie jest stanem OFF.
+Schemat 23 zachowuje dotychczasowy rysunek.
 
 ## ecoMAX810P-L TOUCH — profil od beta.40
 
-**Użyj beta.41 lub nowszej.** Beta.40 miała zbyt duże żądania tabel
-nazw i opcji. Beta.41 pobiera je małymi porcjami, bez powiększania
-buforów ramek ESP.
+**Użyj beta.42 lub nowszej.** Raport wariantu modułu A **10.40.186.R5**
+i panelu **10.14.50** zawiera 169 pozycji oraz dwa mieszacze. Służy jako
+przypadek testowy. Od beta.42 katalog jest odczytywany z podłączonego
+sterownika, bez listy dopuszczonych numerów tej wersji.
 
-Obsługiwany wariant: **moduł A 10.40.186.R5, panel 10.14.50**.
-Raport użytkownika potwierdził świeże pomiary, 169 pozycji katalogu,
-metadane i strukturę menu. Nie zawierał nazw ani opcji ustawień.
+Nastawy zmienia się w **Parametrach użytkownika / Parametrach serwisowych**.
+Po aktualizacji trzeba poczekać na pobranie nazw i zakresów. Jeśli nie
+otrzymano kompletnego katalogu, odczyt jest ponawiany po minucie.
+Wtedy raport zgodności zawiera powód przerwania odczytu.
 
-Po aktualizacji ESP automatycznie pobiera przez RS485 polskie nazwy,
-jednostki, opcje wyboru i kategorie **z podłączonego sterownika**.
-**Nie potrzeba modułu ecoNET.** Połączenie z nowym kotłem nie korzysta
-z indeksów ani nazw profilu ecoMAX860P-LZ. Pierwszy odczyt katalogu może
-potrwać kilkadziesiąt sekund; niepełny odczyt jest ponawiany po minucie.
-
-Nastawy tego wariantu zmienia się w **Parametrach użytkownika** i
-**Parametrach serwisowych**. Udostępniane są pozycje obecne w jego
-strukturze menu, odblokowane przez sterownik i z aktualnym zakresem.
-Zapis jest pojedynczy; wynik wymaga ACK i nowego odczytu tej nastawy.
-Menu producenta, kasowanie liczników, kalibracja paliwa, harmonogramy,
-sterowanie pracą kotła i specjalne komendy ecoSTER nie są odblokowywane
-przez samą zgodność nazwy modelu. Skróty edycji temperatur na kafelkach
-tego nowego profilu nie są jeszcze przypisane; użyj jego menu parametrów.
-
-**Status: obsługa eksperymentalna, rzeczywisty zapis na tym wariancie
-czeka na test właściciela.** Raport nie potwierdza wszystkich funkcji.
-W razie braku menu pobierz ponownie raport zgodności po aktualizacji.
-Raport zawiera wtedy wynik pobierania katalogu, a po udanym odczycie
-również rzeczywiste nazwy, jednostki, opcje i kategorie.
-Nie aktualizuje ani nie zmienia nastaw automatycznie.
+**Rzeczywiste polecenia na innym kotle wymagają sprawdzenia u właściciela.**
+Testy protokołu obejmują różne numery firmware, nie wszystkie instalacje.
+Kalibracja paliwa, specjalne ustawienia producenta, bezpośrednie skróty
+nastaw i mapy termostatów/harmonogramów pozostają dostępne wyłącznie tam,
+gdzie ich kodowanie jest potwierdzone. Nie są kopiowane z innego modelu.
 
 ## Inny kocioł lub blokada zapisu — raport zgodności
 
@@ -94,8 +100,8 @@ możesz go obejrzeć. Nic nie jest automatycznie wysyłane. Ostatni raport
 pozostaje w RAM ESP do następnego raportu lub restartu; nie zapisuje się
 go w pamięci flash.
 
-**Raport pomaga przygotować obsługę nowego wariantu, ale sam jej nie
-odblokowuje.** Część nazw i poleceń może wymagać dalszych porównań z ekranem
+**Raport pomaga diagnozować obsługę nowego wariantu; sam plik nie
+odblokowuje poleceń.** Część nazw i poleceń może wymagać dalszych porównań z ekranem
 regulatora oraz osobnego testu. Komplet odpowiedzi nie jest potwierdzeniem
 poprawności wszystkich zapisów ani obsługi wszystkich modułów.
 
@@ -123,7 +129,7 @@ indeksy nastaw, termostaty i uprawnienia moga sie roznic.
 | --- | --- |
 | ecoMAX860P-LZ TOUCH, modul A 8.41.38.L0, panel 8.30.28 | Profil referencyjny, uzywany w instalacji prywatnej; nie kazdy zapis przetestowany |
 | ecoMAX860P4-LZ | Oznaczenie sprzetowe modulu w tej samej instalacji referencyjnej, nie osobny drugi test |
-| ecoMAX810P-L TOUCH, moduł A 10.40.186.R5, panel 10.14.50 | Profil beta.41 na podstawie raportu RS485; 169 nastaw. Własne nazwy i menu pobierane z kotła. Zapis wymaga testu u właściciela |
+| ecoMAX810P-L TOUCH, moduł A 10.40.186.R5, panel 10.14.50 | Raport testowy: 169 nastaw; od beta.42 automatyczny katalog i standardowe START/STOP. Własne nazwy i menu pobierane z kotła. Zapis wymaga testu u właściciela |
 | ecoMAX850R2-X | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |
 | ecoMAX360 | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |
 | ecoMAX860P2-N | Wymieniony przez zewnetrzna integracje ecoNET300; w tym panelu brak testu zgodnosci |
@@ -137,13 +143,13 @@ obslugi przez ten firmware. Nie przenosimy z niej obslugi ecoSOL,
 pomp ciepla ani innych urzadzen do panelu kotla.
 
 **Lokalny ecoNET:** czesc odczytow moze dzialac przez wspolne API.
-Specjalne nastawy pokojowe i sterowanie kotlem w obecnym kodzie maja
-kontrole konkretnego modelu i firmware. Nie nalezy ich odblokowywac
-przez podmiane identyfikatora modelu.
+Specjalne nastawy pokojowe nadal zależą od mapy danego modelu.
+Standardowe START/STOP rozpoznaje rodzinę ecoMAX i kontroluje bieżący stan.
+Nie należy podmieniać identyfikatora modelu.
 
-**Bezposredni RS485:** identyfikacja i katalog zapisu sa ograniczone
-do profilu referencyjnego oraz wskazanego wyżej wariantu ecoMAX810P-L.
-Inny model nie otrzymuje zgadywanych komend.
+**Bezpośredni RS485:** od beta.42 standardowe sterowniki ecoMAX-P
+pobierają własny katalog menu 1.0, niezależnie od numeru firmware.
+Niepełne lub niezgodne dane nie udostępniają zapisu nastaw.
 Fakt, ze PyPlumIO obsluguje wiecej wariantow protokolu, nie oznacza,
 ze wszystkie jego mozliwosci zostaly przeniesione do tej aplikacji C++.
 

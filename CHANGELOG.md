@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-beta.42
+
+- Standardowe START/STOP ecoMAX-P nie wymaga numeru firmware kotła autora. Osobne komunikaty wskazują brak identyfikacji, bieżącego stanu lub wersji modułu.
+- Automatyczne pobieranie własnego katalogu menu 1.0 dla innych wersji ecoMAX-P, do 255 pozycji. Brak kopiowania indeksów profilu referencyjnego; kontrola wersji, metadanych, nazw, zakresów, uprawnień i odpowiedzi na zapis pozostaje.
+- Schemat dla innych konfiguracji pokazuje obiegi odczytane ze sterownika, w tym dwa mieszacze. Schemat 23 pozostaje bez zmian.
+- Raport zgodności zawiera stan i liczbę pozycji odkrytego katalogu. Nie wykonano automatycznych testów START/STOP ani zmian nastaw na kotle.
+
 
 ## 0.7.0-beta.41
 

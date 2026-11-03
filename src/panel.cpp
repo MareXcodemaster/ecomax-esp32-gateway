@@ -12,7 +12,7 @@
 #include "econet_defaults.hpp"
 #include "identity_guard.hpp"
 #include "compatibility_report.hpp"
-#include "model810.hpp"
+#include "controller_profile.hpp"
 #include "remote_menu_language.hpp"
 #include <cstdlib>
 #include "advanced_menu.hpp"
@@ -67,9 +67,11 @@ unsigned schedule_failures=0;
 int native_structure_version=-1,last_pending_alerts=-1;
 unsigned health_failures=0,alarm_failures=0;
 uint64_t native_menu_row_ms[256]{};
-bool profile810=false,profile810_ready=false;
-uint64_t profile810_next_attempt=0;
-unsigned menu_count(){return profile810?model810::parameter_count:168;}
+bool discovered_profile=false,discovered_profile_ready=false,reference_catalog_changed=false;
+uint64_t discovered_profile_next_attempt=0;
+unsigned discovered_count=0;
+J *discovered_versions=nullptr;
+unsigned menu_count(){return discovered_profile?discovered_count:168;}
 std::string native_menu_error;
 uint64_t health_ms=0, next_health=0;
 struct Lock { Lock() { xSemaphoreTake(mutex, portMAX_DELAY); } ~Lock() { xSemaphoreGive(mutex); } };
@@ -221,7 +223,7 @@ bool menu_access(int wanted,bool advanced=false) {
         else if(type==0||type==2||type==4||type==5) {
             if(count>=256||parent>=256) return false;
             auto inherited=sections[parent];
-            bool advanced_section=!profile810&&num(get(row,"index"))==30&&num(get(row,"pass_index"))==3&&inherited.pass<=1&&
+            bool advanced_section=!discovered_profile&&num(get(row,"index"))==30&&num(get(row,"pass_index"))==3&&inherited.pass<=1&&
                 !strcmp(str(item(body("rmCatsNames"),30)),"Ustawienia zaawansowane");
             sections[count++]={inherited.locked||!cJSON_IsFalse(get(row,"lock")),std::max(inherited.pass,num(get(row,"pass_index"),99)),inherited.advanced||advanced_section};
         } else if(type==1&&num(get(row,"index"))==wanted) {
@@ -234,7 +236,7 @@ bool menu_access(int wanted,bool advanced=false) {
     return matches==1&&allowed;
 }
 bool menu_versions_match(const J *details) {
-    if(profile810)return model810::version_match(details);
+    if(discovered_profile)return controller_profile::same_versions(discovered_versions,details);
     if(num(get(details,"command"))!=0||num(get(details,"minor"))!=0||num(get(details,"major"))!=1) return false;
     // Bound labels, enumeration and inherited access to the captured ecoNET catalogue.
     const unsigned expected[][2]={{2,7672},{3,51616},{6,13175},{7,7227},{8,15074},{13,50115},{14,373}};
@@ -312,8 +314,9 @@ J *generic_target(const char *id) {
     if(direct&&room_wire_index(id)>0)return rs_room_parameter_target(id);
     if(direct&&(!native_identity||!transport::enabled()||transport::conflict()||!native_menu_config_ms||now()-native_menu_config_ms>65000||!native_menu_versions_ms||now()-native_menu_versions_ms>65000||!native_structure_ms||now()-native_structure_ms>65000)) return nullptr;
     auto *sys=get(raw,"sysParams"), *curr=get(get(raw,"regParams"),"curr");
-    if(direct&&profile810) {
-        if(!profile810_ready||!model810::matches(str(get(sys,"controllerID")),str(get(sys,"moduleASoftVer")),str(get(sys,"modulePanelSoftVer"))))return nullptr;
+    if(direct&&discovered_profile) {
+        Owned sensor{boiler::snapshot()};
+        if(!discovered_profile_ready||!controller_profile::modules_match(sys,sensor.p))return nullptr;
     } else if(strcmp(str(get(sys,"controllerID")),"ecoMAX860P-LZ TOUCH")||strcmp(str(get(sys,"moduleASoftVer")),"8.41.38.L0")) return nullptr;
     bool legacy=!strncmp(id,"legacy:",7); int index=-1; J *meta=nullptr; std::string key,name,unit;
     if(legacy) {
@@ -499,7 +502,7 @@ void build_menu() {
         number(v,"index",index); text(v,"name",str(item(body("rmParamsNames"),index),"Parametr")); text(v,"description",str(item(body("rmParamsDescs"),index)));
         copy(v,"metadata",meta); copy(v,"unit_name",item(body("rmParamsUnitsNames"),static_cast<int>(num(get(meta,"unit"),-1))));
         copy(v,"category",get(ref,"path")); flag(v,"in_structure",ref!=nullptr); flag(v,"write_enabled",false);
-        for(auto &d:definitions) if(!profile810&&!d.legacy&&d.index==index) menu_write(v,d);
+        for(auto &d:definitions) if(!discovered_profile&&!d.legacy&&d.index==index) menu_write(v,d);
         J *access; cJSON_ArrayForEach(access,body("rmStructure")) if(num(get(access,"type"))==1 && num(get(access,"index"))==index) { copy(v,"locked",get(access,"lock")); copy(v,"pass_index",get(access,"pass_index")); break; }
         put(v,"enum_text",enum_value(meta));
         if(selected_mode=="rs485") {
@@ -507,7 +510,7 @@ void build_menu() {
             text(v,"source",direct_setting?"RS485_CURRENT_PARAMETERS_212":"RS485_REMOTE_MENU_214"); flag(v,"read_available",(direct_setting||(index<menu_count()&&native_menu_row_ms[index]&&now()-native_menu_row_ms[index]<=20000))&&std::isfinite(num(get(meta,"value"))));
             text(v,"read_status",cJSON_IsTrue(get(v,"read_available"))?"Odczyt RS485":native_menu_error.empty()?"Parametr nieudostepniony przez sterownik":native_menu_error);
         }
-        if(selected_mode=="rs485") for(auto &d:definitions) if(!profile810&&!d.legacy&&d.index==index) { Owned writable{rs_menu_temperature_target(d.id)}; flag(v,"write_enabled",writable.p!=nullptr); }
+        if(selected_mode=="rs485") for(auto &d:definitions) if(!discovered_profile&&!d.legacy&&d.index==index) { Owned writable{rs_menu_temperature_target(d.id)}; flag(v,"write_enabled",writable.p!=nullptr); }
         cJSON_AddItemToArray(menu,v); ++index;
     }
     const char *ster[][3]={{"STER_MODE","Tryb pracy",""},{"STER_TEMP_DAY","Temperatura zadana dzienna","\u00b0C"},{"STER_TEMP_NIGHT","Temperatura zadana nocna","\u00b0C"},{"STER_TEMP_ANTIFREEZ","Temperatura zadana przeciwzamrozeniowa","\u00b0C"},{"STER_TEMP_SET_PARTY","Temperatura zadana dla trybu Party","\u00b0C"},{"STER_TEMP_SET_SUMMER","Temperatura zadana dla trybu Wakacje","\u00b0C"},{"STER_HYSTEREZE","Histereza temperatury zadanej","\u00b0C"},{"STER_CORRECTION","Korekta wskazan temperatury","\u00b0C"},{"STER_TIMER_EXIT","Czas trwania trybu Wyjscie z domu","h"},{"STER_TIMER_VENT","Czas trwania trybu Wietrzenie","min"},{"STER_TIMER_PARTY","Czas trwania trybu Party","h"},{"STER_TIMER_HOLIDAY","Czas trwania trybu Wakacje","dni"}};
@@ -540,7 +543,7 @@ void build_menu() {
         if(cJSON_IsString(get(row,"index"))||!get(row,"write_id")) { Owned v{generic_target(id.c_str())}; if(v.p) { text(row,"write_id",id); flag(row,"write_enabled",true); copy(row,"advanced",get(v.p,"advanced")); copy(row,"cached",get(v.p,"cached")); copy(row,"enum_text",nullptr); if(cJSON_GetArraySize(get(v.p,"options"))) { J *o; cJSON_ArrayForEach(o,get(v.p,"options")) if(equal(num(get(o,"value")),num(get(v.p,"before")))) copy(row,"enum_text",get(o,"label")); } copy(get(row,"metadata"),"value",get(v.p,"before")); } }
     }
     // A cold RS485-only boot has no HTTP editParams catalogue; build room rows from the wire.
-    if(!profile810&&selected_mode=="rs485") for(auto &d:definitions) if(d.legacy&&d.native) {
+    if(!discovered_profile&&selected_mode=="rs485") for(auto &d:definitions) if(d.legacy&&d.native) {
         J *entry=nullptr; cJSON_ArrayForEach(row,menu) if(!strcmp(str(get(row,"index")),d.id)) entry=row;
         if(!entry) { entry=cJSON_CreateObject(); cJSON_AddItemToArray(menu,entry); }
         Owned t{rs_target(d.id)}; auto *metadata=cJSON_CreateObject();
@@ -557,7 +560,7 @@ void build_menu() {
         }
         text(entry,"value_source",t.p?(cJSON_IsTrue(get(t.p,"active_profile"))?"RS485 / aktywny profil eSTER":"RS485 / pamiec nieaktywnego profilu"):"Brak zgodnego odczytu profilu RS485");
     }
-    if(!profile810&&selected_mode=="rs485"&&native_room_ms&&now()-native_room_ms<15000&&native_room_config_ms&&now()-native_room_config_ms<120000) {
+    if(!discovered_profile&&selected_mode=="rs485"&&native_room_ms&&now()-native_room_ms<15000&&native_room_config_ms&&now()-native_room_config_ms<120000) {
         const unsigned wire_indices[]={1,10,11,12,2,3,9,4,5,6,7,8};
         const char *keys[]={"STER_MODE_1","STER_TEMP_DAY_1","STER_TEMP_NIGHT_1","STER_TEMP_ANTIFREEZ_1","STER_TEMP_SET_PARTY_1","STER_TEMP_SET_SUMMER_1","STER_HYSTEREZE_1","STER_CORRECTION_1","STER_TIMER_EXIT_1","STER_TIMER_VENT_1","STER_TIMER_PARTY_1","STER_TIMER_HOLIDAY_1"};
         for(unsigned i=0;i<12;++i) {
@@ -583,12 +586,12 @@ void build_menu() {
 bool rs_refresh(bool background=false);
 bool rs_inspect_temperature(const char *id,J *&out);
 J *rs_target(const char *id,bool *sensor_pending) {
-    if(profile810){
+    if(discovered_profile){
         if(sensor_pending)*sensor_pending=false;
         auto *d=definition(id);auto *edit=get(body("rmCurrentDataParamsEdits"),id);Owned sensor{boiler::snapshot()};
         double value=num(get(edit,"value")),low=num(get(edit,"min")),high=num(get(edit,"max"));
         if(!d||d->legacy||!native_identity||now()-native_identity_ms>60000||!transport::enabled()||transport::conflict()||
-           !cJSON_IsTrue(get(sensor.p,"fresh"))||strcmp(str(get(get(sensor.p,"modules"),"module_a")),model810::module_a)||
+           !cJSON_IsTrue(get(sensor.p,"fresh"))||!controller_profile::modules_match(get(raw,"sysParams"),sensor.p)||
            num(get(edit,"type"))!=4||!std::isfinite(value)||!std::isfinite(low)||!std::isfinite(high)||low<0||high>255||value<low||value>high)return nullptr;
         // Standard current-data IDs identify these readings. They do not identify a menu-write index.
         auto *v=cJSON_CreateObject();text(v,"id",id);text(v,"name",d->name);text(v,"measured_key",d->measured);
@@ -712,6 +715,7 @@ bool inspect(const char *id, J *&out) {
     out=target(id); return out!=nullptr;
 }
 bool rs_identify() {
+    native_identity=false;
     transport::Reply reply;
     if(!transport::request(57,nullptr,0,185,reply) || reply.length<20) return fail("Brak identyfikacji kotla po RS485");
     auto *p=reply.bytes+8; size_t size=reply.length-10, at=3;
@@ -728,20 +732,25 @@ bool rs_identify() {
     at+=4; size_t model_length=p[at++];
     std::string model=at+model_length==size?std::string(reinterpret_cast<const char *>(p+at),model_length):"";
     Owned sensor{boiler::snapshot()};auto *modules=get(sensor.p,"modules");
-    bool client=model==model810::model&&p[1]==2&&p[2]==0&&cJSON_IsTrue(get(sensor.p,"fresh"))&&
-        model810::matches(model.c_str(),str(get(modules,"module_a")),str(get(modules,"panel")));
-    bool supported=model=="ecoMAX860P-LZ TOUCH"||client;
+    const char *module_a=str(get(modules,"module_a")),*panel=str(get(modules,"panel"));
+    bool supported=controller_profile::family(p[0],model.c_str());
     {Lock lock;text(data,"observed_controller",model);}
-    if(!remember_identity(identity.c_str(),supported)) { native_identity=false; return false; }
-    if(client&&!profile810){
-        profile810=true;profile810_ready=false;profile810_next_attempt=0;
+    if(!remember_identity(identity.c_str(),supported))return false;
+    if(!cJSON_IsTrue(get(sensor.p,"fresh"))||!controller_profile::firmware(module_a)||!controller_profile::firmware(panel))return fail("Oczekiwanie na odczyt wersji modulow sterownika RS485");
+    bool reference=!reference_catalog_changed&&controller_profile::reference(model.c_str(),module_a,panel);
+    bool changed=strcmp(str(get(get(raw,"sysParams"),"controllerID")),model.c_str())||
+        !controller_profile::modules_match(get(raw,"sysParams"),sensor.p);
+    if((!reference||discovered_profile)&&(!discovered_profile||changed)){
+        discovered_profile=true;discovered_profile_ready=false;discovered_profile_next_attempt=0;discovered_count=0;
+        cJSON_Delete(discovered_versions);discovered_versions=nullptr;
         native_menu_ms=native_menu_config_ms=native_menu_versions_ms=native_structure_ms=0;
+        native_room_ms=native_room_config_ms=native_schedule_ms=native_room_schedule_ms=0;
         std::fill_n(native_menu_row_ms,256,0);
         for(auto key:{"rmParamsNames","rmParamsDescs","rmCatsNames","rmCatsDescs","rmParamsUnitsNames","rmParamsEnums","rmParamsData","rmStructure","editParams","rmAlarmsNames"}){
             auto *wrapper=cJSON_CreateObject();put(wrapper,"data",cJSON_CreateArray());put(raw,key,wrapper);
         }
-        auto *sys=cJSON_CreateObject();text(sys,"controllerID",model);text(sys,"moduleASoftVer",model810::module_a);text(sys,"modulePanelSoftVer",model810::panel);flag(sys,"remoteMenu",true);put(raw,"sysParams",sys);
-        {Lock lock;copy(data,"system",sys);put(data,"targets",cJSON_CreateObject());text(data,"profile_status","ecoMAX810P-L: pobieranie własnego katalogu RS485");}
+        auto *sys=cJSON_CreateObject();text(sys,"controllerID",model);text(sys,"moduleASoftVer",module_a);text(sys,"modulePanelSoftVer",panel);flag(sys,"remoteMenu",true);put(raw,"sysParams",sys);
+        {Lock lock;copy(data,"system",sys);put(data,"targets",cJSON_CreateObject());text(data,"profile_status","ecoMAX: pobieranie własnego katalogu RS485");}
         build_menu();
     }
     text(get(raw,"sysParams"),"uid",uid);
@@ -750,27 +759,29 @@ bool rs_identify() {
 // A new profile must obtain its own language tables before any indexed write.
 // Everything is staged privately; incomplete or changing catalogues are discarded.
 bool rs_client_catalog() {
-    if(!profile810||!native_identity||!transport::enabled()||transport::conflict())return false;
-    if(now()<profile810_next_attempt)return false;
-    profile810_next_attempt=now()+60000;
+    if(!discovered_profile||!native_identity||!transport::enabled()||transport::conflict())return false;
+    if(now()<discovered_profile_next_attempt)return false;
+    discovered_profile_next_attempt=now()+60000;
     native_menu_ms=native_menu_config_ms=native_menu_versions_ms=native_structure_ms=0;
     std::fill_n(native_menu_row_ms,256,0);
-    native_menu_error="Odczyt nazw i opcji menu ecoMAX810P-L przez RS485";
-    const auto deadline=now()+40000;const std::string identity=uid;
+    native_menu_error="Odczyt własnych nazw i opcji menu sterownika przez RS485";
+    const auto deadline=now()+55000;const std::string identity=uid;
+    Owned original_system{cJSON_Duplicate(get(raw,"sysParams"),true)};
     unsigned requests=0;size_t bytes_read=0;
     auto ask=[&](const uint8_t *q,size_t size,transport::Reply &reply){
-        return now()<deadline&&++requests<=96&&transport::enabled()&&!transport::conflict()&&
+        return now()<deadline&&++requests<=160&&transport::enabled()&&!transport::conflict()&&
             transport::request_readonly(86,q,size,214,reply);
     };
     auto abort=[&](const char *reason){native_menu_error=reason;Lock lock;text(data,"profile_status",reason);return false;};
     transport::Reply reply;const uint8_t version_query[]={0},metadata_query[]={3},language_query[]={1},structure_query[]={9};
-    if(!ask(version_query,1,reply))return abort("Brak wersji katalogu ecoMAX810P-L");
+    if(!ask(version_query,1,reply))return abort("Brak wersji katalogu sterownika");
     Owned versions{protocol::describe(reply.bytes,reply.length)};
-    if(!model810::version_match(get(versions.p,"data")))return abort("Wariant katalogu ecoMAX810P-L rozni sie od sprawdzonego raportu");
+    if(!controller_profile::versions_valid(get(versions.p,"data")))return abort("Nieobslugiwany lub niepelny protokol katalogu menu RS485");
     int structure=structure_version(get(versions.p,"data"));if(structure<0)return abort("Brak wersji struktury menu");
-    if(!ask(metadata_query,1,reply))return abort("Brak metadanych menu ecoMAX810P-L");
+    if(!ask(metadata_query,1,reply))return abort("Brak metadanych menu sterownika");
     Owned metadata{protocol::describe(reply.bytes,reply.length)};auto *parameters=get(get(metadata.p,"data"),"parameters");
-    if(!model810::metadata_match(parameters))return abort("Metadane ecoMAX810P-L niezgodne z profilem 169 nastaw");
+    if(!controller_profile::metadata_valid(parameters))return abort("Niepoprawne metadane menu sterownika RS485");
+    const unsigned expected=cJSON_GetArraySize(parameters);
     if(!ask(language_query,1,reply))return abort("Sterownik nie odpowiedzial na liste jezykow menu RS485");
     const int lang=remote_menu_language::language(reply.bytes+8,reply.length-10);
     if(lang<0)return abort("Niepoprawna lista jezykow menu RS485");
@@ -780,7 +791,7 @@ bool rs_client_catalog() {
     for(auto pair:{std::pair<unsigned,const char *>{2,"rmParamsNames"},{6,"rmParamsUnitsNames"},{7,"rmParamsEnums"},{8,"rmCatsNames"}}){
         auto *values=cJSON_CreateArray();put(staged.p,pair.second,values);bool finished=false;
         for(unsigned page=0;page<64&&!finished;++page){
-            unsigned begin=cJSON_GetArraySize(values);if(begin>255)return abort("Zbyt duzy katalog nazw RS485");
+            unsigned begin=cJSON_GetArraySize(values);if(begin>=255){finished=true;break;}
             uint8_t query[]={uint8_t(pair.first),uint8_t(lang),uint8_t(pair.first==7?1:8),uint8_t(begin)};size_t size=pair.first==6?2:4;
             if(!ask(query,size,reply))return abort("Brak odpowiedzi tabeli nazw RS485; ponowne pobranie za minute");
             bytes_read+=reply.length;if(bytes_read>65536)return abort("Katalog nazw przekroczyl limit pamieci");
@@ -794,37 +805,41 @@ bool rs_client_catalog() {
         if(!finished)return abort("Niepelna tabela nazw RS485");
     }
     auto *names=get(staged.p,"rmParamsNames"),*units=get(staged.p,"rmParamsUnitsNames"),*enums=get(staged.p,"rmParamsEnums");
-    if(cJSON_GetArraySize(names)!=model810::parameter_count)return abort("Liczba nazw nie odpowiada 169 nastawom");
-    for(unsigned i=0;i<model810::parameter_count;++i){auto *m=item(parameters,i);int unit=num(get(m,"unit")),offset=num(get(m,"offset"));
+    if(cJSON_GetArraySize(names)!=expected)return abort("Liczba nazw nie odpowiada metadanym nastaw sterownika");
+    for(unsigned i=0;i<expected;++i){auto *m=item(parameters,i);int unit=num(get(m,"unit")),offset=num(get(m,"offset"));
         if(unit==31){if(offset<0||!item(enums,offset))return abort("Brak opcji nastawy w katalogu kotla");}
         else if(unit<0||!item(units,unit))return abort("Brak jednostki nastawy w katalogu kotla");
     }
-    if(!ask(structure_query,1,reply))return abort("Brak struktury menu ecoMAX810P-L");
+    if(!ask(structure_query,1,reply))return abort("Brak struktury menu sterownika");
     Owned layout{protocol::describe(reply.bytes,reply.length)};auto *tree=get(get(layout.p,"data"),"structure");
-    if(!menu_structure_valid(tree,get(staged.p,"rmCatsNames"),model810::parameter_count))return abort("Niepoprawna struktura lub uprawnienia menu ecoMAX810P-L");
+    if(!menu_structure_valid(tree,get(staged.p,"rmCatsNames"),expected))return abort("Niepoprawna struktura lub uprawnienia menu sterownika");
     if(!ask(version_query,1,reply))return abort("Brak koncowego potwierdzenia wersji menu");
     Owned final_versions{protocol::describe(reply.bytes,reply.length)};
-    if(!model810::version_match(get(final_versions.p,"data"))||structure_version(get(final_versions.p,"data"))!=structure)return abort("Katalog zmienil sie podczas pobierania");
+    if(!controller_profile::same_versions(get(versions.p,"data"),get(final_versions.p,"data"))||structure_version(get(final_versions.p,"data"))!=structure)return abort("Katalog zmienil sie podczas pobierania");
     if(!ask(language_query,1,reply)||languages!=std::string(reinterpret_cast<const char *>(reply.bytes+8),reply.length-10))return abort("Jezyk lub wersja tekstow menu zmienily sie podczas pobierania");
-    if(!rs_identify()||uid!=identity)return abort("Zmiana lub brak potwierdzenia tozsamosci po odczycie katalogu");
+    if(!rs_identify()||uid!=identity||!cJSON_Compare(original_system.p,get(raw,"sysParams"),true))return abort("Zmiana modelu, wersji lub tozsamosci podczas odczytu katalogu");
+    if(!ask(metadata_query,1,reply))return abort("Brak koncowego potwierdzenia metadanych menu");
+    Owned verified_metadata{protocol::describe(reply.bytes,reply.length)};
+    if(!controller_profile::same_metadata(parameters,get(get(verified_metadata.p,"data"),"parameters")))return abort("Metadane zmienily sie podczas odczytu katalogu");
     for(auto key:{"rmParamsNames","rmParamsUnitsNames","rmParamsEnums","rmCatsNames"}){auto *wrapper=cJSON_CreateObject();copy(wrapper,"data",get(staged.p,key));put(raw,key,wrapper);}
     auto *wrapper=cJSON_CreateObject();copy(wrapper,"data",parameters);put(raw,"rmParamsData",wrapper);
     J *row;cJSON_ArrayForEach(row,body("rmParamsData")){flag(row,"edit",true);put(row,"value",nullptr);put(row,"minv",nullptr);put(row,"maxv",nullptr);}
     wrapper=cJSON_CreateObject();copy(wrapper,"data",tree);put(raw,"rmStructure",wrapper);
-    native_structure_version=structure;native_menu_config_ms=native_menu_versions_ms=native_structure_ms=now();profile810_ready=true;
-    {Lock lock;text(data,"profile_status","ecoMAX810P-L: własne nazwy, jednostki i opcje odczytane przez RS485");}
+    discovered_count=expected;cJSON_Delete(discovered_versions);discovered_versions=cJSON_Duplicate(get(final_versions.p,"data"),true);
+    native_structure_version=structure;native_menu_config_ms=native_menu_versions_ms=native_structure_ms=now();discovered_profile_ready=true;
+    {Lock lock;text(data,"profile_status","ecoMAX: własne nazwy, jednostki i opcje odczytane przez RS485");}
     native_menu_error.clear();return true;
 }
 bool rs_menu_catalog(bool check_versions=false) {
     const unsigned expected=cJSON_GetArraySize(body("rmParamsData"));
     Owned sensor{boiler::snapshot()};
-    if(profile810&&!profile810_ready)return rs_client_catalog();
-    if(expected!=menu_count()||!native_identity||!transport::enabled()||!cJSON_IsTrue(get(sensor.p,"fresh"))||strcmp(str(get(get(sensor.p,"modules"),"module_a")),profile810?model810::module_a:"8.41.38.L0")||strcmp(str(get(get(sensor.p,"modules"),"panel")),profile810?model810::panel:"8.30.28")) { native_menu_ms=0; std::fill_n(native_menu_row_ms,256,0); native_menu_error="Brak zweryfikowanego katalogu RS485"; return false; }
+    if(discovered_profile&&!discovered_profile_ready)return rs_client_catalog();
+    if(expected!=menu_count()||!native_identity||!transport::enabled()||!cJSON_IsTrue(get(sensor.p,"fresh"))||(discovered_profile?!controller_profile::modules_match(get(raw,"sysParams"),sensor.p):!controller_profile::reference(str(get(get(raw,"sysParams"),"controllerID")),str(get(get(sensor.p,"modules"),"module_a")),str(get(get(sensor.p,"modules"),"panel"))))) { native_menu_ms=0; std::fill_n(native_menu_row_ms,256,0); native_menu_error="Brak zweryfikowanego katalogu RS485"; return false; }
     if(check_versions||!native_menu_versions_ms||now()-native_menu_versions_ms>=60000||!native_structure_ms||now()-native_structure_ms>=60000) {
         const uint8_t query[]={0}; transport::Reply reply;
         if(!transport::request_readonly(86,query,sizeof(query),214,reply)) { native_menu_error="Brak wersji katalogu menu RS485"; return false; }
         Owned parsed{protocol::describe(reply.bytes,reply.length)};
-        if(strcmp(str(get(parsed.p,"state")),"decoded")||!menu_versions_match(get(parsed.p,"data"))) { native_menu_ms=native_menu_versions_ms=0; std::fill_n(native_menu_row_ms,256,0); native_menu_error="Wersje nazw, opcji lub uprawnien menu zmienily sie"; return false; }
+        if(strcmp(str(get(parsed.p,"state")),"decoded")||!menu_versions_match(get(parsed.p,"data"))) { native_menu_ms=native_menu_versions_ms=0; std::fill_n(native_menu_row_ms,256,0); native_menu_error="Katalog sterownika zmienil sie; pobieranie aktualnych nazw i uprawnien"; if(discovered_profile){discovered_profile_ready=false;discovered_profile_next_attempt=0;}else{reference_catalog_changed=true;native_identity=false;} return false; }
         int version=structure_version(get(parsed.p,"data"));
         if(version!=native_structure_version||!native_structure_ms||now()-native_structure_ms>=60000) {
             const uint8_t structure_query[]={9}; transport::Reply structure_reply,verify_reply;
@@ -847,7 +862,7 @@ bool rs_menu_catalog(bool check_versions=false) {
         if(strcmp(str(get(parsed.p,"state")),"decoded")||num(get(details,"command"))!=3||cJSON_GetArraySize(metadata)!=expected) { native_menu_ms=0; std::fill_n(native_menu_row_ms,256,0); native_menu_error="Niezgodny format metadanych menu RS485"; return false; }
         for(unsigned i=0;i<expected;++i) {
             auto *reference=item(body("rmParamsData"),i), *actual=item(metadata,i);
-            for(auto key:{"unit","mult","offset"}) if(!equal(num(get(reference,key)),num(get(actual,key)))) { native_menu_ms=0; std::fill_n(native_menu_row_ms,256,0); native_menu_error="Metadane menu niezgodne z katalogiem tego sterownika"; return false; }
+            for(auto key:{"unit","mult","offset"}) if(!equal(num(get(reference,key)),num(get(actual,key)))) { native_menu_ms=0; std::fill_n(native_menu_row_ms,256,0); native_menu_error="Metadane menu zmienily sie; ponowne pobieranie katalogu"; if(discovered_profile){discovered_profile_ready=false;discovered_profile_next_attempt=0;}else{reference_catalog_changed=true;native_identity=false;} return false; }
         }
         native_menu_config_ms=now();
     }
@@ -885,7 +900,7 @@ bool rs_menu_point(unsigned index) {
     native_menu_row_ms[index]=now(); return true;
 }
 J *rs_menu_temperature_target(const char *id) {
-    auto *d=definition(id); if(profile810||!d||d->legacy) return nullptr;
+    auto *d=definition(id); if(discovered_profile||!d||d->legacy) return nullptr;
     std::string key="rm:"+std::to_string(d->index); Owned point{generic_target(key.c_str())}; if(!point.p) return nullptr;
     if(strcmp(str(get(point.p,"name")),d->name)||num(get(point.p,"wire_unit"))!=1||num(get(point.p,"wire_mult"))!=1||num(get(point.p,"wire_offset"))!=0||num(get(point.p,"min"))<d->low||num(get(point.p,"max"))>d->high||num(get(point.p,"step"))!=d->step) return nullptr;
     Owned sensor{boiler::snapshot()}; if(!cJSON_IsTrue(get(sensor.p,"fresh"))) return nullptr;
@@ -919,7 +934,7 @@ bool rs_room_refresh() {
     native_room_ms=now(); return true;
 }
 bool rs_inspect_temperature(const char *id,J *&out) {
-    if(profile810)return fail("Wybierz nastawę w Parametrach użytkownika lub serwisowych tego kotła");
+    if(discovered_profile)return fail("Wybierz nastawę w Parametrach użytkownika lub serwisowych tego kotła");
     auto *d=definition(id); if(!d) return false;
     if((!native_identity||now()-native_identity_ms>30000)&&!rs_identify()) return false;
     if(d->legacy) {
@@ -971,16 +986,19 @@ bool rs_refresh(bool background) {
     if(now()>=next_menu_poll) { rs_menu_refresh(); next_menu_poll=now()+6000; }
     if(pending())return true;
     transport::Reply reply;
-    if(!transport::request(84,nullptr,0,212,reply)) { Lock lock; target_ms=0; return fail("Brak odczytu nastaw RS485"); }
-    Owned parsed{protocol::describe(reply.bytes,reply.length)};
-    if(strcmp(str(get(parsed.p,"state")),"decoded")) return fail("Niepoprawna odpowiedz nastaw RS485");
+    bool current_received=transport::request(84,nullptr,0,212,reply);
+    Owned parsed{current_received?protocol::describe(reply.bytes,reply.length):nullptr};
+    if(!current_received||strcmp(str(get(parsed.p,"state")),"decoded")){
+        if(!discovered_profile){Lock lock;target_ms=0;return fail("Brak poprawnego odczytu nastaw RS485");}
+        cJSON_Delete(parsed.p);parsed.p=nullptr;
+    }
     auto *edits=cJSON_CreateObject(); J *row;
     cJSON_ArrayForEach(row,get(get(parsed.p,"data"),"parameters")) {
         char key[12]; snprintf(key,sizeof(key),"%.0f",num(get(row,"id")));
         auto *v=cJSON_CreateObject(); copy(v,"value",get(row,"value")); copy(v,"min",get(row,"min")); copy(v,"max",get(row,"max")); copy(v,"type",get(row,"wire_type")); put(edits,key,v);
     }
     auto *wrap=cJSON_CreateObject(); put(wrap,"data",edits); put(raw,"rmCurrentDataParamsEdits",wrap);
-    for(auto &d:definitions) if(!profile810&&d.native&&!d.legacy) { auto *meta=get(edits,d.id), *m=item(body("rmParamsData"),d.index); copy(m,"value",get(meta,"value")); copy(m,"minv",get(meta,"min")); copy(m,"maxv",get(meta,"max")); }
+    for(auto &d:definitions) if(!discovered_profile&&d.native&&!d.legacy) { auto *meta=get(edits,d.id), *m=item(body("rmParamsData"),d.index); copy(m,"value",get(meta,"value")); copy(m,"minv",get(meta,"min")); copy(m,"maxv",get(meta,"max")); }
     if(pending())return true;
     native_room_ms=0;
     const uint8_t room_request[]={255,0}; transport::Reply room_reply;
@@ -1007,7 +1025,7 @@ bool rs_refresh(bool background) {
         auto *v=rs_target(d.id);
         if(v) {
             Owned writable{d.legacy?nullptr:rs_menu_temperature_target(d.id)}; bool ready=d.legacy||writable.p;
-            flag(v,"write_ready",ready); if(!ready)text(v,"write_error",profile810?"Zmień tę nastawę w Parametrach użytkownika lub serwisowych":native_menu_error.empty()?"Brak zweryfikowanego odczytu pozycji menu":native_menu_error);
+            flag(v,"write_ready",ready); if(!ready)text(v,"write_error",discovered_profile?"Zmień tę nastawę w Parametrach użytkownika lub serwisowych":native_menu_error.empty()?"Brak zweryfikowanego odczytu pozycji menu":native_menu_error);
             put(targets,d.id,v);
         } else text(errors,d.id,error_text);
     }
@@ -1080,6 +1098,7 @@ bool save_mode(const char *mode) {
     if(result!=ESP_OK) return fail("Nie zapisano wyboru polaczenia");
     selected_mode=mode; ++revision; cJSON_Delete(ticket); ticket=nullptr; native_identity=false; native_room_ms=0; native_room={}; native_mixer={};
     native_menu_ms=native_menu_config_ms=native_menu_versions_ms=next_menu_poll=native_room_config_ms=0; native_menu_error.clear();
+    discovered_profile_ready=false;discovered_profile_next_attempt=0;
     native_structure_ms=native_alarm_ms=next_alarm_poll=next_history_sample=0; native_structure_version=last_pending_alerts=-1; health_failures=alarm_failures=0;
     std::fill_n(native_menu_row_ms,256,0);
     // A new route must not inherit live settings or alarms from the previous one.
@@ -1397,17 +1416,12 @@ bool control_observed(bool start, int mode) {
     return start?((mode>=1&&mode<=6)||mode==12||mode==23):(mode==0||mode==7);
 }
 const char *control_guard(const J *sensor, bool direct, bool identity, bool enabled, bool start) {
-    if(!direct) return "START/STOP wymaga trybu RS485 bezposrednio";
-    if(!enabled||!identity) return "Brak potwierdzonej tozsamosci lub nadawanie RS485 wylaczone";
-    if(!cJSON_IsTrue(get(sensor,"fresh"))||num(get(sensor,"age_ms"))>5000||strcmp(str(get(get(sensor,"modules"),"module_a")),"8.41.38.L0")) return "Brak swiezego stanu i potwierdzenia firmware kotla";
-    double mode=num(get(get(sensor,"sensors"),"state"));
-    if(!std::isfinite(mode)||floor(mode)!=mode||mode<0||(mode>11&&mode!=12&&mode!=23)) return "Nierozpoznany stan kotla";
-    if(start && (mode!=0||num(get(get(sensor,"sensors"),"pending_alerts"))!=0||!cJSON_IsFalse(get(get(sensor,"outputs"),"alarm")))) return "START wymaga wylaczonego kotla i braku zgloszonych alarmow";
-    return nullptr;
+    return controller_profile::control_guard(sensor,direct,identity,enabled,start);
 }
 const char *http_control_guard(const J *sys, const J *curr, const J *alarms, bool fresh, bool start) {
     if(!fresh) return "Brak swiezego odczytu stanu lub identyfikacji ecoNET";
-    if(strcmp(str(get(sys,"controllerID")),"ecoMAX860P-LZ TOUCH")||strcmp(str(get(sys,"moduleASoftVer")),"8.41.38.L0")) return "Niezweryfikowany model lub firmware kotla";
+    if(!controller_profile::family(0,str(get(sys,"controllerID"))))return "Nie rozpoznano sterownika ecoMAX dla START/STOP";
+    if(!controller_profile::firmware(str(get(sys,"moduleASoftVer"))))return "Brak odczytu wersji modulu A przez ecoNET";
     double mode=num(get(curr,"mode"));
     if(!std::isfinite(mode)||floor(mode)!=mode||mode<0||(mode>11&&mode!=12)) return "Nierozpoznany stan kotla";
     if(start&&(mode!=0||!cJSON_IsArray(alarms)||cJSON_GetArraySize(alarms)!=0||!cJSON_IsFalse(get(curr,"alarmOutputWorks")))) return "START wymaga wylaczonego kotla i braku zgloszonych alarmow";
@@ -1615,8 +1629,8 @@ J *collect_compatibility(const J *payload){
     if(first_identity.empty()||last_identity.empty()||first_identity!=last_identity)warn("Nie potwierdzono tego samego sterownika na poczatku i koncu odczytu; nie lacz tych danych automatycznie w profil zapisu.");
     if(!cJSON_IsTrue(get(sensor.p,"fresh")))warn("Brak swiezej, rozpoznanej ramki czujnikow. Stan nie jest potwierdzeniem dzialania wszystkich pomiarow.");
     warn("Raport nie odblokowuje zapisu. Nazwy, jednostki, opcje i komendy nowego modelu wymagaja weryfikacji; nie uzyto nazw z profilu referencyjnego jako danych obcego kotla.");
-    if(profile810){flag(report,"catalog_ready",profile810_ready);text(report,"catalog_error",native_menu_error);}
-    if(profile810&&profile810_ready){auto *catalog=cJSON_CreateObject();for(auto key:{"rmParamsNames","rmParamsUnitsNames","rmParamsEnums","rmCatsNames"})copy(catalog,key,body(key));text(catalog,"source","RS485 remote menu, observed on this controller");put(report,"observed_catalog",catalog);}
+    if(discovered_profile){flag(report,"catalog_ready",discovered_profile_ready);text(report,"catalog_error",native_menu_error);text(report,"catalog_source","controller_rs485");number(report,"catalog_parameter_count",discovered_count);}
+    if(discovered_profile&&discovered_profile_ready){auto *catalog=cJSON_CreateObject();for(auto key:{"rmParamsNames","rmParamsUnitsNames","rmParamsEnums","rmCatsNames"})copy(catalog,key,body(key));text(catalog,"source","RS485 remote menu, observed on this controller");put(report,"observed_catalog",catalog);}
     number(report,"received_replies",replies);number(report,"failed_queries",failures);number(report,"duration_ms",now()-started);
     flag(report,"partial",!active||failures||replies<sizeof(compatibility_report::queries)/sizeof(compatibility_report::queries[0])+1||first_identity.empty()||first_identity!=last_identity);
     auto *result=cJSON_CreateObject();text(result,"state","ready");text(result,"report_id",report_id);text(result,"message","Raport gotowy do pobrania. Nastaw nie zmieniano.");
@@ -1654,11 +1668,11 @@ void worker(void *) {
         }
         if(!busy&&selected_mode=="rs485")sample_rs_history();
         if(!busy)sample_settings_history();
-        if(!profile810&&!busy&&selected_mode=="rs485"&&transport::enabled()&&native_identity&&now()-native_identity_ms<30000&&now()>=next_schedule_poll) {
+        if(!discovered_profile&&!busy&&selected_mode=="rs485"&&transport::enabled()&&native_identity&&now()-native_identity_ms<30000&&now()>=next_schedule_poll) {
             auto saved_error=error_text; bool ok=rs_schedule_refresh(); schedule_failures=ok?0:std::min(schedule_failures+1,2U);
             next_schedule_poll=now()+(ok?30000:std::min(60000U,15000U<<schedule_failures)); error_text=saved_error;
         }
-        if(!profile810&&!busy&&selected_mode=="rs485"&&transport::enabled()&&native_identity&&now()-native_identity_ms<30000&&now()>=next_room_schedule_poll) {
+        if(!discovered_profile&&!busy&&selected_mode=="rs485"&&transport::enabled()&&native_identity&&now()-native_identity_ms<30000&&now()>=next_room_schedule_poll) {
             auto saved_error=error_text; bool ok=rs_room_schedule_refresh(); room_schedule_failures=ok?0:std::min(room_schedule_failures+1,2U);
             next_room_schedule_poll=now()+(ok?30000:std::min(60000U,15000U<<room_schedule_failures));error_text=saved_error;
         }
@@ -1682,7 +1696,7 @@ void worker(void *) {
 }
 void fill_rs_curr(J *curr,const J *snapshot) {
     auto *s=get(snapshot,"sensors");
-    const char *map[][2]={{"heating_temp","tempCO"},{"water_heater_temp","tempCWU"},{"outside_temp","tempExternalSensor"},{"feeder_temp","tempFeeder"},{"exhaust_temp","tempFlueGas"},{"heating_target","tempCOSet"},{"water_heater_target","tempCWUSet"},{"state","mode"},{"fan_power","fanPower"},{"boiler_load","boilerPower"},{"fuel_level","fuelLevel"},{"lambda_state","lambdaStatus"},{"heating_status","statusCO"},{"water_heater_status","statusCWU"}};
+    const char *map[][2]={{"heating_temp","tempCO"},{"water_heater_temp","tempCWU"},{"outside_temp","tempExternalSensor"},{"feeder_temp","tempFeeder"},{"exhaust_temp","tempFlueGas"},{"return_temp","tempBack"},{"upper_buffer_temp","tempUpperBuffer"},{"lower_buffer_temp","tempLowerBuffer"},{"hydraulic_coupler_temp","tempHydraulicCoupler"},{"upper_solar_temp","tempUpperSolar"},{"heating_target","tempCOSet"},{"water_heater_target","tempCWUSet"},{"state","mode"},{"fan_power","fanPower"},{"boiler_load","boilerPower"},{"fuel_level","fuelLevel"},{"lambda_state","lambdaStatus"},{"heating_status","statusCO"},{"water_heater_status","statusCWU"}};
     for(auto &p:map) copy(curr,p[1],get(s,p[0]));
     copy(curr,"fuelLevelRaw",get(s,"fuel_level_raw"));copy(curr,"fuelCalibration",get(s,"fuel_calibrating"));
     copy(curr,"fuelStream",get(s,"fuel_consumption")); copy(curr,"boilerPowerKW",get(s,"boiler_power"));
