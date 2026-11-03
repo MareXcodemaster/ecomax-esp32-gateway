@@ -8,6 +8,7 @@ const modeLabel=mode=>EcoSettings.boilerModeLabel(mode,state?.write_transport);
 function renderControl(){
  const busy=actionBusy||state.busy||!!ticket||!!controlTicket,controls=state.controls||{},mode=fresh()?state.curr.mode:null;
  text('control-mode',mode===null?'Brak aktualnego odczytu':modeLabel(mode));
+ const headerMode=Number.isInteger(mode)?modeLabel(mode):'Brak odczytu';if($('header-boiler-mode').textContent!==headerMode)text('header-boiler-mode',headerMode);
  $('boiler-start').disabled=busy||!fresh()||!controls.start;
  $('boiler-stop').disabled=busy||!fresh()||!controls.stop||mode===0||mode===7;
  $('boiler-start').title=controls.start_error||'';$('boiler-stop').title=controls.stop_error||'';

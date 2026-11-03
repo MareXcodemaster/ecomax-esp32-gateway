@@ -74,7 +74,14 @@
   if(group.kind)timeline(get('chart'),data,group.kind==='outputs');else numeric(get('chart'),data,group);get('history-phases-band').hidden=group.kind==='states';if(group.kind!=='states')timeline(get('history-phases'),data);
   get('history-download').disabled=!data.length;const table=document.createElement('table'),head=document.createElement('thead'),tr=document.createElement('tr'),columns=group.lines||[];for(const name of ['Czas','Stan kot\u0142a',...(group.kind==='outputs'?outputs.map(o=>o[1]):columns.map(l=>l.name+' ['+l.unit+']'))])tr.append(element('th',name));head.append(tr);table.append(head);const body=document.createElement('tbody');for(const p of data.slice(-12).reverse()){const row=document.createElement('tr');for(const value of [stamp(p.time),phase(p),...(group.kind==='outputs'?outputs.map(([key])=>p[key]===1?'ON':p[key]===0?'OFF':'\u2014'):columns.map(l=>fmt(p[l.key])))])row.append(element('td',value));body.append(row);}table.append(body);get('history-table').replaceChildren(table);updateReadout(data,group);
  }
- function updateReadout(data,group){const p=inspectTime===null?data.at(-1):data.reduce((a,b)=>!a||Math.abs(b.time-inspectTime)<Math.abs(a.time-inspectTime)?b:a,null);get('history-readout').textContent=p?[stamp(p.time),phase(p),...(group.lines||[]).filter(l=>!hiddenKeys.has(l.key)).map(l=>l.name+': '+fmt(p[l.key])+' '+l.unit),...(group.kind==='outputs'?outputs.filter(([key])=>finite(p[key])).map(([key,name])=>name+': '+(p[key]?'ON':'OFF')):[])].join(' / '):'Brak pr\u00f3bek';}
+ function updateReadout(data,group){
+  const p=inspectTime===null?data.at(-1):data.reduce((a,b)=>!a||Math.abs(b.time-inspectTime)<Math.abs(a.time-inspectTime)?b:a,null),readout=get('history-readout');
+  readout.replaceChildren();if(!p){readout.textContent='Brak pr\u00f3bek';return;}
+  const state=phase(p),items=[{text:stamp(p.time)},{text:state,color:phaseColors[state]||'#647c8b'},
+   ...(group.lines||[]).filter(l=>!hiddenKeys.has(l.key)).map(l=>({text:l.name+': '+fmt(p[l.key])+' '+l.unit,color:l.color})),
+   ...(group.kind==='outputs'?outputs.filter(([key])=>finite(p[key])).map(([key,name])=>({text:name+': '+(p[key]?'ON':'OFF'),color:p[key]?(key==='alarm'?'#b63737':'#21836d'):'#4c555a'})):[])];
+  for(const item of items){if(readout.childNodes.length)readout.append(' / ');const part=element('span',item.text,item.color?'history-readout-value':'');if(item.color)part.style.color=item.color;readout.append(part);}
+ }
  async function refresh(force=false){
   if(!visible()||busy||(!force&&Date.now()-lastAttempt<(get('history-window').value==='day'?60000:10000)))return;
   busy=true;lastAttempt=Date.now();const key=queryKey();get('history-refresh').disabled=true;

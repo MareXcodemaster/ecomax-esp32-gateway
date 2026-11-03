@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0-beta.45
+
+- Aktualny stan kotła jest widoczny na zielonym pasku za nazwą sterownika, we wszystkich zakładkach. Na telefonie mieści się pod tytułem. Przy utracie aktualnego odczytu pokazuje „Brak odczytu”.
+
+- Podpisy i wartości pod wykresami historii mają kolory odpowiadających im serii: m.in. kocioł i jego nastawa czerwone, CWU i jego nastawa niebieskie.
+- Nazwa stanu kotła, np. Nadzór, ma kolor tego stanu na wykresie. Data i godzina pozostają neutralne.
+- Kolory są zachowane przy wskazywaniu próbki myszą lub dotykiem, zmianie wykresu i ukrywaniu serii.
+
 ## 0.7.0-beta.44
 
 - Dane bieżące automatycznie dodają kafelki kolejnych odczytanych mieszaczy, z temperaturą zmierzoną i zadaną.
