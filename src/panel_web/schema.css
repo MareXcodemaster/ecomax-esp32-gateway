@@ -6,6 +6,17 @@
 .schema-detected .schema-note{font-size:16px;fill:#4e666b}.schema-detected .schema-temperature{font-size:30px;fill:#147fa1;font-weight:600}
 .schema-detected .schema-box{fill:#fff;stroke:#bdcfcb;stroke-width:1.5}.schema-detected .schema-connection{fill:none;stroke:#6a9996;stroke-width:4;stroke-dasharray:8 5}
 .schema-detected .schema-pump{stroke:#53766f;stroke-width:2;fill:#e7efed}.schema-detected .schema-pump.on{fill:#c5efcf;stroke:#298047}.schema-detected .schema-pump.unknown{fill:#eee;stroke:#999}.schema-detected .schema-pump-arrow{fill:#425e59}
+.schema-graphic>svg.schema-plant{background:#f4f4f4;min-width:1000px;border-radius:0}
+.schema-plant .plant-model{font-size:21px;font-weight:700;fill:#514f7b}.schema-plant .plant-label{font-size:19px;font-weight:700;fill:#35354d}
+.schema-plant .plant-note{font-size:17px;fill:#514f7b}.schema-plant .plant-small{font-size:14px;fill:#50556a}
+.schema-plant .plant-pipe{fill:none;stroke-width:4;stroke-linejoin:round;stroke-linecap:round}.schema-plant .hot{stroke:#d22037}.schema-plant .cold{stroke:#09ade4}.schema-plant .blend{stroke:#514f7b;stroke-width:3}
+.schema-plant .divider{stroke:#b3afc4;stroke-width:1}.schema-plant .plant-hot-label{font-size:16px;fill:#ad2034}.schema-plant .plant-cold-label{font-size:16px;fill:#137d9e}
+.schema-plant .plant-pill{fill:#56527f}.schema-plant .plant-pill.target{fill:#716b95}.schema-plant .plant-pill.outdoor{fill:#00a9c4}.schema-plant .plant-pill-text{font-size:17px;font-weight:600;fill:#fff}
+.schema-plant .plant-stat-icon{stroke:#56527f;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}.schema-plant .plant-stat-label{font-size:14px;fill:#363446}.schema-plant .plant-stat-value{font-size:18px;fill:#56527f}
+.schema-plant .plant-sensor-point{fill:#fff;stroke:#56527f;stroke-width:2}.schema-plant .plant-valve{fill:#fafafa;stroke:#56527f;stroke-width:2}.schema-plant .plant-valve-lines{fill:none;stroke:#56527f;stroke-width:1.6}
+.schema-plant .plant-pump{stroke:#56527f;stroke-width:2;fill:#fff}.schema-plant .plant-pump.on{stroke:#26854c;fill:#dcf2df}.schema-plant .plant-pump.unknown{stroke:#92929c;fill:#ddd}.schema-plant .plant-pump-arrow{fill:#45445c}.schema-plant .plant-pump-state{font-size:13px;fill:#45445c}
+.schema-plant .plant-floor-base{fill:#e5dcca;stroke:#c3b79f;stroke-width:1.5}.schema-plant .floor{stroke:#d35849;stroke-width:5}.schema-plant .plant-emitter{fill:#dedee2;stroke:#9b9ba8;stroke-width:2}
+.schema-circuit-options{grid-column:1/-1;margin:14px 0 0;border-top:1px solid #d4d8d8;padding-top:16px;color:#405b60}.schema-circuit-options summary{cursor:pointer;font-weight:600}.schema-circuit-options p{font-size:14px;line-height:1.5}.schema-circuit-options label{display:inline-flex;gap:8px;align-items:center;margin:8px 18px 8px 0}.schema-circuit-options select{max-width:190px}
 #wifi-dialog{width:480px}#wifi-title{font-size:19px}#wifi-select{width:100%}
 #wifi-form>.check{margin:12px 0}#wifi-form>p{font-size:13px;line-height:1.6;overflow-wrap:anywhere}
 #wifi-result{min-height:22px}#wifi-form [hidden]{display:none}

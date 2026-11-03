@@ -231,3 +231,9 @@ Po pierwszym uruchomieniu kilka dni zapelni sie dopiero z czasem.
 Alarmy to odczyt informacji przekazanych przez regulator. Skasowanie
 historii lub ukrycie komunikatu nie usuwa przyczyny alarmu i nie powinno
 byc uzywane do obchodzenia zabezpieczen. Ocen stan samego kotla.
+
+## Schemat z kilkoma mieszaczami
+
+Od beta.43 inne konfiguracje pokazują graficznie kocioł, CWU i odczytane mieszacze. Pierwszy mieszacz ma domyślnie symbol grzejnika, drugi — podłogówki. W „Opis obiegów na schemacie” można zmienić te symbole zgodnie z instalacją. Wybór jest zapisywany tylko w tej przeglądarce, nie zmienia konfiguracji ani nastaw kotła.
+
+Temperatury zmierzone i zadane oraz stany pomp pochodzą z aktualnych danych. Pod rysunkiem są dostępne pozostałe temperatury: spaliny, podajnik, powrót, otoczenie, pomieszczenia, bufor, solary i inne obsługiwane czujniki, jeśli sterownik udostępnia pomiar. Przy utracie odczytu pojawia się „---”. Połączenia rur są poglądowe. Dotychczasowy schemat 23 pozostaje bez zmian.

@@ -320,16 +320,25 @@ try {
   await page.evaluate(()=>EcoHeatingSchema.render(state,false));
   assert.equal(await page.locator('#lbSchema_tempCO').textContent(),'---');
   assert.equal(await page.locator('#schema_pumpMixerA').getAttribute('data-state'),'unknown');
-  await page.evaluate(()=>EcoHeatingSchema.render({...state,system:{controllerID:'ecoMAX810P-L TOUCH'},curr:{tempCO:65,tempCOSet:70,mode:3,tempCWU:45,tempCWUSet:50,mixerTemp1:31,mixerSetTemp1:35,mixerPumpWorks1:true,mixerTemp2:28,mixerSetTemp2:40,mixerPumpWorks2:false,mixerTemp3:null,mixerSetTemp3:40}},true));
+  await page.evaluate(()=>EcoHeatingSchema.render({...state,system:{controllerID:'ecoMAX810P-L TOUCH'},curr:{tempCO:65,tempCOSet:70,mode:3,tempCWU:45,tempCWUSet:50,pumpCWUWorks:true,mixerTemp1:44,mixerSetTemp1:45,mixerPumpWorks1:true,mixerTemp2:31,mixerSetTemp2:35,mixerPumpWorks2:false,mixerTemp3:null,mixerSetTemp3:40,tempBack:52,tempFeeder:27,tempFlueGas:112,tempExternalSensor:8.4,ecoSterTemp1:22.1,ecoSterTemp2:21.7,fuelLevel:68,boilerPower:45,fanPower:32,lambdaLevel:105,feederWorks:false}},true));
   assert.equal(await page.locator('#schema-graphic').isVisible(),true);
   assert.equal(await page.locator('[data-circuit]').count(),3);
   assert.equal(await page.locator('[data-circuit="mixerTemp2"]').getAttribute('data-pump-state'),'off');
   assert.equal(await page.locator('[data-circuit="mixerTemp3"]').count(),0);
+  assert.equal(await page.locator('[data-sensor="tempFeeder"] strong').textContent(),'27,0 °C');
+  assert.equal(await page.locator('[data-sensor="ecoSterTemp2"] strong').textContent(),'21,7 °C');
   await screenshot('21-schemat-obiegi');
+  await page.locator('.schema-circuit-options summary').click();
+  await page.getByLabel('Rodzaj obiegu mieszacza 2').selectOption('radiator');
+  assert.ok((await page.locator('[data-circuit="mixerTemp2"]').textContent()).includes('Grzejniki'));
+  assert.equal(await page.locator('.schema-circuit-options').getAttribute('open'),'');
+  await page.getByLabel('Rodzaj obiegu mieszacza 2').selectOption('floor');
+  for(const width of [320,390,1280]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
+  await page.setViewportSize({width:1280,height:1080});
   await page.evaluate(()=>EcoHeatingSchema.render({system:{controllerID:'ecoMAX810P-L TOUCH'},curr:{}},false));
   assert.equal(await page.locator('[data-circuit]').count(),3);
   assert.equal(await page.locator('[data-circuit="mixerTemp2"]').getAttribute('data-pump-state'),'unknown');
-  assert.ok(!(await page.locator('.schema-detected').textContent()).includes('31,0'));
+  assert.ok(!(await page.locator('.schema-detected').textContent()).includes('44,0'));
   await page.evaluate(()=>EcoHeatingSchema.render(state,true));
   for(const width of [320,390,1280]){
     await page.setViewportSize({width,height:844});

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-beta.43
+
+- Graficzny schemat dla innych konfiguracji: kocioł, CWU, mieszacze z pompami, grzejniki i podłogówka w stylu dotychczasowego widoku. Grafiki SVG działają lokalnie.
+- Temperatury kotła, CWU, obiegów, spalin, podajnika, powrotu, otoczenia, pokojów i pozostałych dostępnych czujników. Brak aktualnego odczytu pozostaje nieznany.
+- Rodzaj obiegu na rysunku można zmienić lokalnie w przeglądarce; nie wysyła to nastaw do kotła. Połączenia na schemacie są poglądowe.
+- Zachowano oryginalny schemat 23 i poprawki rozpoznawania katalogu oraz START/STOP z beta.42.
+
 ## 0.7.0-beta.42
 
 - Standardowe START/STOP ecoMAX-P nie wymaga numeru firmware kotła autora. Osobne komunikaty wskazują brak identyfikacji, bieżącego stanu lub wersji modułu.

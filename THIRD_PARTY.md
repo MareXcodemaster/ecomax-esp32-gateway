@@ -109,6 +109,11 @@ logo, account identifier, network configuration or recorded measurement
 is included in these assets. The SVG contains empty live-reading labels
 which the panel fills from the current controller data.
 
+The derived schema-equipment.svg reuses cropped boiler, radiator, tank and
+room-controller artwork from that same schema.svg. The same exclusion and
+original ownership apply. Its new pipe layout, data bindings and circuit
+selection code are part of this project; they do not change the artwork rights.
+
 Brand names describe compatibility, not affiliation or endorsement.
 
 ## Realistic faucet PNG
