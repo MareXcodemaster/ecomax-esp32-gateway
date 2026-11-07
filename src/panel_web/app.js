@@ -156,6 +156,7 @@ if(window.EcoMirror)EcoMirror.init();
 if(window.EcoNetwork)EcoNetwork.init();
 if(window.EcoWifi)EcoWifi.init();
 if(window.EcoUpdates)EcoUpdates.init();
+if(window.EcoTailnet)EcoTailnet.init();
 if(window.EcoAccess)EcoAccess.init();
 if(window.EcoCwuPump)EcoCwuPump.init();
 if(window.EcoNavigation)EcoNavigation.init(Object.keys(titles),next=>selectView(next,false));

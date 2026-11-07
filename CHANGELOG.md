@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.7.0-beta.54
+
+- Bufory Wi-Fi i lwIP preferują PSRAM zgodnie z mechanizmem ESP-IDF. Stosy zadań, DMA i rezerwa ochronna pozostają w RAM-ie wewnętrznym. Zapas RAM-u po połączeniu VPN na testowanym urządzeniu wzrósł do około 82 kB. Próba 135 pobrań zasobów przez LAN przy aktywnym VPN przeszła bez restartu lub zatrzymania VPN; użytkownik potwierdził też pełne załadowanie panelu i temperatur przez Tailscale w telefonie na transmisji komórkowej. Długotrwała stabilność pozostaje do sprawdzenia.
+
+## 0.7.0-beta.53
+
+- Filtr panelu uwzględnia dopełnienie pakietów WireGuard i usuwa je przed przekazaniem do lwIP. Nadal przepuszcza tylko autoryzowany ruch TCP na port 80 ESP.
+- Dodano liczniki przyjętych i odrzuconych pakietów panelu. Próba z telefonu rozpoczęła ładowanie strony, ale zabezpieczenie zatrzymało VPN po spadku zapasu RAM-u. Sam status połączenia nie oznacza jeszcze stabilnego dostępu.
+
+## 0.7.0-beta.52
+
+- Ujednolicono limit sesji, metadanych i uprawnień Tailnet do 16 peerów. Limit czterech blokował przyjęcie większej listy urządzeń; tablice pozostają w PSRAM.
+- Dodano identyfikację odrzucenia mapy i synchronizacji peerów bez danych konta.
+
+## 0.7.0-beta.51
+
+- Dodano diagnostykę etapów zestawiania połączenia Tailscale i błędów TLS bez ujawniania klucza. Próba na sprzęcie nadal trwa; rejestracja i dostęp zdalny nie są jeszcze potwierdzone.
+
+## 0.7.0-beta.50
+
+- Pula sesji WireGuard korzysta z PSRAM i tego samego limitu czterech aktywnych peerów co MicroLink. Nie zajmuje dodatkowych 14,8 kB wewnętrznego RAM-u.
+- Uruchomienie VPN czeka na zakończenie pracującego aktualizatora, aby nie nakładać dwóch początkowych szczytów użycia pamięci. Dodano pomiar minimalnej pamięci podczas próby VPN; progi ochronne pozostają bez zmian.
+
+## 0.7.0-beta.49
+
+- Poprawka lokalnego zapisu konfiguracji Tailnet: serwer ESP-IDF zwraca połączenie IPv4 jako adres mapowany IPv6. Rozpoznawane są oba formaty, przy zachowaniu blokady zmiany konfiguracji przez sam VPN.
+- Dodatkowy test HTTP na rzeczywistym gnieździe sprawdza dojście autoryzowanego żądania do walidacji konfiguracji, bez zapisywania kluczy lub włączania VPN.
+
+## 0.7.0-beta.48
+
+- Eksperymentalny, opcjonalny klient Tailscale na tym samym ESP co panel. Konfiguracja w ustawieniach urządzenia; domyślnie wyłączony. Biblioteka MicroLink z projektu ESP32 Tailnet Gateway, połączenia bezpośrednie i DERP. Wymaga własnego konta Tailscale i klucza autoryzacyjnego.
+- Dostęp do panelu po przypisanym IPv4 Tailscale, z zachowaniem logowania i reguł dostępu. Brak routowania sieci domowej i dostępu do portu mostu RS485. Konfigurację VPN można zmieniać lokalnie.
+- Progi pamięci przed uruchomieniem i podczas pracy, przerwanie nieudanej próby po trzech minutach oraz wstrzymanie VPN po awarii ESP. Wyłączona funkcja nie uruchamia zadań MicroLink.
+- Wspólna synchronizacja czasu dla aktualizatora i VPN, HTTPS z weryfikacją certyfikatów, trwałe klucze urządzenia oraz kontrola błędów zapisu tożsamości.
+- Testy hosta i panelu nie zastępują testu fizycznego tunelu. Połączenie z telefonu spoza LAN i długotrwała stabilność wymagają sprawdzenia na urządzeniu.
+
 ## 0.7.0-beta.47
 
 - Lżejsze odświeżanie: przeglądarka zapamiętuje nazwy, opisy i definicje menu. Bieżące wartości, stan połączenia i uprawnienia nadal są odczytywane także w tle. Zmiana katalogu, tożsamości sterownika lub restart ESP wymusza ponowne pobranie definicji. Eksport JSON pozostaje pełny.

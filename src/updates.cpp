@@ -8,7 +8,7 @@
 #include "esp_http_client.h"
 #include "esp_crt_bundle.h"
 #include "esp_heap_caps.h"
-#include "esp_netif_sntp.h"
+#include "wifi.hpp"
 #include "esp_ota_ops.h"
 #include "esp_app_desc.h"
 #include "esp_system.h"
@@ -28,7 +28,7 @@ using update_manifest::Candidate;
 static SemaphoreHandle_t mutex;
 static std::atomic<bool> flash_busy{false},check_pending{false},install_pending{false},worker_ready{false};
 static std::atomic<bool> worker_running{false};
-static uint64_t next_check=0;static bool time_started=false;
+static uint64_t next_check=0;
 static bool enabled=true,include_beta=true,working=false,available=false;
 static uint64_t checked=0; static size_t received=0;
 static char phase[32]="starting",error[160]{},requested[32]{};
@@ -209,7 +209,7 @@ void tick(){
     if(worker_running.load()){xSemaphoreGive(mutex);return;}
     const bool pending=check_pending.load()||install_pending.load();
     const bool wanted=pending||(enabled&&millis()>=next_check&&!working&&!installing());
-    if(!wanted){xSemaphoreGive(mutex);if(time_started){esp_netif_sntp_deinit();time_started=false;}return;}
+    if(!wanted){xSemaphoreGive(mutex);return;}
     xSemaphoreGive(mutex);
     if(!state::network().connected){
         if(install_pending.exchange(false)){
@@ -219,10 +219,9 @@ void tick(){
         return;
     }
     if(time(nullptr)<1704067200){
-        if(!time_started){esp_sntp_config_t config=ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");time_started=esp_netif_sntp_init(&config)==ESP_OK;}
+        network::request_time();
         status("waiting_for_time");return;
     }
-    if(time_started){esp_netif_sntp_deinit();time_started=false;}
     xSemaphoreTake(mutex,portMAX_DELAY);
     // Recheck under the same mutex used by check/configure/install.
     if(worker_running.load()){xSemaphoreGive(mutex);return;}
@@ -236,6 +235,7 @@ void init(){
     mutex=xSemaphoreCreateMutex();if(!mutex){state::log("Optional GitHub updater unavailable: memory");return;}
     nvs_handle_t handle;if(nvs_open("lazar_s0",NVS_READONLY,&handle)==ESP_OK){uint8_t value;if(nvs_get_u8(handle,"update_auto",&value)==ESP_OK)enabled=value!=0;if(nvs_get_u8(handle,"update_beta",&value)==ESP_OK)include_beta=value!=0;nvs_close(handle);}
 }
+bool worker_busy(){return worker_running.load()||installing();}
 void start(){
     if(!mutex)return;
     next_check=millis()+20000;status("idle");worker_ready.store(true);

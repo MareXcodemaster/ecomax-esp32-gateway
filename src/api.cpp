@@ -10,6 +10,9 @@
 #include "pellet.hpp"
 #include "updates.hpp"
 #include "cwu_pump.hpp"
+#include "tailnet.hpp"
+#include "tailnet_guard.hpp"
+#include "lwip/sockets.h"
 #include "esp_http_server.h"
 #include "esp_ota_ops.h"
 #include "esp_timer.h"
@@ -437,6 +440,31 @@ static esp_err_t pump_status(httpd_req_t *req){
     if(!authorize(req))return ESP_OK;
     return json(req,cwu_pump::snapshot());
 }
+static esp_err_t tailnet_status(httpd_req_t *req){
+    if(!authorize(req))return ESP_OK;
+    return json(req,tailnet::snapshot());
+}
+static esp_err_t tailnet_configure(httpd_req_t *req){
+    if(!authorize(req,true))return ESP_OK;
+    char token[64];if(httpd_req_get_hdr_value_str(req,"X-Tester-Token",token,sizeof(token))!=ESP_OK||!equal(token,panel_csrf))return message(req,"403 Forbidden","Missing panel token");
+    // IDF HTTP listens on a dual-stack socket: LAN IPv4 commonly appears
+    // as ::ffff:a.b.c.d. Keep enough space for sockaddr_in6 before decoding.
+    sockaddr_storage local{};socklen_t length=sizeof(local);uint32_t ip=0;
+    if(getsockname(httpd_req_to_sockfd(req),reinterpret_cast<sockaddr *>(&local),&length)==0){
+        if(local.ss_family==AF_INET&&length>=sizeof(sockaddr_in))ip=ntohl(reinterpret_cast<sockaddr_in *>(&local)->sin_addr.s_addr);
+        else if(local.ss_family==AF_INET6&&length>=sizeof(sockaddr_in6)){
+            const auto &address=reinterpret_cast<sockaddr_in6 *>(&local)->sin6_addr;
+            ip=tailnet_guard::mapped_ipv4(reinterpret_cast<const uint8_t *>(&address),sizeof(address));
+        }
+    }
+    if(!tailnet_guard::local_configuration(ip))
+        return message(req,"403 Forbidden","Konfiguracja Tailnet jest dostepna tylko przez lokalne Wi-Fi");
+    auto *body=request_json(req,true);if(!body)return ESP_OK;
+    std::string error;const bool accepted=tailnet::configure(body,error);
+    auto *key=cJSON_GetObjectItemCaseSensitive(body,"auth_key");if(cJSON_IsString(key))mbedtls_platform_zeroize(key->valuestring,strlen(key->valuestring));
+    cJSON_Delete(body);
+    return accepted?json(req,tailnet::snapshot()):message(req,"400 Bad Request",error.c_str());
+}
 static esp_err_t pump_configure(httpd_req_t *req){
     if(!authorize(req,true))return ESP_OK;
     char token[64];if(httpd_req_get_hdr_value_str(req,"X-Tester-Token",token,sizeof(token))!=ESP_OK||!equal(token,panel_csrf))return message(req,"403 Forbidden","Missing panel token");
@@ -568,6 +596,7 @@ void start() {
     add("/api/updates",HTTP_GET,update_status);add("/api/updates/check",HTTP_POST,update_command);
     add("/api/access",HTTP_POST,configure_access);
     add("/api/cwu-pump",HTTP_GET,pump_status);add("/api/cwu-pump",HTTP_POST,pump_configure);
+    add("/api/tailnet",HTTP_GET,tailnet_status);add("/api/tailnet",HTTP_POST,tailnet_configure);
     add("/api/updates/config",HTTP_POST,update_command);add("/api/updates/install",HTTP_POST,update_command);
     add("/api/mixers", HTTP_GET, subset); add("/api/thermostats", HTTP_GET, subset);
     add("/api/alarms", HTTP_GET, alarms); add("/api/frames", HTTP_GET, frame_stats);

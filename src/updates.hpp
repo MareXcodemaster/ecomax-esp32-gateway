@@ -10,6 +10,7 @@ esp_err_t check();
 esp_err_t configure(bool enabled,bool include_beta);
 esp_err_t install(const char *version);
 bool installing();
+bool worker_busy();
 bool reserve_flash();
 void release_flash();
 struct FlashGuard {

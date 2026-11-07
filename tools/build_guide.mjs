@@ -3,7 +3,7 @@ import { Marked } from 'marked';
 
 const root = new URL('../', import.meta.url);
 const pages = { START_PL: 'Pelna instrukcja', SZYBKI_START: 'Prosta instalacja',
-  GALERIA: 'Galeria panelu', SPRZET: 'Sprzet i podlaczenie', ZGODNOSC: 'Lista zgodnosci', POMPKA_CWU: 'Cyrkulacja CWU' };
+  GALERIA: 'Galeria panelu', SPRZET: 'Sprzet i podlaczenie', ZGODNOSC: 'Lista zgodnosci', POMPKA_CWU: 'Cyrkulacja CWU', TAILNET: 'Dostęp zdalny Tailscale' };
 const markdown = new Marked({ gfm: true });
 markdown.use({ renderer: { link(token) {
   let href = token.href;
@@ -27,4 +27,4 @@ const html = `<!doctype html>
 </style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main>${markdown.parse(source)}</main></body></html>\n`;
 await writeFile(new URL('docs/' + stem + '.html', root), html);
 }
-console.log('Six Polish HTML guides generated, including external CWU recirculation.');
+console.log('Polish HTML guides generated, including CWU recirculation and experimental Tailnet.');

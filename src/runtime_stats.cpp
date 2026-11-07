@@ -7,7 +7,7 @@ namespace {
 struct Entry { uint32_t bytes=0,minimum=UINT32_MAX;bool running=false; };
 constexpr unsigned count=static_cast<unsigned>(Task::count);
 Entry entries[count];portMUX_TYPE mux=portMUX_INITIALIZER_UNLOCKED;
-const char *names[]={"main","rs485_rx","panel","http","wifi_manager","setup_dns","usb_config","github_updates","history_flash","cwu_tapo"};
+const char *names[]={"main","rs485_rx","panel","http","wifi_manager","setup_dns","usb_config","github_updates","history_flash","cwu_tapo","tailnet"};
 }
 void sample(Task id,uint32_t bytes){
     const auto free=uxTaskGetStackHighWaterMark(nullptr);const auto i=static_cast<unsigned>(id);

@@ -1,4 +1,5 @@
 #include "runtime_stats.hpp"
+#include "tailnet.hpp"
 #include "board.hpp"
 #include "state.hpp"
 #include "transport.hpp"
@@ -49,6 +50,7 @@ extern "C" void app_main() {
     state::log("Pellet meter self-test: PASS; ESP calculations only, no boiler calibration command");
     configASSERT(cwu_pump::self_test());
     state::log("CWU pump self-test: PASS; KLAP, TPAP RFC9383/CCM and temperature rules, no device commands");
+    tailnet::init();
     transport::start(); network::start(); panel::start(); updates::init(); cwu_pump::start(); api::start();
     configASSERT(self_test_api());
     state::log("BOOT REQUIRED SELF-TESTS: PASS; parser/sensors/protocol/pellet/panel guard/HTTP assertions completed");
@@ -59,6 +61,7 @@ extern "C" void app_main() {
     }
     updates::start();
     panel::activate();
+    tailnet::activate();
     runtime_stats::sample(runtime_stats::Task::main,8192);
     runtime_stats::stopped(runtime_stats::Task::main);
     // Periodic persistence belongs to the archive worker; return the boot stack.

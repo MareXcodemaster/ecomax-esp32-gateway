@@ -1,4 +1,7 @@
 #include "runtime_stats.hpp"
+#include "tailnet.hpp"
+#include "esp_netif_sntp.h"
+#include <ctime>
 #include "wifi.hpp"
 #include "updates.hpp"
 #include "usb_console.hpp"
@@ -106,6 +109,16 @@ esp_err_t configure(const char *ssid, const char *password) {
     pending.store(true); return ESP_OK;
 }
 static void dns_tick();
+static std::atomic<bool> time_wanted{false};
+void request_time(){time_wanted.store(true);}
+static void time_tick(){
+    static bool started=false;
+    if(time(nullptr)>=1704067200){if(started){esp_netif_sntp_deinit();started=false;}time_wanted.store(false);return;}
+    if(time_wanted.load()&&connected.load()&&!started){
+        esp_sntp_config_t config=ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
+        started=esp_netif_sntp_init(&config)==ESP_OK;
+    }
+}
 static void wifi_task(void *) {
     Credentials current; bool trying = false; unsigned attempts = 0;
     char hostname[64]; snprintf(hostname, sizeof(hostname), "%s", saved_hostname);
@@ -113,7 +126,7 @@ static void wifi_task(void *) {
     uint64_t next = 0;
     for (;;) {
         runtime_stats::sample(runtime_stats::Task::wifi,5120);
-        updates::tick();usb_console::tick();dns_tick();state::maintenance();
+        updates::tick();usb_console::tick();dns_tick();state::maintenance();time_tick();tailnet::tick();
         auto now = static_cast<uint64_t>(esp_timer_get_time() / 1000);
         if(recovered.exchange(false)) { attempts=0; trying=false; lost_ip.store(false); }
         if(lost_ip.exchange(false)&&!connected.load()) {

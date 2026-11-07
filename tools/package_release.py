@@ -15,7 +15,7 @@ TOP_FILES = {"README.md", "LICENSE", "NOTICE", "THIRD_PARTY.md", "SECURITY.md", 
              "platformio.ini", "CMakeLists.txt", "partitions.csv", "sdkconfig.defaults",
              "dependencies.lock", "embed_web.py", "Build.ps1", "requirements.txt",
              "requirements-build.txt", ".gitignore", "package.json", "pnpm-lock.yaml"}
-SOURCE_DIRS = {"src", "profiles", "tests", "tools", "docs", "LICENSES", ".github", "installer"}
+SOURCE_DIRS = {"components", "src", "profiles", "tests", "tools", "docs", "LICENSES", ".github", "installer"}
 
 def source_paths():
     for path in sorted(ROOT.rglob("*")):
@@ -99,7 +99,7 @@ def main():
     print("PUBLIC RELEASE: " + output.name + "; files=" + str(len(paths)))
     guide = artifacts / ("instrukcja-PL-" + version + ".zip")
     guide_paths = [*(ROOT / ("docs/" + stem + suffix)
-                     for stem in ["START_PL", "SZYBKI_START", "GALERIA", "SPRZET", "ZGODNOSC", "POMPKA_CWU"]
+                     for stem in ["START_PL", "SZYBKI_START", "GALERIA", "SPRZET", "ZGODNOSC", "POMPKA_CWU", "TAILNET"]
                      for suffix in [".html", ".md"]),
                    *(ROOT / "docs/images").rglob("*")]
     with zipfile.ZipFile(guide, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:

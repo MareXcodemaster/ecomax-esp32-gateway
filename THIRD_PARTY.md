@@ -7,6 +7,17 @@ components that are not linked in this particular build.
 
 ## Firmware Dependencies
 
+- **MicroLink**, MIT, Mattboxx fork at
+  `fa3153b6892d00d0c9a9c42f11c8f1a89c6ea910`:
+  https://github.com/Mattboxx/microlink . Optional community Tailnet client.
+  Vendored in `components/microlink`, including its MIT notice and nested
+  **wireguard-lwip** BSD-3-Clause source/license and X25519 notices.
+  Pinned upstream hashes and integration changes are documented beside the source.
+  Integration reference and adapted host authorization tests: **ESP32 Tailnet
+  Gateway**, MIT, `cd2d34ccdeeb357a8491b20bced144e1e8cdc67a`:
+  https://github.com/Mattboxx/esp32-tailnet-gateway .
+  This is not an official Tailscale client.
+
 - **tapo TPAP protocol**, MIT, adapted from mihai-dinculescu/tapo at
   `a99f1968ce7f33184facc691a3e4d19ee834d811`:
   https://github.com/mihai-dinculescu/tapo . SPAKE2+ / P-256, password-shadow

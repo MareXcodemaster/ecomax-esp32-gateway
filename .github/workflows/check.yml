@@ -33,6 +33,16 @@ jobs:
         run: pio run -e waveshare_s3
       - name: Native protocol and identity tests
         run: python tools/host_tests.py
+      - name: Native Tailnet policy, revoke and packet ownership tests
+        env:
+          CJSON_SOURCE: /home/runner/.platformio/packages/framework-espidf/components/json/cJSON/cJSON.c
+          POLICY_SANITIZE: "1"
+        run: python tools/test_tailnet_authorization.py
+      - name: Native Tailnet sixteen-peer convergence and failure tests
+        env:
+          CJSON_SOURCE: /home/runner/.platformio/packages/framework-espidf/components/json/cJSON/cJSON.c
+          POLICY_SANITIZE: "1"
+        run: python tools/test_tailnet_peers.py
       - name: Native TPAP crypto and authentication validation
         run: python tools/tpap_crypto_tests.py
       - name: Package blank first-install and OTA images
@@ -69,6 +79,8 @@ jobs:
         run: node tests/analysis_export_browser.mjs
       - name: Read-only compatibility report browser tests
         run: node tests/compatibility_browser.mjs
+      - name: Optional Tailnet configuration browser tests
+        run: node tests/tailnet_browser.mjs
       - name: ESP memory, hardware parameters and stale state browser tests
         run: node tests/device_info_browser.mjs
       - uses: actions/upload-artifact@v4

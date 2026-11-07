@@ -21,7 +21,7 @@ esp_err_t collect(esp_http_client_event_t *event) {
     return ESP_OK;
 }
 Response request(const char *path, const char *authorization, const char *cookie = nullptr,
-                 const char *body = nullptr, bool guard = false, const char *origin = nullptr) {
+                 const char *body = nullptr, bool guard = false, const char *origin = nullptr, const char *token = nullptr) {
     Response response;
     char url[96]; snprintf(url, sizeof(url), "http://127.0.0.1%s", path);
     esp_http_client_config_t config{}; config.url = url; config.timeout_ms = 3000;
@@ -32,6 +32,7 @@ Response request(const char *path, const char *authorization, const char *cookie
     if (cookie) esp_http_client_set_header(client, "Cookie", cookie);
     if (guard) esp_http_client_set_header(client, "X-Lazar-Request", "1");
     if (origin) esp_http_client_set_header(client, "Origin", origin);
+    if (token) esp_http_client_set_header(client, "X-Tester-Token", token);
     if (body) {
         esp_http_client_set_method(client, HTTP_METHOD_POST);
         esp_http_client_set_header(client, "Content-Type", "application/json");
@@ -82,6 +83,18 @@ bool self_test_api() {
     check("hostname-foreign-origin", request("/api/hostname", auth, nullptr, "{}", true, "http://other.invalid"), 403);
     check("hostname-invalid", request("/api/hostname", auth, nullptr, "{\"hostname\":\"bad name\"}", true), 400);
     check("updates-no-auth",request("/api/updates",nullptr),401);
+    check("tailnet-no-auth",request("/api/tailnet",nullptr),401);
+    check("tailnet-snapshot",request("/api/tailnet",auth),200);
+    check("tailnet-write-no-auth",request("/api/tailnet",nullptr,nullptr,"{}",true),401);
+    check("tailnet-missing-guard",request("/api/tailnet",auth,nullptr,"{}"),403);
+    check("tailnet-missing-token",request("/api/tailnet",auth,nullptr,"{}",true),403);
+    check("tailnet-foreign-origin",request("/api/tailnet",auth,nullptr,"{}",true,"http://other.invalid"),403);
+    auto tailnet_session=request("/api/session",auth);
+    auto *session_json=cJSON_Parse(tailnet_session.body.c_str());
+    auto *session_token=cJSON_GetObjectItemCaseSensitive(session_json,"csrf");
+    // Exercise real dual-stack socket authorization without saving configuration.
+    check("tailnet-local-invalid-config",request("/api/tailnet",auth,nullptr,"{}",true,nullptr,cJSON_IsString(session_token)?session_token->valuestring:""),400);
+    cJSON_Delete(session_json);
     check("access-no-auth",request("/api/access",nullptr,nullptr,"{}",true),401);
     check("access-missing-guard",request("/api/access",auth,nullptr,"{}"),403);
     check("access-missing-token",request("/api/access",auth,nullptr,"{}",true),403);

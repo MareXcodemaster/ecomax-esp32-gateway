@@ -77,6 +77,7 @@ const server = createServer(async (req, res) => {
       : url.pathname === '/api/logout' ? { ok: true }
       : url.pathname === '/api/history' ? history
       : url.pathname === '/api/cwu-pump' ? pump
+      : url.pathname === '/api/tailnet' ? {enabled:false,phase:'disabled',name:'piec',key_saved:false,connected:false,policy_ready:false,ip:'',internal_free_bytes:131072}
       : url.pathname === '/api/updates' ? { current: version, current_release:version,version,channel:'all',beta:true,phase:'up_to_date',checked:now, automatic: true, available: false, install_supported: true }
       : null;
     res.writeHead(data ? 200 : 404, { 'Content-Type': 'application/json' }).end(JSON.stringify(data || { error: 'Demo: endpoint disabled' }));
@@ -298,6 +299,10 @@ try {
   await page.locator('.esp-resources').evaluate(el=>el.scrollIntoView({block:'start'}));
   assert.ok((await page.locator('.esp-resources h3').boundingBox()).y>(await page.locator('header').boundingBox()).height,'memory heading is below the fixed header');
   await screenshot('14-pamiec-esp');
+  await page.evaluate(()=>EcoTailnet.load());
+  await page.waitForFunction(()=>document.querySelector('#tailnet-status').textContent==='Wyłączony');
+  await page.locator('.tailnet-settings').evaluate(el=>{el.scrollIntoView({block:'start'});window.scrollBy(0,-90);});
+  await screenshot('23-tailnet');
   const advancedDemo=[[158,'Blokada kotla od termostatu','Tak'],[161,'Praca na czas','Tak'],[44,'Funkcja histerezy','Wylaczona LATO'],[151,'Detekcja obrotow wentylatora',0],[46,'Tryb czujnika podajnika','Podajnik i ruszt'],[45,'Kondensacja','OFF'],[162,'Tryb KOMINIARZ','OFF'],[7,'Sterowanie pogodowe kotla','Wylaczone'],[166,'Pompa ciepla','OFF']];
   state.menu=advancedDemo.map(([index,name,value])=>({index,name,advanced:true,in_structure:true,locked:false,metadata:{value},write_id:'rm:'+index,write_enabled:true}));
   for(const item of state.menu)state.targets[item.write_id]={name:item.name,before:0,min:0,max:1,step:1,value_kind:'enum',options:[{value:0,label:String(item.metadata.value)}],risk:true,advanced:true};

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: https://www.waveshare.com https://docs.waveshare.net; base-uri 'none'; form-action 'none'">
+<title>ecoMAX Wi-Fi - Dostęp zdalny Tailscale</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#243138;font:16px/1.65 system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:0}header{border-bottom:1px solid #d7e1e3;padding:16px 24px}header nav{max-width:960px;margin:auto;display:flex;flex-wrap:wrap;gap:20px}main{max-width:960px;margin:auto;padding:24px}h1{font-size:30px;line-height:1.25}h2{font-size:23px;line-height:1.35;margin-top:40px;padding-top:18px;border-top:1px solid #dce6e7}p,li{overflow-wrap:anywhere}a{color:#176a85}img{display:block;max-width:100%;height:auto;margin:22px auto;border:1px solid #d8e1e3;border-radius:4px}table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}th,td{border:1px solid #ccd9dc;padding:10px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eef6f4}pre{white-space:pre-wrap;overflow-wrap:anywhere}em{font-size:14px;color:#546970}strong{font-weight:700}@media(max-width:600px){main{padding:18px}header{padding:16px 18px}h1{font-size:26px}h2{font-size:21px}th,td{padding:7px;font-size:13px}}@media print{header{display:none}main{max-width:none;padding:0}h2{break-after:avoid}img{max-height:18cm;object-fit:contain}tr{break-inside:avoid}a{color:inherit}body{font-size:11pt}}
+</style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>Dostęp zdalny Tailscale na tym samym ESP</h1>
+<p><strong>Funkcja eksperymentalna od 0.7.0-beta.54, domyślnie wyłączona.</strong> To integracja
+społecznościowej biblioteki MicroLink, a nie oficjalny klient Tailscale.
+W beta.54 potwierdzono załadowanie całego panelu i bieżących temperatur z telefonu
+przez sieć komórkową i Tailscale. Pozostają dłuższe testy stabilności razem
+z panelem, RS485, archiwum i gniazdkiem Tapo.</p>
+<p>ESP z panelem oraz telefon dołączają do prywatnej sieci Tailscale użytkownika.
+Nie jest potrzebny drugi komputer ani przekierowanie portów routera.
+Oba urządzenia potrzebują dostępu do Internetu. Gdy połączenie bezpośrednie
+jest niemożliwe, biblioteka może korzystać z szyfrowanego przekaźnika DERP.
+Usługę koordynacji i przekaźniki zapewnia Tailscale; autor panelu nie prowadzi
+własnego serwera i nie otrzymuje klucza użytkownika.</p>
+<h2>Pierwsze połączenie</h2>
+<ol>
+<li>Zainstaluj oficjalną aplikację Tailscale na telefonie i zaloguj się na swoje
+konto. Włącz połączenie VPN w aplikacji.</li>
+<li>Na tym samym koncie otwórz <a href="https://login.tailscale.com/admin/settings/keys">klucze Tailscale</a>
+i utwórz <strong>auth key</strong>. Wyłącz opcję <strong>Ephemeral</strong>, ponieważ ESP ma pozostać
+zapisanym urządzeniem. Przy włączonym zatwierdzaniu urządzeń trzeba też
+zaakceptować ESP w konsoli Tailscale. Nie używaj hasła do konta ani API key.</li>
+<li>Połącz się z domowym Wi-Fi i otwórz lokalny panel <code>http://piec.local/</code>.
+Wybierz <strong>Ustawienia urządzenia → Dostęp zdalny · Tailscale</strong>.</li>
+<li>Włącz opcję, wpisz nazwę urządzenia (np. <code>piec</code>) i wklej klucz. Naciśnij
+<strong>Zapisz ustawienia Tailscale</strong>. Klucz podawaj wyłącznie w lokalnym panelu,
+nie w zgłoszeniu na GitHubie, zdjęciu ani wiadomości do autora.</li>
+<li>Poczekaj na status <strong>Połączono z Tailscale</strong> i adres <code>http://100.x.x.x/</code>.
+Nadal obowiązuje login i hasło panelu ESP. Własne hasło panelu możesz ustawić
+w jego ustawieniach dostępu.</li>
+<li>Na telefonie wyłącz Wi-Fi, pozostaw transmisję komórkową i Tailscale.
+Otwórz pokazany adres w przeglądarce. Jest to właściwy test dostępu spoza domu.
+Sam wpis ESP na liście urządzeń Tailscale nie potwierdza działania panelu.</li>
+</ol>
+<p>Ta wersja używa klucza, a nie parowania kodem QR. <code>piec.local</code> pozostaje adresem
+sieci lokalnej; do zdalnego testu użyj pokazanego adresu <code>100.x.x.x</code>.</p>
+<p><img src="images/panel/0.7.0-beta.54/23-tailnet.png" alt="Ustawienia Tailscale na ESP — dane demonstracyjne"></p>
+<h2>Co jest udostępnione</h2>
+<ul>
+<li>Tylko panel HTTP tego ESP, port TCP 80, w szyfrowanym tunelu WireGuard.</li>
+<li>Logowanie panelu, ochrona poleceń i uprawnienia sieci Tailscale nadal obowiązują.</li>
+<li>Inne adresy domowe, most TCP RS485, ICMP/ping, IPv6 i pozostałe porty nie są
+udostępnione przez tę integrację. ESP nie jest routerem podsieci ani exit node.</li>
+<li>Sama konfiguracja Tailscale jest dostępna wyłącznie przez lokalne połączenie.
+Wyłączenie opcji zatrzymuje VPN; zapisane klucze zostają w ESP na kolejny raz.</li>
+<li>Puste pole klucza przy kolejnym zapisie zachowuje poprzedni klucz. API nie
+zwraca jego wartości. Konfiguracja i tożsamość urządzenia są zapisywane w NVS;
+fabryczne wymazanie całej pamięci je usuwa. NVS w tym firmware nie jest szyfrowane.</li>
+</ul>
+<h2>Ograniczenia i pamięć</h2>
+<p>Wymagane: ESP32-S3, 16 MB flash, 8 MB PSRAM, zgodne z obsługiwanym Waveshare.
+Biblioteka jest ustawiona na maksymalnie <strong>16 peerów</strong>. Katalog ma limit
+16 znanych peerów, a komunikaty serwera i zasady dostępu są ograniczone rozmiarem.
+Duża sieć firmowa lub nieobsługiwana reguła mogą uniemożliwić połączenie.
+Nie usuwaj swoich reguł dostępu tylko po to, aby uruchomić wersję próbną.</p>
+<p>Start wymaga co najmniej 112 KiB wolnego wewnętrznego RAM-u, bloku 16 KiB
+i 2 MiB PSRAM, już po uruchomieniu zadania zarządzającego. Przy spadku zapasu
+poniżej 48 KiB RAM-u lub 512 KiB PSRAM przez trzy kolejne odczyty VPN jest
+zatrzymywany. Po awarii/watchdogu automatyczny start VPN jest wstrzymany;
+można go ponownie uruchomić zapisując konfigurację lokalnie.
+Te progi są zabezpieczeniem próby, a nie gwarancją stabilności.</p>
+<p>Od beta.54 bufory sieci Wi-Fi i lwIP preferują PSRAM. Stosy zadań i bufory
+wymagające DMA pozostają w pamięci wewnętrznej. Wyniki krótkich prób na
+urządzeniu i testy pozostające do wykonania opisuje <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/TAILNET_TESTY.md">raport testów</a>.</p>
+<p>Przy nieudanym połączeniu przez trzy minuty próba jest zatrzymywana.
+Po sprawdzeniu Internetu, klucza, zatwierdzenia urządzenia i reguł dostępu zapisz
+ustawienia ponownie. Nie potrzeba do tego restartować kotła.
+Stan „Oczekiwanie na synchronizację czasu” wymaga dostępu do serwera NTP;
+poprawny czas jest konieczny do weryfikacji certyfikatów HTTPS.</p>
+<p>Jeżeli po aktualizacji panel lokalny nie działa, przywróć poprzedni obraz OTA
+przez dostępną diagnostykę lub instalator USB zgodnie z instrukcją aktualizacji.
+Do pierwszego testu przygotuj poprzedni plik i miej dostęp do urządzenia.</p>
+<p>Źródła: <a href="https://github.com/Mattboxx/esp32-tailnet-gateway">ESP32 Tailnet Gateway</a>,
+<a href="https://github.com/Mattboxx/microlink">MicroLink</a>. Wersja źródeł i lokalne zmiany:
+<code>components/microlink/UPSTREAM.json</code> i <code>components/microlink/ECOMAX_PATCHES.md</code>.</p>
+</main></body></html>

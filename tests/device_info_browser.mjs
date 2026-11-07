@@ -64,6 +64,6 @@ try{
  }
  assert.deepEqual(errors,[]);
  assert.deepEqual([...new Set(requests.filter(([method])=>method!=='GET').map(([,path])=>path))],['/api/panel/clock']);
- assert.equal(requests.some(([,path])=>!['/api/session','/api/state','/api/panel/clock','/api/updates'].includes(path)),false);
+ assert.equal(requests.some(([,path])=>!['/api/session','/api/state','/api/panel/clock','/api/updates','/api/tailnet'].includes(path)),false);
  console.log('PASS device information uses existing state polling; no extra device or boiler requests');
 }finally{await browser.close();await new Promise(done=>server.close(done));}

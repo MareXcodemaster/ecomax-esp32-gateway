@@ -22,8 +22,10 @@ void remote_menu_language_tests();
 void controller_profile_tests();
 void settings_journal_tests();
 void circulation_tests();
+void tailnet_tests();
 
 int main() {
+    tailnet_tests();
     diagnostic_storage_tests();
     panel_sync_tests();
     remote_menu_language_tests();
