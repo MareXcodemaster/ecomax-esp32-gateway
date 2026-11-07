@@ -12,7 +12,6 @@
  const el=id=>document.getElementById(id);let data=null,online=false,received=0,busy=false;
  function paint(){
   const r=reading(data,online,Date.now()-received);
-  el('header-boiler-clock').textContent=r.time;el('header-clock').title=r.fresh?'Zegar odczytany z panelu kotła · '+r.date:'Brak świeżego odczytu zegara kotła';
   el('boiler-clock-time').textContent=r.time;el('boiler-clock-date').textContent=r.date;
   if(!busy)el('boiler-clock-auto').checked=!!data?.automatic;
   el('boiler-clock-auto').disabled=busy||!online||!data?.supported;

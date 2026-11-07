@@ -33,7 +33,7 @@ opiera sie takze na obserwacji ruchu; nie jest kompletna dokumentacja protokolu.
 
 ## Zegar kotła
 
-Na górnej belce widać godzinę odebraną z panelu kotła. W **Ustawieniach urządzenia → Zegar kotła** są pełna data, stan odczytu, przycisk **Synchronizuj teraz** oraz przełącznik automatycznej aktualizacji. Po utracie świeżych ramek zegar pokazuje brak odczytu.
+W **Ustawieniach urządzenia → Zegar kotła** widać godzinę odebraną z panelu kotła, pełną datę, stan odczytu, przycisk **Synchronizuj teraz** oraz przełącznik automatycznej aktualizacji. Po utracie świeżych ramek zegar pokazuje brak odczytu.
 
 Automat jest opcjonalny i domyślnie wyłączony. Po włączeniu ESP regularnie synchronizuje swój czas z NTP i porównuje go z zegarem kotła. Używa strefy Europe/Warsaw, ze zmianą czasu letniego i zimowego. Otwarta przeglądarka nie jest potrzebna. Brak świeżego czasu internetowego wstrzymuje automatyczne korekty. Przycisk ręczny może użyć czasu telefonu lub komputera, jeśli nie ma świeżego NTP.
 

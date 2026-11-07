@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0-beta.56
+
+- Zegar kotła jest wyświetlany wyłącznie w ustawieniach urządzenia. Usunięto go z górnej zielonej belki; ręczna i automatyczna synchronizacja pozostają dostępne.
+
 ## 0.7.0-beta.55
 
 - Zegar kotła na górnej belce i w ustawieniach urządzenia, z datą i wykrywaniem nieaktualnego odczytu RS485.

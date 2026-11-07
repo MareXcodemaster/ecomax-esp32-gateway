@@ -4,7 +4,7 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,sep,extname} from 'node:path';
 import {chromium} from 'playwright';
 const root=resolve('src/panel_web'),errors=[],writes=[];
-const state={version:'0.7.0-beta.55',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:false,write_transport:'rs485',requires_configuration:false,
+const state={version:'0.7.0-beta.56',csrf:'demo',fresh:true,connected:true,busy:false,error:'',targets_fresh:false,write_transport:'rs485',requires_configuration:false,
 system:{controllerID:'ecoMAX860P-LZ TOUCH'},host:'',values:{},names:{},menu:[],enums:{},units:[],structure:[],category_names:[],tiles:[],endpoints:{},versions:{},tests:[],curr:{mode:4},targets:{},controls:{start:false,stop:false},econet_health:{fresh:false,api_ok:false},
 esp_network:{connected:true,rssi_dbm:-60,hostname:'piec'},schedules:{ecomaxSchedules:{}},pellet:{},last_read_utc:new Date().toISOString()};
 let clock,offline=false;
@@ -37,13 +37,14 @@ try{
   offline=false;clock={fresh:true,supported:true,available:true,automatic:false,pending:false,ntp_synchronized:false,device_time:'2026-11-07 21:25:00',age_ms:500,message:'Zegar kotła jest zgodny'};
   const page=await browser.newPage({viewport:{width,height:960}});page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',route=>route.request().url().startsWith(origin+'/')?route.continue():route.abort());
-  await page.goto(origin+'/#settings');await page.waitForFunction(()=>document.querySelector('#header-boiler-clock').textContent.startsWith('21:25'));
+  await page.goto(origin+'/#settings');await page.waitForFunction(()=>document.querySelector('#boiler-clock-time').textContent.startsWith('21:25'));
+  assert.equal(await page.locator('#header-clock').count(),0);
   assert.equal(await page.locator('#boiler-clock-auto').isChecked(),false);
   await page.locator('#boiler-clock-auto').check();await page.waitForFunction(()=>document.querySelector('#boiler-clock-source').textContent.includes('jest aktualny'));
   await page.locator('#boiler-clock-sync').click();await page.waitForFunction(()=>document.querySelector('#boiler-clock-status').textContent.includes('potwierdzone'));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.screenshot({path:'test-results/boiler-clock-'+width+'.png'});
-  clock.fresh=false;await page.evaluate(()=>poll());await page.waitForFunction(()=>document.querySelector('#header-boiler-clock').textContent==='—');
+  clock.fresh=false;await page.evaluate(()=>poll());await page.waitForFunction(()=>document.querySelector('#boiler-clock-time').textContent==='—');
   offline=true;await page.evaluate(()=>poll());assert.equal(await page.locator('#boiler-clock-sync').isEnabled(),false);
   await page.close();console.log('PASS boiler clock '+width+'px: observed time, automatic toggle, verified sync, stale/offline, no overflow');
  }
