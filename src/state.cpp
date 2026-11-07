@@ -5,6 +5,7 @@
 #include "protocol.hpp"
 #include "crash_record.hpp"
 #include "transport.hpp"
+#include "diagnostic_storage.hpp"
 #include "esp_timer.h"
 #include "esp_system.h"
 #include "esp_heap_caps.h"
@@ -23,32 +24,30 @@ struct Lock {
     Lock() { xSemaphoreTake(mutex, portMAX_DELAY); }
     ~Lock() { xSemaphoreGive(mutex); }
 };
-struct Record { uint64_t seq, ms; uint16_t length; bool validated; uint8_t data[1000]; };
-struct Log { uint64_t seq, ms; char text[160]; };
-static Record fallback_records[48]{};
-static Record *records = fallback_records;
-static size_t capacity = 48;
+using diagnostic_storage::Record;
+using diagnostic_storage::Log;
+using diagnostic_storage::Traffic;
+static diagnostic_storage::Storage storage;
 static Record *latest = nullptr;
 static unsigned latest_count = 0;
 static uint64_t latest_evicted = 0;
 constexpr unsigned latest_capacity = 128;
-struct Traffic { uint64_t count = 0, ms = 0; };
-static Traffic types[256], devices[256];
-static Log entries[48]{};
 static Network net;
 static uint64_t seq = 0, log_seq = 0, rx_bytes = 0, valid_count = 0, bad_count = 0, noise_count = 0;
 static uint64_t overflow_count = 0, uart_errors = 0, evicted = 0, last_rx_ms = 0;
 static unsigned speed = board::baud;
 void init() {
     mutex = xSemaphoreCreateMutex(); configASSERT(mutex);
-    auto *history = static_cast<Record *>(heap_caps_calloc(2048, sizeof(Record), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
-    if (history) { records = history; capacity = 2048; }
+    storage.init([](size_t count, size_t size, diagnostic_storage::Pool pool) {
+        return heap_caps_calloc(count, size, MALLOC_CAP_8BIT |
+            (pool == diagnostic_storage::Pool::external ? MALLOC_CAP_SPIRAM : MALLOC_CAP_INTERNAL));
+    });
     latest = static_cast<Record *>(heap_caps_calloc(latest_capacity, sizeof(Record), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
 }
 void log(const char *format, ...) {
     char text[160];
     va_list ap; va_start(ap, format); vsnprintf(text, sizeof(text), format, ap); va_end(ap);
-    { Lock lock; auto &entry = entries[log_seq % 48]; entry.seq = ++log_seq;
+    { Lock lock; auto &entry = storage.entries[log_seq % storage.entry_capacity]; entry.seq = ++log_seq;
       entry.ms = esp_timer_get_time() / 1000; snprintf(entry.text, sizeof(entry.text), "%s", text); }
     printf("[ESP] %s\n", text);
 }
@@ -56,8 +55,8 @@ void network(const Network &value) { Lock lock; net = value; }
 Network network() { Lock lock; return net; }
 static void append(const uint8_t *bytes, size_t length, bool checked) {
     Lock lock;
-    auto &record = records[seq % capacity];
-    if (seq >= capacity) ++evicted;
+    auto &record = storage.records[seq % storage.capacity];
+    if (seq >= storage.capacity) ++evicted;
     record.seq = ++seq; record.ms = esp_timer_get_time() / 1000;
     record.length = std::min(length, sizeof(record.data)); record.validated = checked;
     memcpy(record.data, bytes, record.length);
@@ -68,8 +67,10 @@ void frame(const uint8_t *data, size_t length) {
     append(data, length, true);
     if (length >= 10) {
         { Lock lock; auto now = static_cast<uint64_t>(esp_timer_get_time() / 1000);
-          ++types[data[7]].count; types[data[7]].ms = now;
-          ++devices[data[4]].count; devices[data[4]].ms = now;
+          if (storage.counters) {
+              auto &type = storage.counters->types[data[7]], &device = storage.counters->devices[data[4]];
+              ++type.count; type.ms = now; ++device.count; device.ms = now;
+          }
           if (latest) {
               unsigned index = latest_count;
               for (unsigned i = 0; i < latest_count; ++i)
@@ -125,7 +126,9 @@ cJSON *status() {
                          "uart_errors", "capture_evicted", "last_rx_ms", "capture_seq"};
     for (int i = 0; i < 9; ++i) cJSON_AddNumberToObject(json, keys[i], values[i]);
     cJSON_AddNumberToObject(json, "baud", current_baud);
-    cJSON_AddNumberToObject(json, "capture_capacity", capacity);
+    cJSON_AddNumberToObject(json, "capture_capacity", storage.capacity);
+    cJSON_AddNumberToObject(json, "log_capacity", storage.entry_capacity);
+    cJSON_AddBoolToObject(json, "frame_stats_available", storage.counters != nullptr);
     cJSON_AddNumberToObject(json, "latest_frame_capacity", latest ? latest_capacity : 0);
     cJSON_AddNumberToObject(json, "max_frame_bytes", 1000);
     cJSON_AddItemToObject(json, "boiler", boiler::snapshot());
@@ -152,9 +155,9 @@ cJSON *capture(uint64_t after, unsigned limit) {
     limit = std::min(limit, 32U);
     std::vector<Record> copy; copy.reserve(limit);
     uint64_t newest, oldest;
-    { Lock lock; newest = seq; oldest = seq > capacity ? seq - capacity + 1 : (seq ? 1 : 0);
+    { Lock lock; newest = seq; oldest = seq > storage.capacity ? seq - storage.capacity + 1 : (seq ? 1 : 0);
       for (uint64_t n = std::max(after + 1, oldest); n <= newest && copy.size() < limit; ++n)
-          copy.push_back(records[(n - 1) % capacity]); }
+          copy.push_back(storage.records[(n - 1) % storage.capacity]); }
     auto *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "oldest_seq", oldest); cJSON_AddNumberToObject(root, "latest_seq", newest);
     cJSON_AddBoolToObject(root, "gap", oldest > 1 && after < oldest - 1);
@@ -180,8 +183,12 @@ cJSON *capture(uint64_t after, unsigned limit) {
 }
 cJSON *frame_stats() {
     std::vector<Traffic> type_copy(256), device_copy(256);
-    { Lock lock; memcpy(type_copy.data(), types, sizeof(types)); memcpy(device_copy.data(), devices, sizeof(devices)); }
+    { Lock lock; if (storage.counters) {
+        memcpy(type_copy.data(), storage.counters->types, sizeof(storage.counters->types));
+        memcpy(device_copy.data(), storage.counters->devices, sizeof(storage.counters->devices));
+    } }
     auto *root = cJSON_CreateObject(); if (!root) return nullptr;
+    cJSON_AddBoolToObject(root, "available", storage.counters != nullptr);
     auto now = static_cast<uint64_t>(esp_timer_get_time() / 1000);
     auto *frames = cJSON_AddArrayToObject(root, "types");
     auto *nodes = cJSON_AddArrayToObject(root, "devices");
@@ -232,9 +239,9 @@ cJSON *latest_frames(int source, int type, unsigned offset, unsigned limit, bool
     return root;
 }
 cJSON *logs(uint64_t after) {
-    std::vector<Log> copy; copy.reserve(48);
-    { Lock lock; auto oldest = log_seq > 48 ? log_seq - 47 : (log_seq ? 1 : 0);
-      for (auto n = std::max(after + 1, oldest); n <= log_seq; ++n) copy.push_back(entries[(n - 1) % 48]); }
+    std::vector<Log> copy; copy.reserve(storage.entry_capacity);
+    { Lock lock; auto oldest = log_seq > storage.entry_capacity ? log_seq - storage.entry_capacity + 1 : (log_seq ? 1 : 0);
+      for (auto n = std::max(after + 1, oldest); n <= log_seq; ++n) copy.push_back(storage.entries[(n - 1) % storage.entry_capacity]); }
     auto *array = cJSON_CreateArray();
     for (const auto &entry : copy) {
         auto *item = cJSON_CreateObject(); cJSON_AddItemToArray(array, item);

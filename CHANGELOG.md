@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-beta.46
+
+- Bufor awaryjny diagnostyki RS485 jest przydzielany tylko wtedy, gdy nie uda się uruchomić głównego bufora w PSRAM. Nie rezerwuje stale 48 KiB wewnętrznego RAM-u.
+- Dziennik i liczniki ramek korzystają z PSRAM. Bez dostępnej pamięci zewnętrznej mogą użyć RAM-u wewnętrznego; gdy przydzielenie tych buforów się nie powiedzie, pozostaje minimalny bufor diagnostyczny, a ramki nadal trafiają do dekoderów kotła.
+- Zachowana pojemność historii ramek, dziennika i statystyk przy działającym PSRAM. Obsługa modeli kotłów pozostaje we wspólnym firmware.
+- Testy obejmują 64 kombinacje odmowy przydzielenia pamięci, granice buforów i ponowną inicjalizację.
+
 ## 0.7.0-beta.45
 
 - Aktualny stan kotła jest widoczny na zielonym pasku za nazwą sterownika, we wszystkich zakładkach. Na telefonie mieści się pod tytułem. Przy utracie aktualnego odczytu pokazuje „Brak odczytu”.

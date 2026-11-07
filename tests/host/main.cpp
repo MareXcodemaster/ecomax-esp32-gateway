@@ -15,6 +15,7 @@
 #include <vector>
 void access_tests();
 void diagnostics_tests();
+void diagnostic_storage_tests();
 void compatibility_tests();
 void remote_menu_language_tests();
 void controller_profile_tests();
@@ -22,6 +23,7 @@ void settings_journal_tests();
 void circulation_tests();
 
 int main() {
+    diagnostic_storage_tests();
     remote_menu_language_tests();
     controller_profile_tests();
     circulation_tests();
