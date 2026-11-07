@@ -9,10 +9,19 @@ struct Log { uint64_t seq, ms; char text[160]; };
 struct Traffic { uint64_t count, ms; };
 struct Counters { Traffic types[256], devices[256]; };
 
+// Sequence numbers are one-based; slots are indexed by sequence minus one.
+// Reallocation retains the newest frames and never invents older records.
+inline size_t retain_latest(Record *next,size_t capacity,const Record *old,size_t old_capacity,
+                            uint64_t sequence,size_t retained) {
+    const size_t keep=retained<capacity?retained:capacity;
+    for(uint64_t n=sequence-keep;n<sequence;++n)next[n%capacity]=old[n%old_capacity];
+    return keep;
+}
+
 // Allocated once before the receiver starts. Diagnostic history is expendable:
 // allocation failure must not stop delivery of frames to the boiler decoder.
 struct Storage {
-    static constexpr size_t history_capacity = 2048, fallback_capacity = 48, log_capacity = 48;
+    static constexpr size_t history_capacity = 256, extended_capacity = 2048, fallback_capacity = 48, log_capacity = 48;
     Record emergency_record{};
     Log emergency_log{};
     Record *records = &emergency_record;

@@ -28,7 +28,7 @@ void diagnostic_storage_tests() {
         };
         Storage s;
         s.init(allocate);
-        size_t expected_capacity = !(failures & 1) ? 2048 : !(failures & 2) ? 48 : 1;
+        size_t expected_capacity = !(failures & 1) ? 256 : !(failures & 2) ? 48 : 1;
         assert(s.capacity == expected_capacity);
         assert(s.entry_capacity == ((failures & 12) == 12 ? 1 : 48));
         assert((s.counters != nullptr) == ((failures & 48) != 48));
@@ -53,5 +53,18 @@ void diagnostic_storage_tests() {
             std::free(block.p);
         }
     }
-    puts("PASS diagnostic storage: 64 allocation-failure cases, no internal buffers with PSRAM, bounded emergency storage");
+    for(size_t capacity:{size_t(1),size_t(48),size_t(256),size_t(2048)}){
+        for(uint64_t seq:{uint64_t(0),uint64_t(3),uint64_t(10001)}){
+            const auto retained=seq<capacity?size_t(seq):capacity;
+            std::vector<Record> old(capacity);
+            for(uint64_t n=seq-retained;n<seq;++n)old[n%capacity].seq=n+1;
+            for(size_t next_capacity:{size_t(256),size_t(2048)}){
+                std::vector<Record> next(next_capacity);
+                auto keep=retain_latest(next.data(),next_capacity,old.data(),capacity,seq,retained);
+                assert(keep==std::min(retained,next_capacity));
+                for(uint64_t n=seq-keep;n<seq;++n)assert(next[n%next_capacity].seq==n+1);
+            }
+        }
+    }
+    puts("PASS diagnostic storage: allocation failures, expansion/shrink chronology, bounded emergency storage");
 }

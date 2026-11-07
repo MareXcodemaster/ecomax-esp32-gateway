@@ -1,4 +1,7 @@
+#include "runtime_stats.hpp"
 #include "history_store.hpp"
+#include "pellet.hpp"
+#include "updates.hpp"
 #include "settings_journal.hpp"
 #include "state.hpp"
 #include "esp_partition.h"
@@ -142,6 +145,8 @@ bool codec_test(){Record r{};r.magic=record_magic;r.sample.time=1700000000;r.sam
 void task(void *){
     {Lock lock;ready=codec_test()&&initialise();loading=false;if(!ready&&!*error)fail("Test formatu historii nie powiodl sie");}
     Sample sample{};for(;;){
+        runtime_stats::sample(runtime_stats::Task::history,6144);
+        if(!updates::installing())pellet::checkpoint();
         if(xQueueReceive(queue,&sample,pdMS_TO_TICKS(1000))==pdTRUE){Lock lock;if(!ready)++dropped;else if(!persist(sample)){ready=false;++dropped;}}
         SettingsEvent event{};if(settings_queue&&xQueueReceive(settings_queue,&event,0)==pdTRUE){
             {Lock lock;if(!ready||!persist_settings(event)){++settings_dropped;settings_failed=true;settings_failed_hour=event.time/3600*3600;snprintf(settings_error,sizeof(settings_error),"Nie zapisano historii nastaw; pomiary pozostaja osobno");}

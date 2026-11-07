@@ -1,3 +1,3 @@
 #pragma once
-namespace usb_console { void start(); }
+namespace usb_console { void start(); void tick(); }
 

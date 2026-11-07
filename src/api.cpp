@@ -1,3 +1,4 @@
+#include "runtime_stats.hpp"
 #include "api.hpp"
 #include "board.hpp"
 #include "state.hpp"
@@ -131,6 +132,7 @@ static bool authorize(httpd_req_t *req, bool mutate = false) {
     return true;
 }
 static esp_err_t json(httpd_req_t *req, cJSON *value) {
+    runtime_stats::sample(runtime_stats::Task::http,16384);
     if (!value) return message(req, "503 Service Unavailable", "Memory unavailable");
     char *body = cJSON_PrintUnformatted(value); cJSON_Delete(value);
     if (!body) return ESP_FAIL;
@@ -188,7 +190,10 @@ static esp_err_t panel_asset(httpd_req_t *req) {
 }
 static esp_err_t panel_state(httpd_req_t *req) {
     if(!authorize(req)) return ESP_OK;
-    auto *value=panel::snapshot();
+    char query[128]{},catalog[17]{};
+    const bool compact=strncmp(req->uri,"/api/export",11)&&query_number(req,"compact",0)==1;
+    if(compact&&httpd_req_get_url_query_str(req,query,sizeof(query))==ESP_OK)httpd_query_key_value(query,"catalog",catalog,sizeof(catalog));
+    auto *value=panel::snapshot(compact,catalog);
     // A remembered cookie survives restart, but mutation guards must adopt the new boot nonce.
     if(value&&strcmp(req->uri,"/api/export")) cJSON_AddStringToObject(value,"csrf",panel_csrf);
     return json(req,value);
@@ -493,6 +498,13 @@ static esp_err_t ota(httpd_req_t *req) {
     message(req, "200 OK", "Obraz sprawdzony. Restart za 2 sekundy.");
     ESP_ERROR_CHECK(esp_timer_start_once(reboot_timer, 2000000)); return ESP_OK;
 }
+static esp_err_t capture_configure(httpd_req_t *req){
+    if(!authorize(req,true))return ESP_OK;
+    auto *payload=request_json(req);if(!payload)return ESP_OK;auto *flag=cJSON_GetObjectItemCaseSensitive(payload,"extended");
+    bool valid=cJSON_IsBool(flag);bool ok=valid&&state::extended_capture(cJSON_IsTrue(flag));cJSON_Delete(payload);
+    if(!valid)return message(req,"400 Bad Request","Wybierz tryb przechwytywania");
+    return ok?json(req,state::status()):message(req,"503 Service Unavailable","Brak PSRAM na historie diagnostyczna. Odbior kotla pozostaje aktywny.");
+}
 static esp_err_t websocket(httpd_req_t *req) {
     if (req->method == HTTP_GET) { if (!authorize(req)) return ESP_FAIL; return ESP_OK; }
     httpd_ws_frame_t frame{};
@@ -503,8 +515,11 @@ static esp_err_t websocket(httpd_req_t *req) {
 }
 static void push(void *) {
     size_t count = 8; int clients[8];
+    if(httpd_get_client_list(server,&count,clients)!=ESP_OK){push_pending.store(false);return;}
+    bool listener=false;for(size_t i=0;i<count;++i)listener|=httpd_ws_get_fd_info(server,clients[i])==HTTPD_WS_CLIENT_WEBSOCKET;
+    if(!listener){push_pending.store(false);return;}
     auto *value = state::status(); char *body = cJSON_PrintUnformatted(value); cJSON_Delete(value);
-    if (body && httpd_get_client_list(server, &count, clients) == ESP_OK) {
+    if (body) {
         httpd_ws_frame_t frame{}; frame.type = HTTPD_WS_TYPE_TEXT;
         frame.payload = reinterpret_cast<uint8_t *>(body); frame.len = strlen(body);
         for (size_t i = 0; i < count; ++i) {
@@ -515,11 +530,8 @@ static void push(void *) {
     if (body) cJSON_free(body);
     push_pending.store(false);
 }
-static void push_task(void *) {
-    for (;;) {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        if (!push_pending.exchange(true) && httpd_queue_work(server, push, nullptr) != ESP_OK) push_pending.store(false);
-    }
+static void push_tick(void *) {
+    if (!push_pending.exchange(true) && httpd_queue_work(server, push, nullptr) != ESP_OK) push_pending.store(false);
 }
 static esp_err_t missing(httpd_req_t *req, httpd_err_code_t) {
     if (!strncmp(req->uri, "/api/", 5)) return message(req, "404 Not Found", "Unknown API endpoint");
@@ -539,7 +551,7 @@ void start() {
     esp_timer_create_args_t timer{}; timer.callback = [](void *) { esp_restart(); }; timer.name = "ota_reboot";
     ESP_ERROR_CHECK(esp_timer_create(&timer, &reboot_timer));
     httpd_config_t config = HTTPD_DEFAULT_CONFIG(); config.stack_size = 16384;
-    config.max_uri_handlers = 59; config.max_open_sockets = 8; config.lru_purge_enable = true;
+    config.max_uri_handlers = 60; config.max_open_sockets = 8; config.lru_purge_enable = true;
     config.uri_match_fn=httpd_uri_match_wildcard;
     config.recv_wait_timeout = 5; config.send_wait_timeout = 12;
     ESP_ERROR_CHECK(httpd_start(&server, &config));
@@ -549,7 +561,7 @@ void start() {
     };
     add("/", HTTP_GET, panel_asset); add("/diagnostics", HTTP_GET, root); add("/api/login", HTTP_POST, login); add("/api/logout", HTTP_POST, logout);
     add("/api/status", HTTP_GET, status); add("/api/ping", HTTP_GET, ping);
-    add("/api/capture", HTTP_GET, capture); add("/api/logs", HTTP_GET, logs);
+    add("/api/capture", HTTP_GET, capture); add("/api/capture/config",HTTP_POST,capture_configure); add("/api/logs", HTTP_GET, logs);
     add("/api/wifi", HTTP_POST, configure_wifi); add("/api/hostname", HTTP_POST, configure_hostname); add("/api/sniffer", HTTP_POST, configure_sniffer);
     add("/api/wifi/scan",HTTP_GET,wifi_scan);add("/api/wifi/scan",HTTP_POST,wifi_scan);
     add("/api/ota", HTTP_POST, ota); add("/api/ecomax", HTTP_GET, ecomax);
@@ -571,7 +583,11 @@ void start() {
     for(auto uri:{"/api/connect","/api/scan","/api/refresh","/api/write/prepare","/api/write/execute","/api/write/save","/api/control/prepare","/api/control/execute","/api/panel/clock","/api/transport","/api/rs485/probe"}) add(uri,HTTP_POST,panel_command);
     add("/*",HTTP_GET,panel_asset);
     ESP_ERROR_CHECK(httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, missing));
-    configASSERT(xTaskCreate(push_task, "status_push", 3072, nullptr, 3, nullptr) == pdPASS);
+    esp_timer_handle_t push_timer=nullptr;esp_timer_create_args_t push_args{};
+    push_args.callback=push_tick;push_args.name="status_push";push_args.skip_unhandled_events=true;
+    auto push_error=esp_timer_create(&push_args,&push_timer);
+    if(push_error==ESP_OK)push_error=esp_timer_start_periodic(push_timer,1000000);
+    if(push_error!=ESP_OK)state::log("Diagnostic websocket push unavailable; HTTP polling remains available");
     state::log("HTTP+WebSocket ready; local boiler decoder, diagnostics and OTA; all boiler TX disabled");
 }
 }

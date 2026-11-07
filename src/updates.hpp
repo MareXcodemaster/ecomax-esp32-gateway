@@ -4,6 +4,7 @@
 namespace updates {
 void init();
 void start();
+void tick();
 cJSON *snapshot();
 esp_err_t check();
 esp_err_t configure(bool enabled,bool include_beta);

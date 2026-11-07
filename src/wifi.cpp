@@ -1,4 +1,7 @@
+#include "runtime_stats.hpp"
 #include "wifi.hpp"
+#include "updates.hpp"
+#include "usb_console.hpp"
 #include "board.hpp"
 #include "state.hpp"
 #include "esp_wifi.h"
@@ -102,12 +105,15 @@ esp_err_t configure(const char *ssid, const char *password) {
     xSemaphoreTake(config_mutex, portMAX_DELAY); saved = value; xSemaphoreGive(config_mutex);
     pending.store(true); return ESP_OK;
 }
+static void dns_tick();
 static void wifi_task(void *) {
     Credentials current; bool trying = false; unsigned attempts = 0;
     char hostname[64]; snprintf(hostname, sizeof(hostname), "%s", saved_hostname);
     esp_err_t hostname_error = ESP_OK;
     uint64_t next = 0;
     for (;;) {
+        runtime_stats::sample(runtime_stats::Task::wifi,5120);
+        updates::tick();usb_console::tick();dns_tick();state::maintenance();
         auto now = static_cast<uint64_t>(esp_timer_get_time() / 1000);
         if(recovered.exchange(false)) { attempts=0; trying=false; lost_ip.store(false); }
         if(lost_ip.exchange(false)&&!connected.load()) {
@@ -197,17 +203,23 @@ static void wifi_task(void *) {
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
-static void dns_task(void *) {
+static int dns_socket=-1;
+static void dns_start() {
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     sockaddr_in address{}; address.sin_family = AF_INET; address.sin_port = htons(53);
     if (sock < 0 || bind(sock, reinterpret_cast<sockaddr *>(&address), sizeof(address)) != 0) {
         if (sock >= 0) close(sock);
-        state::log("DNS unavailable; use http://192.168.4.1"); vTaskDelete(nullptr); return;
+        state::log("DNS unavailable; use http://192.168.4.1"); return;
     }
-    uint8_t buffer[512];
-    for (;;) {
+    int nonblocking=1;if(ioctl(sock,FIONBIO,&nonblocking)!=0){close(sock);return;}dns_socket=sock;
+}
+static void dns_tick() {
+    if(dns_socket<0)return;
+    const int sock=dns_socket;uint8_t buffer[512];
+    for (unsigned batch=0;batch<8;++batch) {
         sockaddr_in peer{}; socklen_t size = sizeof(peer);
         int n = recvfrom(sock, buffer, sizeof(buffer) - 16, 0, reinterpret_cast<sockaddr *>(&peer), &size);
+        if(n<0)return;
         // Reply only to setup-network A/IN questions; do not act as a DNS server on the home LAN.
         if (n < 17 || (ntohl(peer.sin_addr.s_addr) & 0xffffff00U) != 0xc0a80400U ||
             (buffer[2] & 0x80) || buffer[4] || buffer[5] != 1) continue;
@@ -274,8 +286,8 @@ void start() {
     }
     state::log("mDNS %s.local on STA: %s; address requires router connection", saved_hostname, esp_err_to_name(mdns_error));
     state::log("Setup AP=%s; http://192.168.4.1; WWW user=%s; passwords omitted", ap_name, board::user);
-    configASSERT(xTaskCreate(wifi_task, "wifi_manager", 4096, nullptr, 4, nullptr) == pdPASS);
-    configASSERT(xTaskCreate(dns_task, "setup_dns", 3072, nullptr, 3, nullptr) == pdPASS);
+    configASSERT(xTaskCreate(wifi_task, "wifi_manager", 5120, nullptr, 4, nullptr) == pdPASS);
+    dns_start();
 }
 }
 

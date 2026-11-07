@@ -1,4 +1,5 @@
 #include "protocol.hpp"
+#include "diagnostic_buffer.hpp"
 #include "protocol_catalog.hpp"
 #include "protocol_fixtures.hpp"
 #include "sensor_decoder.hpp"
@@ -31,7 +32,7 @@ struct Schema {
 struct Outcome { const char *state = "reference_only"; unsigned fields = 0; };
 struct Counts { uint64_t decoded = 0, partial = 0, failed = 0; const char *state = "not_seen"; unsigned fields = 0; };
 static Schema schema;
-static Counts counts[256];
+static DiagnosticBuffer<Counts> counts;
 static uint16_t latest_version = 0; static bool version_seen = false;
 static SemaphoreHandle_t mutex;
 struct Lock { Lock() { xSemaphoreTake(mutex, portMAX_DELAY); } ~Lock() { xSemaphoreGive(mutex); } };
@@ -550,6 +551,7 @@ Schema context_copy() { Lock lock; return schema; }
 }
 
 void init() {
+    if(counts.reserve(256))for(unsigned i=0;i<256;++i)counts[i]=Counts{};
     mutex = xSemaphoreCreateMutex(); configASSERT(mutex);
     Reader r{protocol_fixtures::frame_213+8, sizeof(protocol_fixtures::frame_213)-10};
     configASSERT(schema_read(r, schema, nullptr));
@@ -559,7 +561,7 @@ void init() {
 void receive(const uint8_t *raw, size_t length) {
     if (length < 10) return;
     auto context = context_copy(); auto result = decode(raw, length, context, nullptr);
-    Lock lock; auto &entry = counts[raw[7]]; entry.state = result.state; entry.fields = result.fields;
+    Lock lock; Counts ignored;auto &entry = counts?counts[raw[7]]:ignored; entry.state = result.state; entry.fields = result.fields;
     if (!strcmp(result.state, "decoded")) ++entry.decoded;
     if (!strcmp(result.state, "partial")) ++entry.partial;
     if (!strcmp(result.state, "payload_mismatch")) ++entry.failed;
@@ -574,7 +576,7 @@ void receive(const uint8_t *raw, size_t length) {
     }
 }
 void add_stats(cJSON *item, unsigned type) {
-    Counts entry; { Lock lock; entry = counts[type]; }
+    Counts entry; { Lock lock; if(counts&&type<256)entry = counts[type]; }
     if (auto *value = name(type)) cJSON_AddStringToObject(item, "name", value); else cJSON_AddNullToObject(item, "name");
     cJSON_AddStringToObject(item, "name_source", origin(type));
     if(auto *value=label(type))text(item,"label",value);

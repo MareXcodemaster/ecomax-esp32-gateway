@@ -1,3 +1,4 @@
+#include "runtime_stats.hpp"
 #include "cwu_pump.hpp"
 #include "circulation_policy.hpp"
 #include "tapo_discovery.hpp"
@@ -50,7 +51,6 @@ TaskHandle_t worker=nullptr;
 bool known=false,actual_on=false,linked=false,pending=false;
 uint64_t verified_ms=0,last_off_ms=0;
 unsigned writes=0;
-tapo_session::Key session_key;
 unsigned auth_attempts=0,auth_failures=0;
 uint64_t retry_at_ms=0;
 tapo_energy::Usage energy;
@@ -150,8 +150,9 @@ bool read(TapoClient &client,const Config &c,std::string &found_id,bool &on,std:
     if(encoded.size()<192){unsigned char decoded[145]{};size_t length=0;if(mbedtls_base64_decode(decoded,sizeof(decoded)-1,&length,reinterpret_cast<const unsigned char *>(encoded.data()),encoded.size())==0&&length<=96)name.assign(reinterpret_cast<char *>(decoded),length);}
     cJSON_Delete(body);return ok;
 }
-void run(void *){
+void run_session(){
     Transport transport;TapoClient client(random_fill,nullptr,crypto_yield,now);client.set_transport(&transport);
+    tapo_session::Key session_key;
     circulation::Policy policy;uint32_t revision=UINT32_MAX;uint64_t next_read=0,next_discovery=0,next_clock=0,next_energy=0,next_history=0;unsigned failures=0;
     std::string policy_identity;
     auto find=[&](const Config &c){
@@ -164,8 +165,9 @@ void run(void *){
         }
     };
     for(;;){
+        runtime_stats::sample(runtime_stats::Task::tapo,8192);
         vTaskDelay(pdMS_TO_TICKS(500));Config c;{Lock l(mutex);c=config;}
-        if(!c.enabled){client.reset();policy.demand=false;Lock l(mutex);known=linked=pending=scan_requested=scan_busy=false;decision={};status="Obsluga cyrkulacji wylaczona";continue;}
+        if(!c.enabled){client.reset();policy.demand=false;{Lock l(mutex);if(config.enabled)continue;known=linked=pending=scan_requested=scan_busy=false;decision={};status="Obsluga cyrkulacji wylaczona";}return;}
         bool scan;{Lock l(mutex);scan=scan_requested;scan_requested=false;if(scan)scan_busy=true;}
         if(scan&&state::network().connected&&!updates::installing()){find(c);next_discovery=now()+60000;}
         else if(scan){Lock l(mutex);scan_busy=false;++scan_sequence;}
@@ -264,7 +266,14 @@ void run(void *){
         next_read=now()+10000;
     }
 }
-bool start_worker(){return worker||xTaskCreate(run,"cwu_tapo",6144,nullptr,2,&worker)==pdPASS;}
+void run(void *){
+    for(;;){
+        run_session(); // Unwind C++ resources before deleting the RTOS task.
+        {Lock lock(mutex);if(config.enabled)continue;runtime_stats::stopped(runtime_stats::Task::tapo);worker=nullptr;}
+        vTaskDelete(nullptr);return;
+    }
+}
+bool start_worker(){Lock lock(mutex);return worker||xTaskCreate(run,"cwu_tapo",8192,nullptr,2,&worker)==pdPASS;}
 const char *reason(circulation::Reason r){
     const char *names[]={"Sterowanie nieaktywne","Nieprawidlowe progi","Wylaczone","Brak aktualnej temperatury CWU","Brak czasu do harmonogramu","Poza godzinami harmonogramu","CWU ponizej dolnego progu","Oczekiwanie na gorny prog","Przerwa przed ponownym wlaczeniem","Wlaczenie reczne","CWU powyzej progu wlaczenia","Recznie: pompa wylaczona"};
     return names[static_cast<unsigned>(r)];
@@ -342,7 +351,7 @@ bool configure(const cJSON *request,std::string &error){
     next.revision++;
     updates::FlashGuard flash;if(!flash.acquired||!store(next)){error="Nie zapisano konfiguracji; trwa aktualizacja lub blad pamieci";return false;}
     {Lock l(mutex);config=next;if(action=="connect"){known=linked=false;alias.clear();model.clear();protocol.clear();}if(!next.enabled){known=linked=pending=false;decision={};}status=next.enabled?"Oczekiwanie na odczyt Tapo":"Obsluga cyrkulacji wylaczona";}
-    if(!start_worker()){error="Brak pamieci na zadanie Tapo";return false;}return true;
+    if(next.enabled&&!start_worker()){error="Brak pamieci na zadanie Tapo";return false;}return true;
 }
 cJSON *snapshot(){
     auto *out=cJSON_CreateObject();if(!out)return nullptr;

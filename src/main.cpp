@@ -1,3 +1,4 @@
+#include "runtime_stats.hpp"
 #include "board.hpp"
 #include "state.hpp"
 #include "transport.hpp"
@@ -57,11 +58,9 @@ extern "C" void app_main() {
         ESP_ERROR_CHECK(esp_ota_mark_app_valid_cancel_rollback()); state::log("OTA boot self-test passed; image confirmed");
     }
     updates::start();
-    for (;;) {
-        vTaskDelay(pdMS_TO_TICKS(10000));
-        pellet::checkpoint();
-        auto *status = state::status(); auto *text = cJSON_PrintUnformatted(status); cJSON_Delete(status);
-        if (text) { printf("[STATUS] %s\n", text); cJSON_free(text); }
-    }
+    panel::activate();
+    runtime_stats::sample(runtime_stats::Task::main,8192);
+    runtime_stats::stopped(runtime_stats::Task::main);
+    // Periodic persistence belongs to the archive worker; return the boot stack.
 }
 

@@ -1,4 +1,5 @@
 #include "device_info.hpp"
+#include "runtime_stats.hpp"
 #include "history_store.hpp"
 #include "esp_app_desc.h"
 #include "esp_chip_info.h"
@@ -70,6 +71,7 @@ cJSON *snapshot(){
     cJSON_AddItemToObject(out,"internal_ram",memory(MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT));
     cJSON_AddItemToObject(out,"psram",memory(MALLOC_CAP_SPIRAM));
     cJSON_AddItemToObject(out,"history",history_store::status());
+    cJSON_AddItemToObject(out,"tasks",runtime_stats::snapshot());
     return out;
 }
 }

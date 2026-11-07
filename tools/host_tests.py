@@ -30,6 +30,7 @@ def main():
                    str(ROOT / 'src/device_access.cpp'), str(ROOT / 'tests/host/access.cpp'),
                    str(ROOT / 'tests/host/diagnostics.cpp'),
                    str(ROOT / 'tests/host/diagnostic_storage.cpp'),
+                   str(ROOT / 'tests/host/panel_sync.cpp'),
                    str(ROOT / 'tests/host/compatibility.cpp'),
                    str(ROOT / 'tests/host/remote_menu_language.cpp'),
                    str(ROOT / 'tests/host/controller_profile.cpp'),
@@ -40,6 +41,12 @@ def main():
             command += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer']
         subprocess.run(command, check=True)
         subprocess.run([str(executable)], check=True)
+        # The browser suite must exercise the real C++ encoder, not a JS copy.
+        encoder = ROOT / 'test-results' / ('panel-sync-encoder.exe' if os.name == 'nt' else 'panel-sync-encoder')
+        encoder.parent.mkdir(exist_ok=True)
+        subprocess.run([*compiler, '-std=c++17', '-O1', '-I'+str(ROOT/'src'),
+                        '-I'+str(cjson), str(ROOT/'tests/host/panel_sync_encoder.cpp'),
+                        '-x','c++',str(cjson/'cJSON.c'),'-o',str(encoder)], check=True)
 
 if __name__ == '__main__':
     main()

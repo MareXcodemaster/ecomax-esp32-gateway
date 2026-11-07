@@ -28,7 +28,7 @@ const temp=value=>typeof value==='number'?number(value)+' \u00b0C':'-';
 const valueText=value=>value===null||value===undefined?'-':typeof value==='boolean'?(value?'Tak':'Nie'):typeof value==='number'?number(value,Number.isInteger(value)?0:2):String(value);
 const timeText=value=>value?new Date(value).toLocaleTimeString('pl-PL'):'-';
 function icons(){if(window.lucide)lucide.createIcons();}
-function text(id,value){$(id).textContent=value;}
+function text(id,value){const node=$(id),next=String(value??'');if(node.textContent!==next)node.textContent=next;}
 function badge(label,kind='neutral'){const span=document.createElement('span');span.className='status '+kind;span.textContent=label;return span;}
 function cell(row,value,cls=''){const td=document.createElement('td');td.textContent=value;td.className=cls;row.append(td);return td;}
 function preflightReadFailure(job){return job?.status==='failed'&&(job.kind==='prepare'&&job.dispatch_started!==true||['save','execute'].includes(job.kind)&&job.dispatch_started===false)&&['Brak zgodnego odczytu nastawy RS485','Brak zgodnego odczytu nastawy i aktywnego profilu RS485','Brak odczytu nastawy termostatu RS485','Odczyty nastawy i aktywnego profilu RS485 jeszcze nie sa zgodne. Nie wyslano zmiany'].includes(job.error);}
@@ -90,7 +90,7 @@ function renderCapabilities(){
  for(const [label,read,write]of rows){const row=document.createElement('tr');cell(row,label);cell(row,read);cell(row,write);body.append(row);}
  text('alarms-json',JSON.stringify({alarms:state.alarms,names:state.alarm_names},null,2));text('schedules-json',JSON.stringify(state.schedules,null,2));
 }
-async function poll(){if(pollBusy||actionBusy)return;pollBusy=true;const epoch=actionEpoch;try{const wasOffline=!serverReachable;if(!csrf)csrf=(await request('/api/session')).csrf;const next=await request('/api/state');if(actionBusy||epoch!==actionEpoch)return;state=next;if(typeof next.csrf==='string')csrf=next.csrf;serverReachable=true;if(wasOffline&&noticeKind==='connection')notice('');render();}catch(error){if(!actionBusy&&epoch===actionEpoch){serverReachable=false;render();}}finally{pollBusy=false;}}
+async function poll(){if(pollBusy||actionBusy)return;pollBusy=true;const epoch=actionEpoch;try{const wasOffline=!serverReachable;if(!csrf)csrf=(await request('/api/session')).csrf;const next=await (typeof EcoSync==='undefined'?request('/api/state'):EcoSync.load(request));if(actionBusy||epoch!==actionEpoch)return;state=next;if(typeof next.csrf==='string')csrf=next.csrf;serverReachable=true;if(wasOffline&&noticeKind==='connection')notice('');render();}catch(error){if(!actionBusy&&epoch===actionEpoch){serverReachable=false;render();}}finally{pollBusy=false;}}
 async function run(path,payload={}){
  if(actionBusy)throw new Error('Trwa operacja.');
  const fast=state?.write_transport==='rs485'&&path.startsWith('/api/write/');actionBusy=true;actionEpoch++;notice('');render();
@@ -114,7 +114,7 @@ async function run(path,payload={}){
    if(next.job.status==='failed')throw new Error(next.job.error);
    if(next.job.status==='done'){
     const result=next.job.result;
-    try{state=await request('/api/state');if(typeof state.csrf==='string')csrf=state.csrf;serverReachable=true;render();}
+    try{state=await (typeof EcoSync==='undefined'?request('/api/state'):EcoSync.load(request));if(typeof state.csrf==='string')csrf=state.csrf;serverReachable=true;render();}
     catch(error){serverReachable=false;render();notice('Wynik operacji odebrano. Ponawianie odczytu panelu.',true,'connection');}
     return result;
    }

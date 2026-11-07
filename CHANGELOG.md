@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0-beta.47
+
+- Lżejsze odświeżanie: przeglądarka zapamiętuje nazwy, opisy i definicje menu. Bieżące wartości, stan połączenia i uprawnienia nadal są odczytywane także w tle. Zmiana katalogu, tożsamości sterownika lub restart ESP wymusza ponowne pobranie definicji. Eksport JSON pozostaje pełny.
+- Zwykła historia surowych ramek zajmuje 256 KiB PSRAM. W diagnostyce można włączyć rozszerzony bufor 2 MiB na 10 minut. Przełączenie zachowuje najnowsze ramki; trzydniowe archiwum pomiarów i nastaw pozostaje bez zmian.
+- Aktualizator GitHub i konsola USB uruchamiają swoje zadania na żądanie. Zadanie startowe oddaje stos po testach; nieużywana obsługa Tapo zwalnia zadanie i sesję. DNS konfiguracji korzysta z zadania Wi-Fi, a diagnostyka WebSocket z kolejki HTTP.
+- Statystyki protokołu i tymczasowe kopie diagnostyczne korzystają z PSRAM. Raport zgodności jest zwalniany po 15 minutach. Ograniczono powtarzanie porównań niezmienionych nastaw w archiwum.
+- Większy zapas stosu Tapo i Wi-Fi, pomiary wolnego stosu zadań w ustawieniach ESP oraz osobne liczniki przepełnienia FIFO i bufora UART. Odczyt RS485 i archiwizacja działają również podczas braku Wi-Fi, po zakończeniu testów startowych.
+- Testy obejmują rzeczywisty kod C++ wraz z dwiema przeglądarkami: zmiany nastaw z zewnątrz, zakresy i uprawnienia, restart, utratę połączenia, zachowanie wpisywanego tekstu, odświeżanie w tle i usunięcie nieaktualnych nastaw z katalogu.
+
 ## 0.7.0-beta.46
 
 - Bufor awaryjny diagnostyki RS485 jest przydzielany tylko wtedy, gdy nie uda się uruchomić głównego bufora w PSRAM. Nie rezerwuje stale 48 KiB wewnętrznego RAM-u.

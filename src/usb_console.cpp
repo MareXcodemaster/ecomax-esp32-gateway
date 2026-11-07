@@ -1,3 +1,4 @@
+#include "runtime_stats.hpp"
 #include "usb_console.hpp"
 #include "wifi.hpp"
 #include "state.hpp"
@@ -9,8 +10,11 @@
 #include "mbedtls/platform_util.h"
 #include <cstdio>
 #include <cstring>
+#include <atomic>
 
 namespace usb_console {
+static std::atomic<bool> ready{false},running{false};
+static bool own_driver=false;
 static void reply(cJSON *value) {
     char *text = cJSON_PrintUnformatted(value); cJSON_Delete(value);
     if (text) { printf("[USB] %s\n", text); cJSON_free(text); }
@@ -65,7 +69,15 @@ static void command(char *line) {
 static void receive(void *) {
     char line[512]{}; size_t used = 0; bool overflow = false;
     uint8_t bytes[128]; TickType_t last = xTaskGetTickCount();
+    TickType_t connected_at=last;
     for (;;) {
+        runtime_stats::sample(runtime_stats::Task::usb,4096);
+        if(usb_serial_jtag_is_connected())connected_at=xTaskGetTickCount();
+        else if(xTaskGetTickCount()-connected_at>pdMS_TO_TICKS(5000)){
+            mbedtls_platform_zeroize(line,sizeof(line));mbedtls_platform_zeroize(bytes,sizeof(bytes));
+            if(own_driver){usb_serial_jtag_driver_uninstall();own_driver=false;}
+            runtime_stats::stopped(runtime_stats::Task::usb);running.store(false);vTaskDelete(nullptr);return;
+        }
         int n = usb_serial_jtag_read_bytes(bytes, sizeof(bytes), pdMS_TO_TICKS(200));
         auto now = xTaskGetTickCount();
         if ((used || overflow) && now - last > pdMS_TO_TICKS(3000)) {
@@ -86,14 +98,17 @@ static void receive(void *) {
         mbedtls_platform_zeroize(bytes, sizeof(bytes));
     }
 }
-void start() {
-    if (!usb_serial_jtag_is_driver_installed()) {
-        usb_serial_jtag_driver_config_t config{}; config.rx_buffer_size = 1024; config.tx_buffer_size = 256;
-        ESP_ERROR_CHECK(usb_serial_jtag_driver_install(&config));
+void start(){ready.store(true);}
+void tick(){
+    if(!ready.load()||!usb_serial_jtag_is_connected()||running.exchange(true))return;
+    if(!usb_serial_jtag_is_driver_installed()){
+        usb_serial_jtag_driver_config_t config{};config.rx_buffer_size=1024;config.tx_buffer_size=256;
+        if(usb_serial_jtag_driver_install(&config)!=ESP_OK){running.store(false);return;}
+        own_driver=true;
     }
-    // Keep stdout in its default polled mode so a disconnected USB host cannot block logging.
-    configASSERT(xTaskCreate(receive, "usb_config", 4096, nullptr, 3, nullptr) == pdPASS);
+    if(xTaskCreate(receive,"usb_config",4096,nullptr,3,nullptr)!=pdPASS){
+        if(own_driver){usb_serial_jtag_driver_uninstall();own_driver=false;}running.store(false);return;
+    }
     state::log("USB local setup ready: WiFi configuration and read-only diagnostics; no RS485 TX commands");
 }
 }
-

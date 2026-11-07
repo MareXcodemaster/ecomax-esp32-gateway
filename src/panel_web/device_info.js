@@ -39,7 +39,8 @@
     ['Najmniej wolnego PSRAM od startu',bytes(data.psram?.minimum_free_bytes)],
     ['Najwiekszy wolny blok PSRAM',bytes(data.psram?.largest_free_block_bytes)],
     ['Probki w archiwum flash',valid(history?.samples)?fmt(history.samples,0):'---'],
-    ['Retencja historii',valid(history?.retention_days)?fmt(history.retention_days,0)+' dni':'---']
+    ['Retencja historii',valid(history?.retention_days)?fmt(history.retention_days,0)+' dni':'---'],
+    ...(Array.isArray(data.tasks)?data.tasks.filter(t=>t.running&&valid(t.stack_bytes)&&valid(t.minimum_free_bytes)).map(t=>['Zapas stosu / '+t.name,bytes(t.minimum_free_bytes)+' / '+bytes(t.stack_bytes)]):[])
    ],history_error:history?'':data.history?.loading?'Archiwum: uruchamianie':typeof data.history?.error==='string'&&data.history.error?'Archiwum: '+data.history.error:'Archiwum: brak odczytu'
   };
  }

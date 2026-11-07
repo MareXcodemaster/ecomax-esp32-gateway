@@ -105,6 +105,9 @@ bool self_test_api() {
     check("panel-no-auth",request("/api/state",nullptr),401);
     check("panel-session",request("/api/session",auth),200);
     check("panel-state",request("/api/state",auth),200);
+    check("panel-compact-state",request("/api/state?compact=1",auth),200);
+    check("capture-config-no-auth",request("/api/capture/config",nullptr,nullptr,"{}",true),401);
+    check("capture-config-guard",request("/api/capture/config",auth,nullptr,"{}"),403);
     check("pellet-no-auth", request("/api/pellet", nullptr), 401);
     check("pellet-readonly", request("/api/pellet", auth), 200);
     check("pellet-config-no-auth", request("/api/pellet/calibration", nullptr, nullptr, "{}", true), 401);

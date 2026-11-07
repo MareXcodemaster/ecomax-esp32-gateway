@@ -1,3 +1,4 @@
+#include "runtime_stats.hpp"
 #include "updates.hpp"
 #include "update_manifest.hpp"
 #include "board.hpp"
@@ -26,6 +27,8 @@ namespace updates {
 using update_manifest::Candidate;
 static SemaphoreHandle_t mutex;
 static std::atomic<bool> flash_busy{false},check_pending{false},install_pending{false},worker_ready{false};
+static std::atomic<bool> worker_running{false};
+static uint64_t next_check=0;static bool time_started=false;
 static bool enabled=true,include_beta=true,working=false,available=false;
 static uint64_t checked=0; static size_t received=0;
 static char phase[32]="starting",error[160]{},requested[32]{};
@@ -186,35 +189,48 @@ cJSON *snapshot(){
     xSemaphoreGive(mutex);return out;
 }
 static void task(void *){
-    uint64_t next=millis()+20000;bool time_started=false;
-    for(;;){
-        bool download_pending=install_pending.exchange(false);
-        xSemaphoreTake(mutex,portMAX_DELAY);bool auto_check=enabled,busy=working;xSemaphoreGive(mutex);
-        if(time_started&&(time(nullptr)>=1704067200||(!auto_check&&!check_pending.load()&&!download_pending))){
-            esp_netif_sntp_deinit();time_started=false;
-        }
-        bool wanted=download_pending||check_pending.load()||(auto_check&&millis()>=next&&!busy&&!installing());
-        if(wanted&&state::network().connected){
-            if(time(nullptr)<1704067200){
-                if(!time_started){esp_sntp_config_t config=ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");time_started=esp_netif_sntp_init(&config)==ESP_OK;}
-                status("waiting_for_time");
-                if(download_pending){release_flash();xSemaphoreTake(mutex,portMAX_DELAY);working=false;xSemaphoreGive(mutex);}
-            }else{
-                check_pending.store(false);xSemaphoreTake(mutex,portMAX_DELAY);working=true;xSemaphoreGive(mutex);
-                bool ok=refresh();next=millis()+(ok?86400000ULL:3600000ULL);
-                if(download_pending){
-                    xSemaphoreTake(mutex,portMAX_DELAY);Candidate value=candidate; xSemaphoreGive(mutex);
-                    if(ok&&available&&!strcmp(value.version,requested)&&board::github_ota){status("downloading");ok=download(value);}
-                    else ok=false;
-                    if(!ok)status("error","Aktualizacja nie zostala wgrana. Sprawdz polaczenie, zgodnosc obrazu i nowa wersje. Nie ponowiono automatycznie.");
-                    release_flash();
-                }
-                xSemaphoreTake(mutex,portMAX_DELAY);working=false;xSemaphoreGive(mutex);
-            }
-        }else if(download_pending){status("error","Brak Wi-Fi. Nie rozpoczeto aktualizacji.");release_flash();xSemaphoreTake(mutex,portMAX_DELAY);working=false;xSemaphoreGive(mutex);}
-        else if(wanted)status("waiting_for_wifi");
-        vTaskDelay(pdMS_TO_TICKS(1000));
+    const bool download_pending=install_pending.exchange(false);
+    check_pending.store(false);
+    bool ok=refresh();
+    if(download_pending){
+        xSemaphoreTake(mutex,portMAX_DELAY);Candidate value=candidate;xSemaphoreGive(mutex);
+        if(ok&&available&&!strcmp(value.version,requested)&&board::github_ota){status("downloading");ok=download(value);}else ok=false;
+        if(!ok)status("error","Aktualizacja nie zostala wgrana. Sprawdz polaczenie, zgodnosc obrazu i nowa wersje. Nie ponowiono automatycznie.");
+        release_flash();
     }
+    runtime_stats::sample(runtime_stats::Task::updates,12288);
+    runtime_stats::stopped(runtime_stats::Task::updates);
+    xSemaphoreTake(mutex,portMAX_DELAY);next_check=millis()+(ok?86400000ULL:3600000ULL);working=false;worker_running.store(false);xSemaphoreGive(mutex);
+    vTaskDelete(nullptr);
+}
+void tick(){
+    if(!worker_ready.load()||!mutex)return;
+    xSemaphoreTake(mutex,portMAX_DELAY);
+    if(worker_running.load()){xSemaphoreGive(mutex);return;}
+    const bool pending=check_pending.load()||install_pending.load();
+    const bool wanted=pending||(enabled&&millis()>=next_check&&!working&&!installing());
+    if(!wanted){xSemaphoreGive(mutex);if(time_started){esp_netif_sntp_deinit();time_started=false;}return;}
+    xSemaphoreGive(mutex);
+    if(!state::network().connected){
+        if(install_pending.exchange(false)){
+            release_flash();xSemaphoreTake(mutex,portMAX_DELAY);working=false;xSemaphoreGive(mutex);
+            status("error","Brak Wi-Fi. Nie rozpoczeto aktualizacji.");
+        }else status("waiting_for_wifi");
+        return;
+    }
+    if(time(nullptr)<1704067200){
+        if(!time_started){esp_sntp_config_t config=ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");time_started=esp_netif_sntp_init(&config)==ESP_OK;}
+        status("waiting_for_time");return;
+    }
+    if(time_started){esp_netif_sntp_deinit();time_started=false;}
+    xSemaphoreTake(mutex,portMAX_DELAY);
+    // Recheck under the same mutex used by check/configure/install.
+    if(worker_running.load()){xSemaphoreGive(mutex);return;}
+    working=true;worker_running.store(true);
+    const bool created=xTaskCreate(task,"github_updates",12288,nullptr,1,nullptr)==pdPASS;
+    if(!created){working=false;worker_running.store(false);check_pending.store(false);if(install_pending.exchange(false))release_flash();next_check=millis()+60000;}
+    xSemaphoreGive(mutex);
+    if(!created)status("error","Brak pamieci na aktualizator. Instalacja nie rozpoczela sie.");
 }
 void init(){
     mutex=xSemaphoreCreateMutex();if(!mutex){state::log("Optional GitHub updater unavailable: memory");return;}
@@ -222,8 +238,6 @@ void init(){
 }
 void start(){
     if(!mutex)return;
-    worker_ready.store(xTaskCreate(task,"github_updates",12288,nullptr,1,nullptr)==pdPASS);
-    if(worker_ready.load())status("idle");
-    if(!worker_ready.load()){status("error","Aktualizator niedostepny: brak pamieci zadania.");state::log("Optional GitHub updater unavailable: task");}
+    next_check=millis()+20000;status("idle");worker_ready.store(true);
 }
 }

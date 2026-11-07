@@ -1,3 +1,4 @@
+#include "runtime_stats.hpp"
 #include "transport.hpp"
 #include "compatibility_report.hpp"
 #include "remote_menu_language.hpp"
@@ -191,8 +192,12 @@ static void receive(void *) {
     ESP_ERROR_CHECK(esp_task_wdt_add(nullptr));
     FrameParser parser;
     uint8_t buffer[256]; unsigned current = board::baud;
+    uint64_t last_loop=esp_timer_get_time(),next_stack=0;
     for (;;) {
         ESP_ERROR_CHECK(esp_task_wdt_reset());
+        const auto tick=static_cast<uint64_t>(esp_timer_get_time());size_t backlog=0;uart_get_buffered_data_len(board::uart,&backlog);
+        state::receiver_timing(tick-last_loop,backlog);last_loop=tick;
+        if(tick>=next_stack){runtime_stats::sample(runtime_stats::Task::rs485,12288);next_stack=tick+1000000;}
         if (gpio_get_level(board::de)) {
             gpio_set_level(board::de, 0); state::log("ERROR: DE was not LOW; restart"); esp_restart();
         }
@@ -210,8 +215,8 @@ static void receive(void *) {
         uart_event_t event;
         while (xQueueReceive(events, &event, 0) == pdTRUE) {
             if (event.type == UART_FIFO_OVF || event.type == UART_BUFFER_FULL) {
-                state::uart_error(true); parser.reset(); uart_flush_input(board::uart);
-                state::log("UART overflow: RX gap, increase capture/export frequency");
+                state::uart_overflow(event.type==UART_FIFO_OVF,buffered); parser.reset(); uart_flush_input(board::uart);
+                state::log("UART %s overflow: receive gap; diagnostics counters updated",event.type==UART_FIFO_OVF?"FIFO":"buffer");
             } else if (event.type == UART_FRAME_ERR || event.type == UART_PARITY_ERR) state::uart_error(false);
         }
         state::parser_stats(parser.valid, parser.invalid, parser.noise);

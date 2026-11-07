@@ -16,6 +16,7 @@
 void access_tests();
 void diagnostics_tests();
 void diagnostic_storage_tests();
+void panel_sync_tests();
 void compatibility_tests();
 void remote_menu_language_tests();
 void controller_profile_tests();
@@ -24,6 +25,7 @@ void circulation_tests();
 
 int main() {
     diagnostic_storage_tests();
+    panel_sync_tests();
     remote_menu_language_tests();
     controller_profile_tests();
     circulation_tests();

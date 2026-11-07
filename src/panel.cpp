@@ -1,4 +1,6 @@
+#include "runtime_stats.hpp"
 #include "panel.hpp"
+#include "panel_sync.hpp"
 #include "panel_history.hpp"
 #include "pellet.hpp"
 #include "board.hpp"
@@ -43,7 +45,7 @@ SemaphoreHandle_t mutex;
 J *data, *raw, *ticket;
 J *compatibility_cache=nullptr;
 uint64_t compatibility_started=0;
-std::string uid, error_text, queued_kind, queued_owner, ticket_owner;
+std::string uid, error_text, queued_kind, queued_owner, ticket_owner, boot_identity;
 J *queued_payload;
 std::atomic<bool> busy{false};
 uint64_t live_ms = 0, target_ms = 0, system_ms = 0, ticket_deadline = 0;
@@ -1525,8 +1527,14 @@ void sample_rs_history() {
     panel_history::append(curr.p,true,epoch(),now());
 }
 void sample_settings_history() {
-    static uint64_t next=0;if(now()<next)return;next=now()+1000;
-    Lock lock;if(!busy&&target_ms&&now()-target_ms<20000)panel_history::append_settings(data,selected_mode=="rs485",epoch(),now());
+    static uint64_t next=0,last_targets=0,last_menu=0,last_room=0,last_sample=0;static uint32_t last_hour=0;
+    if(now()<next)return;
+    next=now()+1000;
+    Lock lock;if(busy||!target_ms||now()-target_ms>=20000)return;
+    const uint32_t hour=static_cast<uint32_t>(epoch())/3600;
+    if(last_targets==target_ms&&last_menu==native_menu_ms&&last_room==native_room_ms&&hour==last_hour&&now()-last_sample<600000)return;
+    panel_history::append_settings(data,selected_mode=="rs485",epoch(),now());
+    last_targets=target_ms;last_menu=native_menu_ms;last_room=native_room_ms;last_hour=hour;last_sample=now();
 }
 bool rs_alarm_refresh() {
     const uint8_t query[]={0,10}; transport::Reply reply; std::string error;
@@ -1638,9 +1646,13 @@ J *collect_compatibility(const J *payload){
     {Lock lock;cJSON_Delete(compatibility_cache);compatibility_cache=report;}
     return result;
 }
+std::atomic<bool> boot_ready{false};
 void worker(void *) {
     bool initial=true; uint64_t next_poll=0;
     for(;;) {
+        runtime_stats::sample(runtime_stats::Task::panel,16384);
+        if(!boot_ready.load()){vTaskDelay(pdMS_TO_TICKS(100));continue;}
+        {Lock lock;if(compatibility_cache&&now()-compatibility_started>900000){cJSON_Delete(compatibility_cache);compatibility_cache=nullptr;}}
         std::string kind, owner; J *payload=nullptr;
         { Lock lock; if(!queued_kind.empty()) { kind=queued_kind; owner=queued_owner; payload=queued_payload; queued_kind.clear(); queued_payload=nullptr; } }
         if(!kind.empty()) {
@@ -1658,7 +1670,7 @@ void worker(void *) {
             { Lock lock; auto *job=get(data,"job"); number(job,"finished_ms",now()); if(result) { text(job,"status","done"); put(job,"result",result); } else { text(job,"status","failed"); text(job,"error",error_text); text(data,"error",error_text); } busy=false; }
             next_poll=now()+3000; initial=false;
         } else if(!busy && now()>=next_poll) {
-            if(state::network().connected) {
+            if(selected_mode=="rs485"||state::network().connected) {
                 if(selected_mode=="rs485" && !transport::enabled() && !transport::conflict() && transport::enable()) { transport::Reply reply; transport::request(25,nullptr,0,0,reply); transport::request(85,nullptr,0,213,reply); }
                 error_text.clear(); bool ok=selected_mode=="rs485"?rs_refresh(true):initial?scan():refresh();
                 if(ok) { initial=false; }
@@ -1676,14 +1688,14 @@ void worker(void *) {
             auto saved_error=error_text; bool ok=rs_room_schedule_refresh(); room_schedule_failures=ok?0:std::min(room_schedule_failures+1,2U);
             next_room_schedule_poll=now()+(ok?30000:std::min(60000U,15000U<<room_schedule_failures));error_text=saved_error;
         }
-        if(!busy&&selected_mode=="rs485"&&transport::enabled()&&native_identity&&now()-native_identity_ms<30000&&state::network().connected) {
+        if(!busy&&selected_mode=="rs485"&&transport::enabled()&&native_identity&&now()-native_identity_ms<30000) {
             Owned sensor{boiler::snapshot()}; int pending=static_cast<int>(num(get(get(sensor.p,"sensors"),"pending_alerts"),-1));
             if(now()>=next_alarm_poll||pending!=last_pending_alerts) {
                 bool ok=rs_alarm_refresh(); alarm_failures=ok?0:std::min(alarm_failures+1,3U);
                 last_pending_alerts=pending; next_alarm_poll=now()+(ok?30000:std::min(60000U,10000U<<alarm_failures));
             }
         }
-        if(!busy && selected_mode=="rs485" && state::network().connected && now()>=next_health) {
+        if(!busy && *config.host && selected_mode=="rs485" && state::network().connected && now()>=next_health) {
             auto saved_error=error_text; Owned probe{request("regParams","",false,400)};
             if(probe.p&&!busy) { Owned network{request("regParamsData","",false,700)}; }
             health_failures=probe.p?0:std::min(health_failures+1,2U);
@@ -1728,9 +1740,9 @@ void overlay(J *out) {
     number(out,"last_read_epoch",epoch()-num(get(b.p,"age_ms"))/1000.0); text(out,"last_read_utc",timestamp());
 }
 }
-cJSON *snapshot() {
+cJSON *snapshot(bool compact,const char *catalog) {
     J *out;
-    { Lock lock; out=cJSON_Duplicate(data,true); flag(out,"busy",busy); number(out,"age_seconds",live_ms?(now()-live_ms)/1000.0:NAN); flag(out,"fresh",live_ms&&now()-live_ms<15000); flag(out,"targets_fresh",target_ms&&now()-target_ms<15000); number(out,"system_age_seconds",system_ms?(now()-system_ms)/1000.0:NAN);
+    { Lock lock; out=compact?panel_sync::snapshot(data,catalog,boot_identity.c_str()):cJSON_Duplicate(data,true); if(!out)return nullptr; flag(out,"busy",busy); number(out,"age_seconds",live_ms?(now()-live_ms)/1000.0:NAN); flag(out,"fresh",live_ms&&now()-live_ms<15000); flag(out,"targets_fresh",target_ms&&now()-target_ms<15000); number(out,"system_age_seconds",system_ms?(now()-system_ms)/1000.0:NAN);
       number(out,"target_read_ms",target_ms);
       auto *alarms=get(out,"alarm_status"); double read_ms=num(get(alarms,"read_ms"),0); flag(alarms,"history_fresh",read_ms&&now()-read_ms<65000); flag(alarms,"count_fresh",false);
       auto *health=get(out,"econet_health"); flag(health,"fresh",health_ms&&now()-health_ms<(selected_mode=="rs485"?65000:30000)); number(health,"age_seconds",health_ms?(now()-health_ms)/1000.0:NAN); }
@@ -1768,6 +1780,7 @@ cJSON *snapshot() {
     for(auto action:{"start","stop"}) { bool start=!strcmp(action,"start"); auto *guard=direct?control_guard(sensor.p,true,identity,transport::enabled(),start):http_control_guard(get(out,"system"),get(out,"curr"),get(out,"alarms"),http_control_fresh,start); if(!guard&&!direct) guard=control_consistency(sensor.p,http_mode,start); flag(controls,action,guard==nullptr); if(guard) text(controls,start?"start_error":"stop_error",guard); }
     copy(controls,"mode",direct?get(get(sensor.p,"sensors"),"state"):get(get(out,"curr"),"mode")); text(controls,"transport",direct?"rs485":"econet"); put(out,"controls",controls); return out;
 }
+void activate(){boot_ready.store(true);}
 bool is_busy() { return busy.load(); }
 static J *completed_jobs=nullptr;
 cJSON *job_snapshot(const char *id) {
@@ -1995,6 +2008,7 @@ void set_clock(double seconds) {
     auto *series=get(data,"series"); if(cJSON_GetArraySize(series) && num(get(item(series,0),"time"),0)<1577836800) put(data,"series",cJSON_CreateArray());
 }
 void start() {
+    boot_identity=random_token();
     panel_history::start();
     mutex=xSemaphoreCreateMutex(); configASSERT(mutex); raw=cJSON_Parse(panel_catalog_json); configASSERT(raw); data=cJSON_CreateObject();
     snprintf(config.host,sizeof(config.host),"%s",econet_provision::host); snprintf(config.user,sizeof(config.user),"%s",econet_provision::user); snprintf(config.password,sizeof(config.password),"%s",econet_provision::password);
