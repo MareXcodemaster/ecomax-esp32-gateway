@@ -173,10 +173,16 @@ try {
     assert.deepEqual(errors,[]);await page.close();
     console.log(`PASS hostname ${width}px: validation, preserved draft, one save, new local address`);
   }
-  const updateSection=html.match(/<section data-section="settings"[^>]*>[\s\S]*?<\/section>/)[0].replace(' hidden','');
   for(const width of [1280,390]){
     const page=await browser.newPage({viewport:{width,height:850}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    // Settings contains nested sections (including Tailnet). Parse the DOM so
+    // the fixture includes the updater after the first nested closing tag.
+    const updateSection=await page.evaluate(markup=>{
+      const section=new DOMParser().parseFromString(markup,'text/html').querySelector('section[data-section="settings"]');
+      if(!section?.querySelector('#update-check'))throw new Error('Complete settings section missing');
+      section.hidden=false;return section.outerHTML;
+    },html);
     await page.setContent('<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body><main>'+updateSection+'</main><div id="update-notice"><strong id="update-notice-version"></strong><b id="update-notice-beta" hidden>BETA</b><button id="update-open"><span id="update-offer-icon"></span><span id="update-current-icon"></span><span id="update-open-label"></span>Aktualizacja</button></div></body></html>');
     for(const file of ['style.css','updates.css'])await page.addStyleTag({content:await readFile('src/panel_web/'+file,'utf8')});
     await page.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});

@@ -45,7 +45,11 @@ try {
   await page.locator('section[aria-labelledby="step3"]').screenshot({ path: 'docs/images/03-polaczono.png' });
   const panel=await browser.newPage({viewport:{width:850,height:650}});
   const html=await readFile('src/panel_web/index.html','utf8');
-  const section=html.match(/<section data-section="settings"[^>]*>[\s\S]*?<\/section>/)[0].replace(' hidden','');
+  const section=await panel.evaluate(markup=>{
+    const settings=new DOMParser().parseFromString(markup,'text/html').querySelector('section[data-section="settings"]');
+    if(!settings?.querySelector('#update-check'))throw new Error('Complete settings section missing');
+    settings.hidden=false;return settings.outerHTML;
+  },html);
   await panel.setContent('<!doctype html><html lang="pl"><meta charset="utf-8"><body><main>'+section+'</main><div id="update-notice" hidden><strong id="update-notice-version"></strong><b id="update-notice-beta" hidden>BETA</b><button id="update-open"><span id="update-offer-icon"></span><span id="update-current-icon"></span><span id="update-open-label"></span></button></div></body></html>');
   for(const name of ['style.css','updates.css'])await panel.addStyleTag({content:await readFile('src/panel_web/'+name,'utf8')});
   await panel.addScriptTag({content:await readFile('src/panel_web/updates.js','utf8')});
