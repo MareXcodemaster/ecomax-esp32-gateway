@@ -37,6 +37,7 @@ def main():
                    str(ROOT / 'tests/host/settings.cpp'),
                    str(ROOT / 'tests/host/circulation.cpp'),
                    str(ROOT / 'tests/host/tailnet.cpp'),
+                   str(ROOT / 'tests/host/boiler_clock.cpp'),
                    str(ROOT / 'tests/host/main.cpp'), '-x', 'c++', str(cjson / 'cJSON.c'), '-o', str(executable)]
         if os.name != 'nt':
             command += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer']

@@ -11,6 +11,7 @@
 #include "updates.hpp"
 #include "cwu_pump.hpp"
 #include "tailnet.hpp"
+#include "boiler_clock.hpp"
 #include "tailnet_guard.hpp"
 #include "lwip/sockets.h"
 #include "esp_http_server.h"
@@ -250,6 +251,10 @@ static esp_err_t panel_command(httpd_req_t *req) {
     char csrf[64];
     if(httpd_req_get_hdr_value_str(req,"X-Tester-Token",csrf,sizeof(csrf))!=ESP_OK || !equal(csrf,panel_csrf)) return message(req,"403 Forbidden","Missing panel token");
     auto *payload=request_json(req); if(!payload) return ESP_OK;
+    if(!strcmp(req->uri,"/api/boiler-clock")) {
+        std::string error;bool ok=boiler_clock::configure(payload,error);cJSON_Delete(payload);
+        return ok?json(req,boiler_clock::snapshot()):message(req,"409 Conflict",error.c_str());
+    }
     if(!strcmp(req->uri,"/api/panel/clock")) {
         auto *time=cJSON_GetObjectItemCaseSensitive(payload,"epoch"); bool ok=cJSON_IsNumber(time)&&time->valuedouble>=1577836800&&time->valuedouble<=4102444800;
         if(ok) panel::set_clock(time->valuedouble);
@@ -607,6 +612,7 @@ void start() {
     add("/api/compatibility",HTTP_GET,compatibility_state);add("/api/compatibility/scan",HTTP_POST,panel_command);
     add("/api/pellet/calibrate",HTTP_POST,panel_command);
     add("/api/job",HTTP_GET,panel_job);
+    add("/api/boiler-clock",HTTP_POST,panel_command);
     add("/api/history",HTTP_GET,history_state);
     add("/api/pellet", HTTP_GET, pellet_state); add("/api/pellet/calibration", HTTP_POST, pellet_configure);
     for(auto uri:{"/api/connect","/api/scan","/api/refresh","/api/write/prepare","/api/write/execute","/api/write/save","/api/control/prepare","/api/control/execute","/api/panel/clock","/api/transport","/api/rs485/probe"}) add(uri,HTTP_POST,panel_command);

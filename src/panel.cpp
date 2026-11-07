@@ -8,6 +8,8 @@
 #include "state.hpp"
 #include "device_info.hpp"
 #include "transport.hpp"
+#include "boiler_clock.hpp"
+#include "wifi.hpp"
 #include "protocol.hpp"
 #include "thermostat_decoder.hpp"
 #include "panel_catalog.hpp"
@@ -1703,6 +1705,11 @@ void worker(void *) {
             { Lock lock; number(get(data,"econet_health"),"retry_epoch",epoch()+delay/1000.0); }
             error_text=saved_error;
         }
+        if(!busy){
+            auto *sys=get(raw,"sysParams");
+            bool supported=controller_profile::reference(str(get(sys,"controllerID")),str(get(sys,"moduleASoftVer")),str(get(sys,"modulePanelSoftVer")));
+            boiler_clock::tick(supported,selected_mode=="rs485"&&native_identity&&now()-native_identity_ms<60000&&transport::enabled()&&!transport::conflict());
+        }
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
@@ -1760,6 +1767,7 @@ cJSON *snapshot(bool compact,const char *catalog) {
     flag(pellet_info,"boiler_calibration_supported",pellet_supported);flag(pellet_info,"boiler_calibration_available",pellet_available);
     text(pellet_info,"boiler_calibration_status",pellet_available?"Punkty 100% i 0%: polecenia z panelu kotla. Wymagaja potwierdzenia rzeczywistego poziomu":pellet_supported?"Kalibracja czeka na swieze polaczenie RS485":"Brak potwierdzonej wersji kotla dla kalibracji zasobnika");
     put(out,"esp_device",device_info::snapshot());
+    put(out,"boiler_clock",boiler_clock::snapshot());
     // The RS485 ecoNET address is emulated by ESP. Never label its network fields as real ecoNET data.
     auto *network=get(out,"econet_network"); if(!cJSON_IsObject(network)) { network=cJSON_CreateObject(); put(out,"econet_network",network); }
     bool network_fresh=econet_fresh&&econet_network_ms&&now()-econet_network_ms<65000;
@@ -2002,6 +2010,8 @@ bool self_test() {
 }
 void set_clock(double seconds) {
     if(!std::isfinite(seconds)||seconds<1577836800||seconds>4102444800) return;
+    // A browser with an incorrect clock must not replace freshly synchronized NTP time.
+    if(network::time_synchronized())return;
     struct timeval tv{}; tv.tv_sec=static_cast<time_t>(seconds); settimeofday(&tv,nullptr);
     Lock lock; number(data,"system_read_epoch",system_ms?epoch()-(now()-system_ms)/1000.0:0); number(data,"target_read_epoch",target_ms?epoch()-(now()-target_ms)/1000.0:0);
     if(live_ms) { number(data,"last_read_epoch",epoch()-(now()-live_ms)/1000.0); text(data,"last_read_utc",timestamp()); }

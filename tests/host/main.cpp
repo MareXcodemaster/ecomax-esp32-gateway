@@ -23,9 +23,11 @@ void controller_profile_tests();
 void settings_journal_tests();
 void circulation_tests();
 void tailnet_tests();
+void boiler_clock_tests();
 
 int main() {
     tailnet_tests();
+    boiler_clock_tests();
     diagnostic_storage_tests();
     panel_sync_tests();
     remote_menu_language_tests();

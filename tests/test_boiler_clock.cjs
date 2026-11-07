@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict');
+const {reading}=require('../src/panel_web/boiler_clock.js');
+const d={fresh:true,device_time:'2026-11-07 21:00:01',age_ms:600};
+assert.deepEqual(reading(d,true,1500),{time:'21:00:03',date:'07.11.2026',fresh:true});
+assert.equal(reading(d,false).fresh,false);
+assert.equal(reading(d,true,10000).fresh,false);
+assert.equal(reading({...d,fresh:false},true).fresh,false);
+assert.equal(reading({...d,device_time:'<script>'},true).fresh,false);
+assert.equal(reading({...d,device_time:'2026-11-07 23:59:59'},true,1500).date,'08.11.2026');
+console.log('PASS boiler clock: observed date/time, stale/offline state and midnight rendering');

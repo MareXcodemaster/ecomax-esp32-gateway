@@ -18,5 +18,7 @@ bool request(uint8_t type, const uint8_t *payload, size_t size, uint8_t response
 bool request_readonly(uint8_t type, const uint8_t *payload, size_t size, uint8_t response, Reply &reply);
 bool request_thermostat(uint8_t type, const uint8_t *payload, size_t size, uint8_t response, Reply &reply);
 bool read_thermostat_schedule(Reply &reply);
+bool clock_sample(uint8_t payload[26],uint64_t &received_ms);
+bool set_clock(const uint8_t *payload,size_t size,Reply &reply);
 }
 

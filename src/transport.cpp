@@ -6,6 +6,7 @@
 #include "frame_parser.hpp"
 #include "state.hpp"
 #include "pellet_commands.hpp"
+#include "boiler_clock_codec.hpp"
 #include "esp_timer.h"
 #include "esp_task_wdt.h"
 #include "esp_system.h"
@@ -24,6 +25,8 @@ static std::atomic<uint64_t> last_econet_us{0}, tx_count{0};
 static bool hello_pending=false;
 struct Exchange { uint8_t frame[64]{}; size_t length=0; uint8_t expected=0;
     uint64_t deadline=0, sent_us=0; Reply reply; bool pending=false, waiting=false; } exchange;
+static uint8_t observed_clock[26]{};
+static uint64_t observed_clock_ms=0;
 bool enabled() { return active.load(); }
 bool conflict() { return duplicate.load(); }
 uint64_t sent_bytes() { return tx_count.load(); }
@@ -74,7 +77,8 @@ static bool thermostat_allowed(uint8_t type,const uint8_t *payload,size_t size,u
 static bool request_to(uint8_t recipient,uint8_t type, const uint8_t *payload, size_t size, uint8_t response, Reply &reply) {
     reply={};
     bool allowed=recipient==69?request_allowed(type,payload,size,response):recipient==81&&thermostat_allowed(type,payload,size,response);
-    if(!allowed || !active || !call_mutex) return false;
+    allowed=allowed||(recipient==0&&type==137&&response==0&&boiler_clock_codec::valid(payload,size));
+    if(!allowed || size>sizeof(exchange.frame)-10 || !active || !call_mutex) return false;
     xSemaphoreTake(call_mutex,portMAX_DELAY);
     while(xSemaphoreTake(completed,0)==pdTRUE) {}
     xSemaphoreTake(exchange_mutex,portMAX_DELAY);
@@ -98,6 +102,18 @@ bool request_thermostat(uint8_t type,const uint8_t *payload,size_t size,uint8_t 
     return request_to(81,type,payload,size,response,reply);
 }
 bool read_thermostat_schedule(Reply &reply) { return request_thermostat(88,nullptr,0,216,reply); }
+bool clock_sample(uint8_t payload[26],uint64_t &received_ms) {
+    if(!exchange_mutex)return false;
+    xSemaphoreTake(exchange_mutex,portMAX_DELAY);received_ms=observed_clock_ms;
+    if(received_ms)memcpy(payload,observed_clock,sizeof(observed_clock));
+    xSemaphoreGive(exchange_mutex);return received_ms!=0;
+}
+bool set_clock(const uint8_t *payload,size_t size,Reply &reply) {
+    reply={};uint8_t current[26]{};uint64_t received=0;auto tick=static_cast<uint64_t>(esp_timer_get_time()/1000);
+    if(!boiler_clock_codec::valid(payload,size)||!clock_sample(current,received)||tick<received||tick-received>5000||
+       !boiler_clock_codec::same_metadata(payload,current)||conflict())return false;
+    return request_to(0,137,payload,size,0,reply);
+}
 bool request_readonly(uint8_t type,const uint8_t *payload,size_t size,uint8_t response,Reply &reply) {
     reply={};
     if(!readonly_allowed(type,payload,size,response))return false;
@@ -144,6 +160,9 @@ static void captured(const uint8_t *bytes, size_t length, void *) {
         if(active.exchange(false)) { duplicate=true; state::log("RS485 address 0x56 conflict: TX disabled, no command retry"); }
     }
     xSemaphoreTake(exchange_mutex,portMAX_DELAY);
+    if(length==36&&bytes[4]==80&&bytes[3]==0&&bytes[7]==137&&boiler_clock_codec::valid(bytes+8,length-10)) {
+        memcpy(observed_clock,bytes+8,sizeof(observed_clock));observed_clock_ms=esp_timer_get_time()/1000;
+    }
     if(active && length==10 && bytes[4]==69 && bytes[3]==86 && bytes[7]==48) hello_pending=true;
     if(exchange.waiting && reply_matches(exchange.frame,exchange.length,exchange.expected,bytes,length) &&
        static_cast<uint64_t>(esp_timer_get_time())<exchange.deadline) {

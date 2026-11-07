@@ -110,12 +110,17 @@ esp_err_t configure(const char *ssid, const char *password) {
 }
 static void dns_tick();
 static std::atomic<bool> time_wanted{false};
+static std::atomic<bool> continuous_clock{false};
+static std::atomic<uint64_t> last_ntp_us{0};
 void request_time(){time_wanted.store(true);}
+void continuous_time(bool enabled){continuous_clock.store(enabled);if(enabled)request_time();}
+bool time_synchronized(){auto last=last_ntp_us.load();return last&&static_cast<uint64_t>(esp_timer_get_time())-last<21600000000ULL;}
 static void time_tick(){
     static bool started=false;
-    if(time(nullptr)>=1704067200){if(started){esp_netif_sntp_deinit();started=false;}time_wanted.store(false);return;}
-    if(time_wanted.load()&&connected.load()&&!started){
+    if(time(nullptr)>=1704067200&&!continuous_clock.load()){if(started){esp_netif_sntp_deinit();started=false;}time_wanted.store(false);return;}
+    if((time_wanted.load()||continuous_clock.load())&&connected.load()&&!started){
         esp_sntp_config_t config=ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
+        config.sync_cb=[](timeval *){last_ntp_us.store(esp_timer_get_time());};
         started=esp_netif_sntp_init(&config)==ESP_OK;
     }
 }

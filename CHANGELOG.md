@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0-beta.55
+
+- Zegar kotła na górnej belce i w ustawieniach urządzenia, z datą i wykrywaniem nieaktualnego odczytu RS485.
+- Opcjonalna automatyczna synchronizacja godziny z NTP oraz przycisk „Synchronizuj teraz”. Czas polski uwzględnia zmianę lato/zima; automat działa bez przeglądarki i wymaga świeżej synchronizacji internetowej ESP.
+- Zapis ramką TIME z własnego adresu ESP 0x56 potwierdzono na ecoMAX860P-LZ TOUCH (moduł A 8.41.38.L0, panel 8.30.28): próbna korekta o 20 sekund i przywrócenie aktualnego czasu zmieniły odczyty panelu kotła oraz ecoSTER. To nie jest potwierdzenie zgodności pozostałych modeli.
+- Synchronizacja zachowuje datę, dzień tygodnia i pozostałe pola ramki. Koryguje różnicę ponad 10 sekund, maksymalnie 2 godziny w obrębie tej samej daty. Niepotwierdzony zapis wstrzymuje automat do jego ponownego włączenia. Ustawienie jest zapisywane w ESP; domyślnie automat jest wyłączony.
+- Zegar z przeglądarki nie zastępuje świeżego czasu NTP. Dodatek używa istniejącego zadania panelu, bez nowego stosu zadania w RAM.
+
 ## 0.7.0-beta.54
 
 - Bufory Wi-Fi i lwIP preferują PSRAM zgodnie z mechanizmem ESP-IDF. Stosy zadań, DMA i rezerwa ochronna pozostają w RAM-ie wewnętrznym. Zapas RAM-u po połączeniu VPN na testowanym urządzeniu wzrósł do około 82 kB. Próba 135 pobrań zasobów przez LAN przy aktywnym VPN przeszła bez restartu lub zatrzymania VPN; użytkownik potwierdził też pełne załadowanie panelu i temperatur przez Tailscale w telefonie na transmisji komórkowej. Długotrwała stabilność pozostaje do sprawdzenia.

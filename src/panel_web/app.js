@@ -66,6 +66,7 @@ function render(){if(!state)return;const f=fresh(),curr=f?state.curr:{},direct=s
  if(window.EcoAlarmBadge)EcoAlarmBadge.render(state,f);
  if(window.EcoDevice&&view==='settings')EcoDevice.render(state.esp_device,serverReachable);
  if(window.EcoCompatibility?.render)EcoCompatibility.render(state,serverReachable);
+ if(window.EcoBoilerClock)EcoBoilerClock.render(state?.boiler_clock,serverReachable);
  for(const button of document.querySelectorAll('button[data-write-id],[data-write-id] button')){const id=button.closest('[data-write-id]').dataset.writeId,target=state.targets?.[id];if(target?.write_ready===false){button.disabled=true;button.title=target.write_error||'Zapis zablokowany';button.dataset.writeBlocked='true';}else if(button.dataset.writeBlocked){button.removeAttribute('title');delete button.dataset.writeBlocked;}}
  if(view==='menu'&&!state.targets_fresh)for(const row of $('menu-rows').rows)if(row.cells.length===6)row.cells[2].textContent='---';
  if(view==='menu'&&menuSelection!==null){const selected=state.menu.find(item=>item.index===menuSelection);if(selected){text('menu-name',selected.index+' / '+selected.name);text('menu-description',selected.description||'');text('menu-json',JSON.stringify(selected,null,2));}}
@@ -157,6 +158,7 @@ if(window.EcoNetwork)EcoNetwork.init();
 if(window.EcoWifi)EcoWifi.init();
 if(window.EcoUpdates)EcoUpdates.init();
 if(window.EcoTailnet)EcoTailnet.init();
+if(window.EcoBoilerClock)EcoBoilerClock.init();
 if(window.EcoAccess)EcoAccess.init();
 if(window.EcoCwuPump)EcoCwuPump.init();
 if(window.EcoNavigation)EcoNavigation.init(Object.keys(titles),next=>selectView(next,false));
