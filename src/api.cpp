@@ -12,6 +12,7 @@
 #include "cwu_pump.hpp"
 #include "tailnet.hpp"
 #include "boiler_clock.hpp"
+#include "sampling.hpp"
 #include "tailnet_guard.hpp"
 #include "lwip/sockets.h"
 #include "esp_http_server.h"
@@ -251,6 +252,10 @@ static esp_err_t panel_command(httpd_req_t *req) {
     char csrf[64];
     if(httpd_req_get_hdr_value_str(req,"X-Tester-Token",csrf,sizeof(csrf))!=ESP_OK || !equal(csrf,panel_csrf)) return message(req,"403 Forbidden","Missing panel token");
     auto *payload=request_json(req); if(!payload) return ESP_OK;
+    if(!strcmp(req->uri,"/api/sampling")) {
+        std::string error;bool ok=sampling::configure(payload,error);cJSON_Delete(payload);
+        return ok?json(req,sampling::snapshot()):message(req,"400 Bad Request",error.c_str());
+    }
     if(!strcmp(req->uri,"/api/boiler-clock")) {
         std::string error;bool ok=boiler_clock::configure(payload,error);cJSON_Delete(payload);
         return ok?json(req,boiler_clock::snapshot()):message(req,"409 Conflict",error.c_str());
@@ -505,7 +510,7 @@ static esp_err_t ota(httpd_req_t *req) {
     updates::FlashGuard flash_guard;
     if(!flash_guard.acquired)return message(req,"409 Conflict","Another firmware update is running");
     esp_ota_handle_t handle;
-    auto result = esp_ota_begin(partition, req->content_len, &handle);
+    auto result = esp_ota_begin(partition, OTA_WITH_SEQUENTIAL_WRITES, &handle);
     if (result != ESP_OK) return message(req, "409 Conflict", esp_err_to_name(result));
     uint8_t buffer[2048]; size_t received = 0; unsigned timeouts = 0;
     state::log("OTA start, size=%u; passive RX task remains running", (unsigned)req->content_len);
@@ -516,6 +521,8 @@ static esp_err_t ota(httpd_req_t *req) {
         result = esp_ota_write(handle, buffer, n);
         if (result != ESP_OK) { esp_ota_abort(handle); return message(req, "400 Bad Request", esp_err_to_name(result)); }
         received += n;
+        // Let UART, networking and idle/watchdog tasks run even with a full TCP receive buffer.
+        vTaskDelay(1);
     }
     result = esp_ota_end(handle);
     if (result != ESP_OK) { state::log("OTA validation failed: %s", esp_err_to_name(result)); return message(req, "400 Bad Request", esp_err_to_name(result)); }
@@ -584,7 +591,7 @@ void start() {
     esp_timer_create_args_t timer{}; timer.callback = [](void *) { esp_restart(); }; timer.name = "ota_reboot";
     ESP_ERROR_CHECK(esp_timer_create(&timer, &reboot_timer));
     httpd_config_t config = HTTPD_DEFAULT_CONFIG(); config.stack_size = 16384;
-    config.max_uri_handlers = 60; config.max_open_sockets = 8; config.lru_purge_enable = true;
+    config.max_uri_handlers = 64; config.max_open_sockets = 8; config.lru_purge_enable = true;
     config.uri_match_fn=httpd_uri_match_wildcard;
     config.recv_wait_timeout = 5; config.send_wait_timeout = 12;
     ESP_ERROR_CHECK(httpd_start(&server, &config));
@@ -613,6 +620,7 @@ void start() {
     add("/api/pellet/calibrate",HTTP_POST,panel_command);
     add("/api/job",HTTP_GET,panel_job);
     add("/api/boiler-clock",HTTP_POST,panel_command);
+    add("/api/sampling",HTTP_POST,panel_command);
     add("/api/history",HTTP_GET,history_state);
     add("/api/pellet", HTTP_GET, pellet_state); add("/api/pellet/calibration", HTTP_POST, pellet_configure);
     for(auto uri:{"/api/connect","/api/scan","/api/refresh","/api/write/prepare","/api/write/execute","/api/write/save","/api/control/prepare","/api/control/execute","/api/panel/clock","/api/transport","/api/rs485/probe"}) add(uri,HTTP_POST,panel_command);

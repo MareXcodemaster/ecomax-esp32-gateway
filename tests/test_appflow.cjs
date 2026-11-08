@@ -118,8 +118,8 @@ test('poll recovers missing session and network failure on next cycle',async()=>
  await ctx.poll();assert.equal(ctx.serverReachable,true);assert.equal(ctx.csrf,'recovered');assert.equal(ctx.pollBusy,false);
 });
 test('startup polling is installed even when first handshake fails',async()=>{
- const boot=source.slice(source.indexOf('async function bootPanel(){'),source.indexOf("$('esp-login-form').onsubmit="));
- let timers=0;const ctx=context({espPollTimer:null,setInterval:()=>++timers,request:async()=>{throw Error('offline');}});
+ const boot=source.slice(source.indexOf('function applyPanelInterval('),source.indexOf("$('esp-login-form').onsubmit="));
+ let timers=0;const ctx=context({espPollTimer:null,espPollInterval:2000,setInterval:()=>++timers,request:async()=>{throw Error('offline');}});
  vm.runInNewContext(boot,ctx);await assert.rejects(ctx.bootPanel());assert.equal(timers,1);assert.equal(ctx.espPollTimer,1);
 });
 test('native RS485 login never asks to configure the unused ecoNET route',async()=>{

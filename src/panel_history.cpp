@@ -1,4 +1,5 @@
 #include "panel_history.hpp"
+#include "sampling.hpp"
 #include "settings_observation.hpp"
 #include "history_store.hpp"
 #include "state.hpp"
@@ -83,7 +84,7 @@ void append(const cJSON *curr,bool native,double epoch,uint64_t monotonic_ms) {
         if(count==capacity){head=(head+1)%capacity;--count;}
         samples[(head+count++)%capacity]=sample;last_ms=monotonic_ms;previous_mode=sample.mode;previous_native=native;
     }
-    bool save=!archive_ms||monotonic_ms<archive_ms||monotonic_ms-archive_ms>=60000;
+    bool save=!archive_ms||monotonic_ms<archive_ms||monotonic_ms-archive_ms>=sampling::history_ms();
     if(save)archive_ms=monotonic_ms;
     xSemaphoreGive(mutex);
     if(save)history_store::enqueue(sample);
@@ -122,14 +123,15 @@ cJSON *snapshot(uint32_t from,uint32_t to,bool raw) {
     std::stable_sort(copy,copy+size,[](const Point &a,const Point &b){return a.sample.time<b.sample.time;});
     unsigned unique=0;for(size_t i=0;i<size;++i){if(unique&&copy[unique-1].sample.time==copy[i].sample.time){copy[i].gap_before|=copy[unique-1].gap_before;copy[unique-1]=copy[i];}else copy[unique++]=copy[i];}
     const auto actual_from=unique?copy[0].sample.time:from,actual_to=unique?copy[unique-1].sample.time:to;
-    auto resolution=std::max<uint32_t>(detail?10:60,history_data::step(actual_from,actual_to));
-    if(raw){size=unique;for(unsigned i=1;i<size;++i)copy[i].gap_before|=copy[i].sample.time-copy[i-1].sample.time>90||copy[i].sample.native!=copy[i-1].sample.native;}
-    else size=history_data::reduce(copy,unique,actual_from,actual_to,resolution,std::max<uint32_t>(90,resolution*2+5));
+    auto resolution=std::max<uint32_t>(detail?10:sampling::history_ms()/1000,history_data::step(actual_from,actual_to));
+    const auto archive_gap=std::max<uint32_t>(90U,sampling::history_ms()/1000*2+5);
+    if(raw){size=unique;for(unsigned i=1;i<size;++i)copy[i].gap_before|=copy[i].sample.time-copy[i-1].sample.time>archive_gap||copy[i].sample.native!=copy[i-1].sample.native;}
+    else size=history_data::reduce(copy,unique,actual_from,actual_to,resolution,std::max<uint32_t>(archive_gap,resolution*2+5));
     auto *out=cJSON_CreateObject(),*columns=cJSON_CreateArray(),*rows=cJSON_CreateArray();
     cJSON_AddNumberToObject(out,"capacity",capacity);cJSON_AddNumberToObject(out,"interval_seconds",interval_ms/1000);
     auto *archive=history_store::status();bool persistent=cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(archive,"ready"));
     cJSON_AddItemToObject(out,"archive",archive);cJSON_AddStringToObject(out,"storage",persistent?"littlefs+ram":"ram");cJSON_AddNumberToObject(out,"schema",1);
-    cJSON_AddNumberToObject(out,"from",from);cJSON_AddNumberToObject(out,"to",to);cJSON_AddNumberToObject(out,"resolution_seconds",resolution);cJSON_AddNumberToObject(out,"gap_seconds",raw?90:std::max<uint32_t>(90,resolution*2+5));
+    cJSON_AddNumberToObject(out,"from",from);cJSON_AddNumberToObject(out,"to",to);cJSON_AddNumberToObject(out,"resolution_seconds",resolution);cJSON_AddNumberToObject(out,"gap_seconds",raw?archive_gap:std::max<uint32_t>(archive_gap,resolution*2+5));
     cJSON_AddBoolToObject(out,"export_raw",raw);
     for(auto key:{"time","native","mode"})cJSON_AddItemToArray(columns,cJSON_CreateString(key));
     for(auto &field:fields)cJSON_AddItemToArray(columns,cJSON_CreateString(field.key));

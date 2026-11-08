@@ -56,6 +56,20 @@ Zwykłe, zgodne OTA zachowuje NVS. Kasowanie flash i pierwsza instalacja USB
 są innymi operacjami. Jeżeli zniknie odpowiedź, najpierw sprawdź wersję.
 Nie wysyłaj instalacji w pętli. Panel sam nie ponawia POST instalacji.
 
+## Aktualizacja z pliku BIN bez internetu
+
+Od **0.7.0-beta.57** otwórz **Ustawienia urządzenia → Aktualizacja z pliku BIN**.
+
+1. Pobierz na telefon lub komputer plik **firmware-ota.bin** z wydania projektu.
+2. Połącz się z tą samą siecią co ESP i otwórz **http://piec.local/** (lub jego IP).
+3. Wybierz plik BIN. Panel pokaże wersję i rozmiar. **firmware-merged.bin** jest do USB, nie do OTA.
+4. Zaznacz potwierdzenie restartu i naciśnij **Wgraj aktualizację**.
+5. Poczekaj na wysłanie, sprawdzenie obrazu i ponowne uruchomienie panelu. Nie odłączaj zasilania.
+
+Po pobraniu pliku internet nie jest potrzebny. Domowe Wi-Fi, hasła i ustawienia zapisane w ESP pozostają zachowane. Brak odpowiedzi nie powoduje ponownego wysyłania obrazu: najpierw sprawdź wersję po powrocie panelu.
+
+W starszym firmware użyj **Narzędzia → Diagnostyka i aktualizacja ESP → Aktualizacja**. Ta droga pozostaje też dostępna jako alternatywa.
+
 ## Sprawdzanie Obrazu
 
 - HTTPS z weryfikacją certyfikatu i nazwy serwera, bez wyłączania TLS.

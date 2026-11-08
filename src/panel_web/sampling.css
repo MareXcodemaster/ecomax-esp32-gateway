@@ -1,0 +1,13 @@
+.sampling-settings,.manual-ota{padding:24px 0;border-bottom:1px solid #d6e2df}
+.sampling-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:24px;margin:20px 0}
+.sampling-field label{display:block;font-weight:700;margin-bottom:10px}
+.sampling-input{display:flex;gap:8px;max-width:290px}
+.sampling-input input{width:155px;min-width:0}.sampling-input select{width:80px;min-width:0}
+.sampling-field small{display:block;margin-top:10px;line-height:1.5;color:#415c64}
+.sampling-settings .actions{gap:12px;margin-top:22px;flex-wrap:wrap}
+.sampling-settings [hidden]{display:none!important}
+.manual-ota input[type=file]{display:block;width:100%;max-width:560px;margin:16px 0}
+.manual-ota .check{display:flex;align-items:center;gap:10px;margin:18px 0}
+.manual-ota progress{width:100%;max-width:560px;margin-top:18px}
+.manual-ota [hidden]{display:none!important}
+@media(max-width:600px){.sampling-grid{grid-template-columns:1fr}.sampling-settings .actions button{width:100%;justify-content:center}}

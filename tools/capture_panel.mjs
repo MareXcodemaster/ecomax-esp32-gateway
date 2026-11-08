@@ -19,6 +19,7 @@ week.push([1, 5, 0, 20]);
 const target = (name, before, min, max, measured_key, step = 1) =>
   ({ name, before, effective: before, min, max, step, measured_key, write_ready: true });
 const state = {
+  sampling:{boiler_ms:3000,panel_ms:2000,history_ms:60000},
   version, csrf: 'documentation-demo', fresh: true, connected: true, busy: false,
   error: '', last_read_utc: new Date(now * 1000).toISOString(), age_seconds: 0.5,
   write_transport: 'rs485', targets_fresh: true, host: '', values: {}, names: {},
@@ -92,7 +93,7 @@ const server = createServer(async (req, res) => {
 });
 await new Promise(done => server.listen(0, '127.0.0.1', done));
 const origin = `http://127.0.0.1:${server.address().port}`;
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL||undefined });
 const output = `docs/images/panel/${version}`;
 await mkdir(output, { recursive: true });
 try {
@@ -120,7 +121,7 @@ try {
   await page.locator('.eco-tile .tile-value').first().waitFor();
   // This fixture deliberately renders stale/changed snapshots below. Keep its
   // background GET from racing those assertions; live_save_browser tests polling.
-  await page.evaluate(()=>{clearInterval(espPollTimer);espPollTimer=null;});
+  await page.evaluate(()=>{clearInterval(espPollTimer);/* Keep handle to freeze the synthetic fixture cadence. */});
   await page.waitForFunction(()=>!pollBusy);
   await page.evaluate(() => notice('DEMO - dane przykladowe, nie odczyt prawdziwego kotla.'));
   await page.evaluate(() => document.fonts.ready);
@@ -296,6 +297,8 @@ try {
   await page.locator('#update-current').getByText(version,{exact:true}).waitFor();
   await page.locator('.update-panel').scrollIntoViewIfNeeded();
   await screenshot('12-aktualizacje');
+  await page.locator('.sampling-settings').evaluate(el=>{el.scrollIntoView({block:'start'});window.scrollBy(0,-90);});await screenshot('24-odstepy-odczytu');
+  await page.locator('.manual-ota').evaluate(el=>{el.scrollIntoView({block:'start'});window.scrollBy(0,-90);});await screenshot('25-aktualizacja-bin');
   await page.locator('.esp-resources').evaluate(el=>el.scrollIntoView({block:'start'}));
   assert.ok((await page.locator('.esp-resources h3').boundingBox()).y>(await page.locator('header').boundingBox()).height,'memory heading is below the fixed header');
   await screenshot('14-pamiec-esp');
@@ -389,7 +392,7 @@ try {
   await page.locator('#tile-layout-edit').click();
   await page.evaluate(() => notice('DEMO - dane przykladowe, nie odczyt prawdziwego kotla.'));
   await page.locator('[data-view="pellet"]').click();
-  await page.evaluate(()=>{clearInterval(espPollTimer);espPollTimer=null;});await page.waitForFunction(()=>!pollBusy);
+  await page.evaluate(()=>{clearInterval(espPollTimer);/* Keep handle to freeze the synthetic fixture cadence. */});await page.waitForFunction(()=>!pollBusy);
   assert.equal(await page.locator('#pellet-level').textContent(),'68 %');
   assert.equal(await page.locator('#pellet-hopper .pellet-fill').count(),1);
   await page.emulateMedia({reducedMotion:'no-preference'});

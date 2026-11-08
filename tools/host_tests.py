@@ -43,6 +43,11 @@ def main():
             command += ['-fsanitize=address,undefined', '-fno-omit-frame-pointer']
         subprocess.run(command, check=True)
         subprocess.run([str(executable)], check=True)
+        sampling = generated / ('sampling-tests.exe' if os.name == 'nt' else 'sampling-tests')
+        subprocess.run([*compiler, '-std=c++17', '-O1', '-UNDEBUG', '-I'+str(ROOT/'src'),
+                        '-I'+str(ROOT/'tests/host'), '-I'+str(cjson), str(ROOT/'src/sampling.cpp'),
+                        str(ROOT/'tests/host/sampling.cpp'), '-x', 'c++', str(cjson/'cJSON.c'), '-o', str(sampling)], check=True)
+        subprocess.run([str(sampling)], check=True)
         # The browser suite must exercise the real C++ encoder, not a JS copy.
         encoder = ROOT / 'test-results' / ('panel-sync-encoder.exe' if os.name == 'nt' else 'panel-sync-encoder')
         encoder.parent.mkdir(exist_ok=True)

@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');
+const {valid,milliseconds,defaults}=require('../src/panel_web/sampling.js');
+const {inspect}=require('../src/panel_web/manual_ota.js');
+assert.equal(valid(defaults),true);
+assert.equal(milliseconds('1.1','s'),1100);
+assert.equal(milliseconds('1100','ms'),1100);
+assert.equal(valid({...defaults,panel_ms:499}),false);
+assert.equal(valid({...defaults,history_ms:61000}),true);
+assert.equal(valid({...defaults,history_ms:60100}),false);
+assert.equal(valid({...defaults,boiler_ms:Infinity}),false);
+const b=Buffer.alloc(112);b[0]=0xe9;b.writeUInt16LE(9,12);b.writeUInt32LE(0xabcd5432,32);b.write('0.7.0-beta.57',48);b.write('lazar_stage0',80);
+assert.equal(inspect(b,2200000,'firmware-ota.bin'),'0.7.0-beta.57');
+assert.throws(()=>inspect(b,2200000,'firmware-merged.bin'));
+assert.throws(()=>inspect(b,4*1024*1024,'app.bin'));
+assert.throws(()=>inspect(b.subarray(0,5),2200000,'app.bin'));
+b.writeUInt16LE(0,12);assert.throws(()=>inspect(b,2200000,'app.bin'));
+b.writeUInt16LE(9,12);b.write('other_project',80);assert.throws(()=>inspect(b,2200000,'app.bin'));
+console.log('PASS interval units, bounds and OTA project/chip/size/merged validation');

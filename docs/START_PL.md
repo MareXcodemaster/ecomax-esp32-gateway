@@ -4,7 +4,7 @@
 
 **Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
 
-**Oprogramowanie: 0.7.0-beta.54. Instrukcja: wydanie 38, 02.11.2026.**
+**Oprogramowanie: 0.7.0-beta.57. Instrukcja: wydanie 38, 02.11.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -228,7 +228,7 @@ Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz pon
 `piec.local` lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
 Zmiana nie wymaga diagnostyki ani kasowania pamięci.
 
-![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.54/11-zmiana-wifi.png)
+![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.57/11-zmiana-wifi.png)
 
 **Montaż i zasięg:** moduł można umieścić na szynie DIN 35 mm w odpowiedniej
 szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
@@ -414,6 +414,17 @@ Nie używaj go jako obrazu OTA. firmware-ota.bin nie służy do wgrywania pod 0x
 Nieznany wynik aktualizacji: najpierw sprawdź dostępność i wersję,
 zamiast wielokrotnie wysyłać ten sam plik. Przejście ze starej prywatnej
 instalacji do publicznego pierwszego startu nie jest potwierdzoną ścieżką migracji.
+
+### Ręczna aktualizacja bez internetu
+
+Od beta.57 wybierz **Ustawienia urządzenia → Aktualizacja z pliku BIN**.
+Wskaż **firmware-ota.bin**, potwierdź restart i naciśnij **Wgraj aktualizację**.
+W starszej wersji ta funkcja jest pod **Narzędzia → Diagnostyka i aktualizacja ESP → Aktualizacja**.
+Nie wybieraj pliku **firmware-merged.bin**. Po wcześniejszym pobraniu obrazu wystarczy lokalna sieć Wi-Fi.
+
+### Jak często odświeżają się dane?
+
+W **Ustawieniach urządzenia → Odstępy odczytu i zapisu danych** ustawisz osobno cykl odczytu kotła, odświeżanie strony i zapis historii. Domyślne wartości to 3 s, 2 s i 60 s. Możesz wpisywać sekundy lub milisekundy, a następnie nacisnąć **Zapisz odstępy**. [Szczegóły i zakresy](PANEL.md#odstępy-odczytu-i-zapisu-danych).
 
 ## 12. Najczęstsze problemy
 

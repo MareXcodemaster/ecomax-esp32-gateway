@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0-beta.57
+
+- Trzy niezależne odstępy w ustawieniach urządzenia: cykl odczytu ESP (domyślnie 3000 ms), odświeżanie strony (2000 ms) i zapis archiwum (60 s). Wybór jednostek s/ms, trwały zapis w ESP i przywracanie wartości domyślnych.
+- Odbiór nadawanych ramek RS485 i kontrola zapisu nastaw działają niezależnie od tych odstępów. Bufor szczegółowy RAM nadal zapisuje co 10 s.
+- Historia pokazuje wybrany odstęp; przy braku miejsca usuwa najstarsze godziny, zachowując rezerwę pamięci. Format wcześniejszego archiwum pozostaje zgodny.
+- Ręczne OTA kasuje nieaktywny slot stopniowo i oddaje czas zadaniom sieci/UART po każdym bloku, zamiast długiej nieprzerwanej pętli zapisu.
+- Aktualizacja z pliku firmware-ota.bin dostępna bezpośrednio w ustawieniach urządzenia: sprawdzenie obrazu, postęp wysyłania i potwierdzenie wersji po restarcie. Działa w LAN bez internetu.
+
 ## 0.7.0-beta.56
 
 - Zegar kotła jest wyświetlany wyłącznie w ustawieniach urządzenia. Usunięto go z górnej zielonej belki; ręczna i automatyczna synchronizacja pozostają dostępne.

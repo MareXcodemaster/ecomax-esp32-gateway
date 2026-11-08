@@ -79,6 +79,10 @@ jobs:
         run: node tests/analysis_export_browser.mjs
       - name: Read-only compatibility report browser tests
         run: node tests/compatibility_browser.mjs
+      - name: Sampling configuration and manual OTA browser tests
+        run: node tests/sampling_browser.mjs
+      - name: Boiler clock settings browser tests
+        run: node tests/boiler_clock_browser.mjs
       - name: Optional Tailnet configuration browser tests
         run: node tests/tailnet_browser.mjs
       - name: ESP memory, hardware parameters and stale state browser tests

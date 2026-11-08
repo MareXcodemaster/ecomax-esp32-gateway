@@ -223,9 +223,9 @@ Czerwony okragly licznik przy **Alarmy** pokazuje biezace zgloszenia
 sterownika, nie liczbe zapisow w historii. Zero lub nieaktualny odczyt
 ukrywa licznik. Jest odswiezany razem z danymi panelu.
 
-Archiwum jest w ESP, nie w pamieci telefonu. Retencja wynosi 3 dni,
-probkowanie dlugiego archiwum raz na minute, wykres ma ograniczona liczbe
-punktow. Przerwy w danych nie sa wypelniane sztucznymi zerami.
+Archiwum jest w ESP, nie w pamięci telefonu. Obejmuje do 3 dni; domyślnie
+zapisuje próbki raz na minutę. Częstszy zapis może skrócić okres przy braku
+miejsca. Wykres ma ograniczoną liczbę punktów. Przerwy w danych nie sa wypelniane sztucznymi zerami.
 Po pierwszym uruchomieniu kilka dni zapelni sie dopiero z czasem.
 
 Alarmy to odczyt informacji przekazanych przez regulator. Skasowanie
@@ -241,3 +241,20 @@ Temperatury zmierzone i zadane oraz stany pomp pochodzą z aktualnych danych. Po
 ## Kafelki kilku mieszaczy
 
 Od beta.44 w Danych bieżących pojawiają się osobne kafelki kolejnych mieszaczy, jeśli sterownik przesyła ich temperatury. Pokazują pomiar oraz zadaną temperaturę obiegu. Po odczytaniu własnego katalogu menu ołówek otwiera odpowiednią nastawę mieszacza. Nazwa, numer obiegu i jednostka muszą być jednoznaczne; nie dobieramy numeru parametru na podstawie innego kotła. Jeśli katalog jest niepełny lub niejednoznaczny, pozostaje odczyt i szczegóły.
+
+
+## Odstępy odczytu i zapisu danych
+
+Od beta.57 w **Ustawieniach urządzenia** są trzy niezależne pola z wyborem jednostek sekund lub milisekund:
+
+| Ustawienie | Domyślnie | Zakres |
+| --- | --- | --- |
+| Odczyt kotła przez ESP | 3 s (3000 ms) | 1–10 s, krok 0,1 s |
+| Odświeżanie strony | 2 s (2000 ms) | 0,5–10 s, krok 0,1 s |
+| Zapis archiwum wykresów | 60 s (60000 ms) | 30–600 s, krok 1 s |
+
+Naciśnij **Zapisz odstępy**. Ustawienia są zapisane w ESP i zachowane po restarcie; nowy odstęp strony przejmą również inne otwarte panele po kolejnym odczycie. **Wartości domyślne** wypełnia formularz; trzeba je zatwierdzić zapisem.
+
+Cykl zapytań ESP zaczyna się po wybranym odstępie od zakończenia poprzedniego. Czas odpowiedzi kotła lub ecoNET może wydłużyć rzeczywisty odstęp. Ramki nadawane samodzielnie przez kocioł są nadal odbierane na bieżąco. Odczyty kontrolne po zapisie nastaw, alarmy i harmonogramy zachowują osobne reguły; nie należy traktować tego pola jako ustawienia prędkości magistrali.
+
+Bufor bieżących szczegółów w RAM pozostaje co 10 s (plus zmiany stanu). Wybrane próbkowanie archiwum dotyczy historii zachowywanej we flash po restarcie. Stare próbki pozostają zebrane z wcześniejszą częstotliwością. Przy braku miejsca najstarsze godziny są usuwane wcześniej, bez formatowania historii.

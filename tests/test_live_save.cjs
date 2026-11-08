@@ -26,7 +26,7 @@ test('visible and hidden tabs keep polling without a visibility pause',async()=>
  ctx.document.hidden=true;await ctx.poll();assert.equal(calls,3);assert.equal(ctx.serverReachable,true);
  assert.doesNotMatch(app,/if\(document\.hidden\|\|/);
  assert.match(app,/document\.addEventListener\('visibilitychange',poll\)/);
- assert.match(app,/setInterval\(poll,2000\)/);
+ assert.match(app,/espPollInterval=2000/);
 });
 
 test('background polling does not overlap requests and recovers after a read failure',async()=>{

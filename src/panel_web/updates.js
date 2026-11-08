@@ -14,7 +14,7 @@
  let data=null,saving=false,polling=false,metadataReachable=false,expectRestart=false,operationError='',expectedVersion='',monitorUntil=0,timer;
  function render(){
   if(!data)return;
-  const offer=metadataReachable&&releaseOffer(data),busy=saving||data.busy,toolbar=toolbarStatus(data,metadataReachable);
+  const offer=metadataReachable&&releaseOffer(data),busy=saving||data.busy||root.EcoManualOta?.busy,toolbar=toolbarStatus(data,metadataReachable);
   $('update-current').textContent=(data.current_release||data.current||'---')+(data.current_release&&data.current!==data.current_release?' (kompilacja '+data.current+')':'');
   $('update-latest').textContent=data.version?(data.version+(data.beta?' \u00b7 BETA':'')):(['no_release','no_stable_release'].includes(data.phase)?'Brak wydania w wybranym kanale':data.phase==='error'?'Brak aktualnego odczytu':'Jeszcze nie sprawdzono');
   $('update-channel').value=data.channel||'stable';$('update-channel').disabled=!!busy;
@@ -36,6 +36,7 @@
  }
  async function load(){
   clearTimeout(timer);
+  if(root.EcoManualOta?.busy){timer=setTimeout(load,5000);return;}
   if(polling){timer=setTimeout(load,5000);return;}
   if(!csrf||!serverReachable){metadataReachable=false;render();timer=setTimeout(load,5000);return;}
   polling=true;
@@ -46,19 +47,19 @@
  function init(){
   $('update-open').onclick=()=>{selectView('settings');load();};
   $('update-check').onclick=async()=>{
-   if(saving)return;saving=true;operationError='';render();
+   if(saving||root.EcoManualOta?.busy)return;saving=true;operationError='';render();
    try{await request('/api/updates/check',{});}catch(error){operationError=error.message;}
    finally{saving=false;await load();}
   };
   const configure=async()=>{
-   if(saving)return;const value=$('update-auto').checked;saving=true;operationError='';
+   if(saving||root.EcoManualOta?.busy)return;const value=$('update-auto').checked;saving=true;operationError='';
    try{await request('/api/updates/config',{automatic:value,include_beta:$('update-channel').value==='all'});}
    catch(error){operationError=error.message;}
    finally{saving=false;await load();}
   };
   $('update-auto').onchange=configure;$('update-channel').onchange=configure;
   $('update-install').onclick=async()=>{
-   if(saving||!metadataReachable||!releaseOffer(data)||!data.install_supported)return;
+   if(saving||root.EcoManualOta?.busy||!metadataReachable||!releaseOffer(data)||!data.install_supported)return;
    const version=data.version;
    if(!confirm('Zaktualizowa\u0107 ESP do wersji '+version+(data.beta?' BETA (wydanie testowe, mo\u017ce zawiera\u0107 b\u0142\u0119dy)':' stabilnej')+'? Nast\u0105pi kr\u00f3tki restart ESP. Nie od\u0142\u0105czaj zasilania.'))return;
    saving=true;operationError='';expectedVersion=version;monitorUntil=Date.now()+300000;render();

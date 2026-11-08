@@ -9,6 +9,7 @@
 #include "device_info.hpp"
 #include "transport.hpp"
 #include "boiler_clock.hpp"
+#include "sampling.hpp"
 #include "wifi.hpp"
 #include "protocol.hpp"
 #include "thermostat_decoder.hpp"
@@ -1650,11 +1651,13 @@ J *collect_compatibility(const J *payload){
 }
 std::atomic<bool> boot_ready{false};
 void worker(void *) {
-    bool initial=true; uint64_t next_poll=0;
+    bool initial=true; uint64_t next_poll=0;uint32_t interval=sampling::boiler_ms();
     for(;;) {
         runtime_stats::sample(runtime_stats::Task::panel,16384);
         if(!boot_ready.load()){vTaskDelay(pdMS_TO_TICKS(100));continue;}
         {Lock lock;if(compatibility_cache&&now()-compatibility_started>900000){cJSON_Delete(compatibility_cache);compatibility_cache=nullptr;}}
+        auto configured_interval=sampling::boiler_ms();
+        if(configured_interval!=interval){interval=configured_interval;next_poll=now()+interval;}
         std::string kind, owner; J *payload=nullptr;
         { Lock lock; if(!queued_kind.empty()) { kind=queued_kind; owner=queued_owner; payload=queued_payload; queued_kind.clear(); queued_payload=nullptr; } }
         if(!kind.empty()) {
@@ -1670,14 +1673,14 @@ void worker(void *) {
             else if(kind=="compatibility") result=collect_compatibility(payload);
             else { ok=kind=="connect"?configure(payload):kind=="scan"?scan():refresh(true); if(ok) { result=cJSON_CreateObject(); text(result,"state","odczytane"); text(result,"message",selected_mode=="rs485"?"Odczytano dane RS485":"Odczytano dane lokalnego ecoNET"); } }
             { Lock lock; auto *job=get(data,"job"); number(job,"finished_ms",now()); if(result) { text(job,"status","done"); put(job,"result",result); } else { text(job,"status","failed"); text(job,"error",error_text); text(data,"error",error_text); } busy=false; }
-            next_poll=now()+3000; initial=false;
+            next_poll=now()+interval; initial=false;
         } else if(!busy && now()>=next_poll) {
             if(selected_mode=="rs485"||state::network().connected) {
                 if(selected_mode=="rs485" && !transport::enabled() && !transport::conflict() && transport::enable()) { transport::Reply reply; transport::request(25,nullptr,0,0,reply); transport::request(85,nullptr,0,213,reply); }
                 error_text.clear(); bool ok=selected_mode=="rs485"?rs_refresh(true):initial?scan():refresh();
                 if(ok) { initial=false; }
                 else { Lock lock; text(data,"error",error_text); }
-                next_poll=now()+(initial?7000:3000);
+                next_poll=now()+(initial?7000:interval);
             }
         }
         if(!busy&&selected_mode=="rs485")sample_rs_history();
@@ -1768,6 +1771,7 @@ cJSON *snapshot(bool compact,const char *catalog) {
     text(pellet_info,"boiler_calibration_status",pellet_available?"Punkty 100% i 0%: polecenia z panelu kotla. Wymagaja potwierdzenia rzeczywistego poziomu":pellet_supported?"Kalibracja czeka na swieze polaczenie RS485":"Brak potwierdzonej wersji kotla dla kalibracji zasobnika");
     put(out,"esp_device",device_info::snapshot());
     put(out,"boiler_clock",boiler_clock::snapshot());
+    put(out,"sampling",sampling::snapshot());
     // The RS485 ecoNET address is emulated by ESP. Never label its network fields as real ecoNET data.
     auto *network=get(out,"econet_network"); if(!cJSON_IsObject(network)) { network=cJSON_CreateObject(); put(out,"econet_network",network); }
     bool network_fresh=econet_fresh&&econet_network_ms&&now()-econet_network_ms<65000;

@@ -14,6 +14,7 @@
 #include "updates.hpp"
 #include "cwu_pump.hpp"
 #include "boiler_clock.hpp"
+#include "sampling.hpp"
 #include "nvs_flash.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
@@ -53,6 +54,7 @@ extern "C" void app_main() {
     state::log("CWU pump self-test: PASS; KLAP, TPAP RFC9383/CCM and temperature rules, no device commands");
     tailnet::init();
     boiler_clock::init();
+    sampling::init();
     transport::start(); network::start(); panel::start(); updates::init(); cwu_pump::start(); api::start();
     configASSERT(self_test_api());
     state::log("BOOT REQUIRED SELF-TESTS: PASS; parser/sensors/protocol/pellet/panel guard/HTTP assertions completed");

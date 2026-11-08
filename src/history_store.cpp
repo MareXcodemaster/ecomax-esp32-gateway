@@ -1,5 +1,6 @@
 #include "runtime_stats.hpp"
 #include "history_store.hpp"
+#include "sampling.hpp"
 #include "pellet.hpp"
 #include "updates.hpp"
 #include "settings_journal.hpp"
@@ -112,9 +113,24 @@ bool prune(uint32_t time){
     while(!hours.empty()&&hours.front().hour+3600<=cutoff){char name[40];path(name,hours.front().hour);if(unlink(name)){fail("Nie usunieto najstarszej godziny historii");return false;}hours.erase(hours.begin());vTaskDelay(1);}
     return true;
 }
+bool ensure_space(uint32_t current_hour){
+    if(esp_littlefs_info(label,&total_bytes,&used_bytes)!=ESP_OK)return false;
+    while(used_bytes+256*1024>total_bytes){
+        const uint32_t a=hours.empty()?UINT32_MAX:hours.front().hour;
+        const uint32_t b=settings_hours.empty()?UINT32_MAX:settings_hours.front();
+        const auto oldest=std::min(a,b);if(oldest>=current_hour){fail("Brak miejsca na archiwum; najnowsza godzina zachowana");return false;}
+        char name[40];if(a<=b)path(name,a);else settings_path(name,b);
+        if(unlink(name)){fail("Nie zwolniono miejsca archiwum");return false;}
+        if(a<=b)hours.erase(hours.begin());else settings_hours.erase(settings_hours.begin());
+        if(esp_littlefs_info(label,&total_bytes,&used_bytes)!=ESP_OK)return false;
+        vTaskDelay(1);
+    }
+    return true;
+}
 bool persist(const Sample &sample){
-    if(last_stored&&sample.time<last_stored+history_data::archive_interval)return true;
+    if(last_stored&&sample.time<last_stored+sampling::history_ms()/1000)return true;
     const uint32_t hour=sample.time/3600*3600;
+    if(!ensure_space(hour))return false;
     auto found=std::find_if(hours.begin(),hours.end(),[&](const Hour &h){return h.hour==hour;});bool create=found==hours.end();
     if(create){if(!prune(sample.time))return false;if(hours.size()>=74){fail("Limit plikow historii; zapis zatrzymany");return false;}}
     char name[40];path(name,hour);auto *file=fopen(name,create?"wb":"r+b");if(!file){fail("Nie otwarto pliku historii do zapisu");return false;}
@@ -133,6 +149,7 @@ uint32_t settings_hash(const void *data,size_t size,uint32_t seed){return esp_ro
 bool persist_settings(const SettingsEvent &event){
     const uint32_t hour=event.time/3600*3600,cutoff=event.time>history_data::retention_seconds?event.time-history_data::retention_seconds:0;
     while(!settings_hours.empty()&&settings_hours.front()+3600<=cutoff){char name[40];settings_path(name,settings_hours.front());if(unlink(name))return false;settings_hours.erase(settings_hours.begin());}
+    if(!ensure_space(hour))return false;
     const bool create=std::find(settings_hours.begin(),settings_hours.end(),hour)==settings_hours.end();
     if(create&&settings_hours.size()>=74)return false;
     char name[40];settings_path(name,hour);auto *file=fopen(name,create?"w+b":"r+b");if(!file)return false;
@@ -184,9 +201,9 @@ size_t read(uint32_t from,uint32_t to,Point *points,size_t capacity){
     Lock lock;if(!ready)return 0;
     uint32_t first=0;for(const auto &hour:hours)if(hour.first){first=hour.first;break;}
     const auto actual_from=std::max(from,first),actual_to=std::min(to,last_stored);if(!first||actual_from>actual_to)return 0;
-    size_t count=0;uint32_t bucket=0,previous=0,previous_native=0;const auto step=std::max<uint32_t>(60,history_data::step(actual_from,actual_to,capacity));
+    size_t count=0;uint32_t bucket=0,previous=0,previous_native=0;const auto step=std::max<uint32_t>(30,history_data::step(actual_from,actual_to,capacity));
     for(const auto &hour:hours){if(hour.hour>to||hour.hour+3600<=from)continue;char name[40];path(name,hour.hour);auto *file=fopen(name,"rb");if(!file)continue;Header h{};if(fread(&h,sizeof(h),1,file)!=1||!valid_header(h,hour.hour)){fclose(file);continue;}
-        Record r{};while(fread(&r,sizeof(r),1,file)==1){if(!valid(r)||r.sample.time<from||r.sample.time>to)continue;auto time=r.sample.time;const uint32_t next=(time-actual_from)/step;Point point{r.sample,static_cast<uint32_t>(previous&&(time-previous>90||previous_native!=r.sample.native))};previous=time;previous_native=r.sample.native;
+        Record r{};while(fread(&r,sizeof(r),1,file)==1){if(!valid(r)||r.sample.time<from||r.sample.time>to)continue;auto time=r.sample.time;const uint32_t next=(time-actual_from)/step;Point point{r.sample,static_cast<uint32_t>(previous&&(time-previous>std::max<uint32_t>(90U,sampling::history_ms()/1000*2+5)||previous_native!=r.sample.native))};previous=time;previous_native=r.sample.native;
             if(count&&next==bucket){point.gap_before|=points[count-1].gap_before;points[count-1]=point;}else if(count<capacity){points[count++]=point;bucket=next;}
         }fclose(file);vTaskDelay(1);
     }
@@ -197,7 +214,7 @@ cJSON *status(){
     if(!mutex){cJSON_AddBoolToObject(out,"ready",false);cJSON_AddStringToObject(out,"error",error);return out;}
     Lock lock;uint32_t count=0,first=0;for(auto &h:hours){count+=h.count;if(!first&&h.first)first=h.first;}
     cJSON_AddBoolToObject(out,"ready",ready);cJSON_AddBoolToObject(out,"loading",loading);cJSON_AddBoolToObject(out,"restored",restored);cJSON_AddBoolToObject(out,"remount_verified",remount_verified);
-    cJSON_AddNumberToObject(out,"retention_days",3);cJSON_AddNumberToObject(out,"interval_seconds",60);cJSON_AddNumberToObject(out,"samples",count);cJSON_AddNumberToObject(out,"oldest_epoch",first);cJSON_AddNumberToObject(out,"newest_epoch",last_stored);
+    cJSON_AddNumberToObject(out,"retention_days",3);cJSON_AddNumberToObject(out,"interval_seconds",sampling::history_ms()/1000);cJSON_AddNumberToObject(out,"samples",count);cJSON_AddNumberToObject(out,"oldest_epoch",first);cJSON_AddNumberToObject(out,"newest_epoch",last_stored);
     cJSON_AddNumberToObject(out,"total_bytes",total_bytes);cJSON_AddNumberToObject(out,"used_bytes",used_bytes);cJSON_AddNumberToObject(out,"bad_records",bad_records);cJSON_AddNumberToObject(out,"dropped",dropped.load());cJSON_AddStringToObject(out,"error",error);return out;
 }
 }

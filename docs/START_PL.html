@@ -8,7 +8,7 @@
 </style></head><body><header><nav><a href="https://marexcodemaster.github.io/ecomax-esp32-gateway/">Instalator USB</a><a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/releases">Pliki do pobrania</a></nav></header><main><h1>ecoMAX Wi-Fi - sterowanie kotłem z telefonu</h1>
 <h2>Instrukcja krok po kroku</h2>
 <p><strong>Pierwszy raz z ESP? Zacznij od <a href="SZYBKI_START.html">prostej instrukcji w 7 krokach</a>.</strong></p>
-<p><strong>Oprogramowanie: 0.7.0-beta.54. Instrukcja: wydanie 38, 02.11.2026.</strong></p>
+<p><strong>Oprogramowanie: 0.7.0-beta.57. Instrukcja: wydanie 38, 02.11.2026.</strong></p>
 <p>Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
 Komputer i kabel USB są potrzebne do pierwszego wgrania. Później panel
@@ -219,7 +219,7 @@ i otwórz panel ESP.</li>
 Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz ponownie
 <code>piec.local</code> lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
 Zmiana nie wymaga diagnostyki ani kasowania pamięci.</p>
-<p><img src="images/panel/0.7.0-beta.54/11-zmiana-wifi.png" alt="Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi"></p>
+<p><img src="images/panel/0.7.0-beta.57/11-zmiana-wifi.png" alt="Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi"></p>
 <p><strong>Montaż i zasięg:</strong> moduł można umieścić na szynie DIN 35 mm w odpowiedniej
 szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
 ma według producenta <strong>SMA, nie RP-SMA</strong>. Montaż w kotle tylko w bezpiecznej
@@ -434,6 +434,13 @@ Nie używaj go jako obrazu OTA. firmware-ota.bin nie służy do wgrywania pod 0x
 <p>Nieznany wynik aktualizacji: najpierw sprawdź dostępność i wersję,
 zamiast wielokrotnie wysyłać ten sam plik. Przejście ze starej prywatnej
 instalacji do publicznego pierwszego startu nie jest potwierdzoną ścieżką migracji.</p>
+<h3>Ręczna aktualizacja bez internetu</h3>
+<p>Od beta.57 wybierz <strong>Ustawienia urządzenia → Aktualizacja z pliku BIN</strong>.
+Wskaż <strong>firmware-ota.bin</strong>, potwierdź restart i naciśnij <strong>Wgraj aktualizację</strong>.
+W starszej wersji ta funkcja jest pod <strong>Narzędzia → Diagnostyka i aktualizacja ESP → Aktualizacja</strong>.
+Nie wybieraj pliku <strong>firmware-merged.bin</strong>. Po wcześniejszym pobraniu obrazu wystarczy lokalna sieć Wi-Fi.</p>
+<h3>Jak często odświeżają się dane?</h3>
+<p>W <strong>Ustawieniach urządzenia → Odstępy odczytu i zapisu danych</strong> ustawisz osobno cykl odczytu kotła, odświeżanie strony i zapis historii. Domyślne wartości to 3 s, 2 s i 60 s. Możesz wpisywać sekundy lub milisekundy, a następnie nacisnąć <strong>Zapisz odstępy</strong>. <a href="https://github.com/MareXcodemaster/ecomax-esp32-gateway/blob/main/docs/PANEL.md#odst%C4%99py-odczytu-i-zapisu-danych">Szczegóły i zakresy</a>.</p>
 <h2>12. Najczęstsze problemy</h2>
 <table>
 <thead>
