@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-beta.58
+
+- Spójne grafiki techniczne cyrkulacji CWU i podajnika pelletu. Czytelne rury z kierunkiem przepływu, zbiornik, pompa i kran oraz przekrój ślimaka z napędem i zasobnikiem.
+- Spokojna animacja przepływu wody i powolny przesuw pelletu. Ruch zależy od potwierdzonego stanu urządzenia; wyłączenie lub brak aktualnego odczytu zatrzymuje animacje.
+- Grafiki wektorowe renderowane w przeglądarce, bez filmów na ESP. Układ dopasowuje się do telefonu i respektuje ograniczenie animacji w ustawieniach systemu.
+- Aktualne zrzuty ekranu w galerii i instrukcji. Zmiana wyglądu nie zmienia progów, harmonogramów, nastaw kotła ani odstępów odczytu.
+
 ## 0.7.0-beta.57
 
 - Trzy niezależne odstępy w ustawieniach urządzenia: cykl odczytu ESP (domyślnie 3000 ms), odświeżanie strony (2000 ms) i zapis archiwum (60 s). Wybór jednostek s/ms, trwały zapis w ESP i przywracanie wartości domyślnych.

@@ -1,6 +1,6 @@
 # Jak Wyglada Panel ecoMAX Wi-Fi
 
-Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.57**, uruchomionego
+Zrzuty rzeczywistego interfejsu wersji **0.7.0-beta.58**, uruchomionego
 lokalnie z **danymi przykladowymi (DEMO)**. Nie jest to potwierdzenie
 obslugi kazdej nastawy w dowolnym kotle.
 Aktualizacja zdjec: **08.11.2026**. Kliknij zdjecie, aby je powiekszyc w GitHubie.
@@ -14,20 +14,20 @@ Na gorze zakladki jest tez **Priorytet grzania CWU** z przyciskiem
 **Wylacz priorytet / Wlacz priorytet**. Dotyczy grzania bojlera przez kociol;
 nie zmienia trybu ani harmonogramu gniazdka Tapo.
 
-![Pompka CWU z progami i tygodniowa siatka godzin, DEMO](images/panel/0.7.0-beta.57/18-pompka-cwu.png)
+![Pompka CWU z progami i tygodniowa siatka godzin, DEMO](images/panel/0.7.0-beta.58/18-pompka-cwu.png)
 
-Schemat obiegu ze zbiornikiem CWU, rurami, pompa i realistycznym kranem.
+Schemat techniczny obiegu ze zbiornikiem CWU, rurami, pompą i kranem w jednym stylu.
 Animacja w rurach dziala po potwierdzeniu wlaczenia gniazdka; niebieska
 rura oznacza powrot CWU. W ESP nie ma plikow filmowych.
 
 Tryb reczny ma osobne przyciski wlaczenia i wylaczenia. W automatycznym
 od razu widac opcjonalny harmonogram.
 
-![Cyrkulacja CWU: sterowanie reczne, dane DEMO](images/panel/0.7.0-beta.57/19-cyrkulacja-recznie.png)
+![Cyrkulacja CWU: sterowanie reczne, dane DEMO](images/panel/0.7.0-beta.58/19-cyrkulacja-recznie.png)
 
 Pobor mocy oraz zuzycie energii z ostatnich 7 dni, odczytywane z gniazdka.
 
-![Energia pompy, dane DEMO](images/panel/0.7.0-beta.57/20-energia-pompy.png)
+![Energia pompy, dane DEMO](images/panel/0.7.0-beta.58/20-energia-pompy.png)
 
 Panel i diagnostyka maja ikone karty z bialym plomieniem na zielonym tle.
 Ikona jest dostepna lokalnie na ESP, takze dla skrotu na ekranie telefonu.
@@ -51,7 +51,7 @@ paliwa, jezeli regulator udostepnia te dane. Na gornej belce widac
 pieciokreskowy wskaznik i szacowany procent sygnalu Wi-Fi ESP.
 Za nazwą sterownika wyświetlany jest aktualny stan kotła, także w innych zakładkach.
 
-![Panel glowny ecoMAX Wi-Fi, dane przykladowe](images/panel/0.7.0-beta.57/01-odczyty.png)
+![Panel glowny ecoMAX Wi-Fi, dane przykladowe](images/panel/0.7.0-beta.58/01-odczyty.png)
 
 ## Schemat Instalacji
 
@@ -59,21 +59,21 @@ Kociol, mieszacz 1, grzejniki, pokoj i zbiornik CWU. Biezace temperatury
 oraz stan pomp; brak odczytu pokazuje kreski. Jest to grafika pogladowa,
 nie dokumentacja polaczen hydraulicznych konkretnego domu.
 
-![Schemat instalacji z temperaturami, przykladowe dane DEMO](images/panel/0.7.0-beta.57/10-schemat.png)
+![Schemat instalacji z temperaturami, przykladowe dane DEMO](images/panel/0.7.0-beta.58/10-schemat.png)
 
 ## Zmiana Sieci Wi-Fi
 
 **Narzedzia > Zmien siec Wi-Fi**: wyszukiwanie sieci, wybor i haslo.
 **Narzedzia > Ustawienia ESP Wi-Fi**: status polaczenia, IP i nazwa .local.
 
-![Bezposrednia zmiana sieci Wi-Fi z panelu](images/panel/0.7.0-beta.57/11-zmiana-wifi.png)
+![Bezposrednia zmiana sieci Wi-Fi z panelu](images/panel/0.7.0-beta.58/11-zmiana-wifi.png)
 
 ## Harmonogram Tygodniowy
 
 Dni od poniedzialku do niedzieli, godziny 00-24 i kratki po 30 minut.
 Przy wybranym harmonogramie widac opis jego dzialania.
 
-![Harmonogram CWU, przykladowy tydzien](images/panel/0.7.0-beta.57/02-harmonogram.png)
+![Harmonogram CWU, przykladowy tydzien](images/panel/0.7.0-beta.58/02-harmonogram.png)
 
 ## Historia Temperatur
 
@@ -82,13 +82,13 @@ Pod wykresem nazwy i wartości mają kolory odpowiadających im linii.
 Stan kotła ma kolor taki jak na osi stanów.
 Pokazane przebiegi sa wygenerowanym przykladem.
 
-![Wykresy temperatur CO i CWU z przykladowych danych](images/panel/0.7.0-beta.57/03-historia.png)
+![Wykresy temperatur CO i CWU z przykladowych danych](images/panel/0.7.0-beta.58/03-historia.png)
 
 ## Rozpalanie I Stany Kotla
 
 Osobny widok stanow: m.in. rozpalanie, stabilizacja, praca i wygaszanie.
 
-![Historia stanow kotla, dane DEMO](images/panel/0.7.0-beta.57/04-stany-kotla.png)
+![Historia stanow kotla, dane DEMO](images/panel/0.7.0-beta.58/04-stany-kotla.png)
 
 ## Zmiana Nastawy
 
@@ -96,7 +96,7 @@ Przykladowe okno zadanej temperatury CWU: wartosc zmierzona, obecna
 nastawa, dopuszczalny zakres i zapis. Podczas robienia zdjecia nie
 wysylano polecenia do zadnego kotla.
 
-![Okno ustawiania temperatury CWU, bez wykonania zapisu](images/panel/0.7.0-beta.57/05-nastawa.png)
+![Okno ustawiania temperatury CWU, bez wykonania zapisu](images/panel/0.7.0-beta.58/05-nastawa.png)
 
 ## Poziom Pelletu
 
@@ -107,27 +107,29 @@ sruby ani ilosci paliwa. Lekka grafika SVG/CSS, bez filmu.
 
 Graficzny zasobnik z procentami z kotla. Brak danych nie oznacza 0%.
 
-![Graficzny poziom pelletu, dane DEMO](images/panel/0.7.0-beta.57/07-pellet.png)
+Przekrój podajnika pokazuje zasobnik, napęd i ślimak. Pellet przesuwa się powoli przy potwierdzonej pracy podajnika; wyłączenie lub brak aktualnego odczytu zatrzymuje ruch.
+
+![Graficzny poziom pelletu i podajnik, dane DEMO](images/panel/0.7.0-beta.58/07-pellet.png)
 
 ## Wlasna Kolejnosc Kafelkow
 
 Przycisk edycji ukladu, przeciaganie myszka lub dotykiem i przywracanie
 domyslnej kolejnosci. Kazda przegladarka zapamietuje wlasny uklad.
 
-![Zmiana ukladu kafelkow, dane DEMO](images/panel/0.7.0-beta.57/08-uklad-kafelkow.png)
+![Zmiana ukladu kafelkow, dane DEMO](images/panel/0.7.0-beta.58/08-uklad-kafelkow.png)
 
 ## Panel Na Telefonie
 
 Ten sam panel na ekranie telefonu; menu boczne jest zwijane.
 
-![Panel w widoku telefonu, dane przykladowe](images/panel/0.7.0-beta.57/06-telefon.png)
+![Panel w widoku telefonu, dane przykladowe](images/panel/0.7.0-beta.58/06-telefon.png)
 
 ## Narzedzia Panelu
 
 Podpisane przyciski Kafelki i Odswiez oraz menu z nazwami pozostalych funkcji.
 Wyloguj jest ostatnia pozycja, oddzielona od narzedzi.
 
-![Nazwane narzedzia i Wyloguj na koncu listy](images/panel/0.7.0-beta.57/09-narzedzia.png)
+![Nazwane narzedzia i Wyloguj na koncu listy](images/panel/0.7.0-beta.58/09-narzedzia.png)
 
 ## Aktualizacje ESP
 
@@ -135,14 +137,14 @@ Obecna i najnowsza wersja, wybor kanalow stabilnych lub beta oraz
 sprawdzanie aktualizacji. Gdy ESP ma najnowsza wersje, belka pokazuje
 **Aktualne**. Instalacja nowszego wydania wymaga potwierdzenia.
 
-![Aktualizacje ESP z GitHuba: aktualna wersja beta.37, dane DEMO](images/panel/0.7.0-beta.57/12-aktualizacje.png)
+![Aktualizacje ESP z GitHuba: aktualna wersja beta.37, dane DEMO](images/panel/0.7.0-beta.58/12-aktualizacje.png)
 
 ## JSON Do Analizy Pracy Kotla
 
 Pobieranie zapisanych pomiarow z okresu do 3 dni oraz aktualnych nastaw.
 Jednostki, czas UTC i oznaczenia brakow danych pozostaja w pliku.
 
-![Eksport JSON do analizy spalania, dane DEMO](images/panel/0.7.0-beta.57/13-analiza-json.png)
+![Eksport JSON do analizy spalania, dane DEMO](images/panel/0.7.0-beta.58/13-analiza-json.png)
 
 ## Pamiec I Parametry ESP
 
@@ -150,7 +152,7 @@ Zajetosc programu w slocie OTA, RAM wewnetrznej, PSRAM i archiwum flash.
 Osobno parametry procesora, fizyczna pojemnosc flash, czas pracy i restart.
 Wskazania ponizej sa przykladowe, nie odczytem prywatnego urzadzenia.
 
-![Pamiec i parametry ESP: cztery pule pamieci i dane procesora, DEMO](images/panel/0.7.0-beta.57/14-pamiec-esp.png)
+![Pamiec i parametry ESP: cztery pule pamieci i dane procesora, DEMO](images/panel/0.7.0-beta.58/14-pamiec-esp.png)
 
 ## Ustawienia Zaawansowane
 
@@ -162,16 +164,16 @@ do menu zaawansowanego. Nie ma drugiego przycisku u gory.
 8888 to oznaczenie kodu menu na fizycznym ekranie opisanego kotla,
 nie haslo logowania do ESP. W innych sterownikach kod moze byc inny.
 
-![Dolna belka z przyciskiem Ustawienia zaawansowane 8888, DEMO](images/panel/0.7.0-beta.57/17-menu-zaawansowane.png)
+![Dolna belka z przyciskiem Ustawienia zaawansowane 8888, DEMO](images/panel/0.7.0-beta.58/17-menu-zaawansowane.png)
 
-![Dziewiec rozpoznanych ustawien zaawansowanych, dane DEMO](images/panel/0.7.0-beta.57/15-zaawansowane.png)
+![Dziewiec rozpoznanych ustawien zaawansowanych, dane DEMO](images/panel/0.7.0-beta.58/15-zaawansowane.png)
 
 ## Kalibracja Poziomu Paliwa
 
 Stan Kalibracja jest osobny od 0% i 100%. Widoczny przy aktualnym sygnale
 rozpoznanego regulatora; nie oznacza pustego zbiornika. Dane DEMO.
 
-![Stan Kalibracja zamiast falszywego 0 procent, dane DEMO](images/panel/0.7.0-beta.57/16-kalibracja-paliwa.png)
+![Stan Kalibracja zamiast falszywego 0 procent, dane DEMO](images/panel/0.7.0-beta.58/16-kalibracja-paliwa.png)
 
 ## Instalacja I Sprzet
 
@@ -183,14 +185,14 @@ Zobacz [instrukcje ze zdjeciami i schematem](START_PL.md),
 
 ## Odczytane obiegi innych konfiguracji
 
-![CWU, grzejniki, podłogówka i odczyty czujników — dane DEMO](images/panel/0.7.0-beta.57/21-schemat-obiegi.png)
+![CWU, grzejniki, podłogówka i odczyty czujników — dane DEMO](images/panel/0.7.0-beta.58/21-schemat-obiegi.png)
 
 Od beta.43 schemat innych konfiguracji wykorzystuje grafiki kotła, grzejnika i CWU.
 W „Opis obiegów na schemacie” można przypisać grzejniki, podłogówkę lub ogólny obieg do każdego mieszacza. To ustawienie samego rysunku w przeglądarce, bez polecenia do kotła.
 
 ## Dwa mieszacze w Danych bieżących
 
-![Osobne kafelki i nastawy obu mieszaczy — dane DEMO](images/panel/0.7.0-beta.57/22-dwa-mieszacze.png)
+![Osobne kafelki i nastawy obu mieszaczy — dane DEMO](images/panel/0.7.0-beta.58/22-dwa-mieszacze.png)
 
 Kolejne odczytane mieszacze pojawiają się automatycznie. Ołówek edycji
 korzysta z własnego katalogu i zakresów sterownika. Niepełny lub
@@ -198,15 +200,15 @@ niejednoznaczny katalog pozostawia odczyt bez zgadywania numeru nastawy.
 
 ## Opcjonalny Tailscale
 
-![Konfiguracja eksperymentalnego Tailnet na tym samym ESP, dane DEMO](images/panel/0.7.0-beta.57/23-tailnet.png)
+![Konfiguracja eksperymentalnego Tailnet na tym samym ESP, dane DEMO](images/panel/0.7.0-beta.58/23-tailnet.png)
 
 Funkcja jest domyślnie wyłączona. [Instrukcja i ograniczenia](TAILNET.md).
 
 
 ## Odstępy odczytu i archiwum
 
-![Trzy odstępy z wyborem s/ms i wartościami domyślnymi](images/panel/0.7.0-beta.57/24-odstepy-odczytu.png)
+![Trzy odstępy z wyborem s/ms i wartościami domyślnymi](images/panel/0.7.0-beta.58/24-odstepy-odczytu.png)
 
 ## Aktualizacja z pliku BIN
 
-![Ręczne OTA w ustawieniach urządzenia, bez internetu](images/panel/0.7.0-beta.57/25-aktualizacja-bin.png)
+![Ręczne OTA w ustawieniach urządzenia, bez internetu](images/panel/0.7.0-beta.58/25-aktualizacja-bin.png)

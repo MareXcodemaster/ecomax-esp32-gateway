@@ -1,0 +1,33 @@
+.plant-diagram{--diagram-body:#fbfcfc;--diagram-edge:#7d9098;--diagram-rule:#d9e2e5;--diagram-ink:#344b55;--diagram-muted:#526a74;--diagram-hot:#d96c51;--diagram-cool:#258bad;--diagram-green:#176b67;--diagram-grain:#a57843;--diagram-bed:#e7d3b6}
+.plant-diagram .equipment-body{fill:var(--diagram-body);stroke:var(--diagram-edge);stroke-width:1.8;stroke-linejoin:round}
+.plant-diagram .equipment-rule{fill:none;stroke:var(--diagram-rule);stroke-width:1.5}
+.plant-diagram .equipment-foot{fill:none;stroke:var(--diagram-edge);stroke-width:4;stroke-linecap:round}
+.plant-diagram .equipment-title{fill:var(--diagram-ink);font:600 16px Inter,Arial,sans-serif}
+.plant-diagram .equipment-caption{fill:var(--diagram-muted);font:500 13px Inter,Arial,sans-serif}
+.plant-diagram .pipe-case{fill:none;stroke:var(--diagram-rule);stroke-width:12;stroke-linejoin:round;stroke-linecap:round}
+.plant-diagram .water{fill:none;stroke-width:8;stroke-linejoin:round;stroke-linecap:round}
+.plant-diagram .hot-water,.plant-diagram .tap-feed{stroke:var(--diagram-hot)}.plant-diagram .return-water{stroke:var(--diagram-cool)}
+.plant-diagram .flow{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:12 40;opacity:.65;animation:cwu-water-flow 2.8s linear infinite;animation-play-state:paused}
+.plant-diagram .pipe-direction{fill:none;stroke:#fff;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.plant-diagram .tank-insulation{fill:var(--diagram-rule)}.plant-diagram .tank-hot{fill:#f6e3dc}.plant-diagram .tank-cool{fill:#dfeef3}
+.plant-diagram .tank-thermometer{fill:none;stroke:var(--diagram-edge);stroke-width:2}.plant-diagram .thermometer-end{fill:var(--diagram-cool)}
+.plant-diagram .tank-port{fill:none;stroke:var(--diagram-edge);stroke-width:12}
+.plant-diagram .tap-outline{fill:none;stroke:var(--diagram-edge);stroke-width:10;stroke-linecap:butt}.plant-diagram .tap-metal{fill:none;stroke:var(--diagram-body);stroke-width:6}
+.plant-diagram .tap-handle{fill:none;stroke:var(--diagram-edge);stroke-width:4;stroke-linecap:round}.plant-diagram .tap-aerator{fill:none;stroke:var(--diagram-ink);stroke-width:3}
+.plant-diagram .pump-rim{fill:var(--diagram-green);stroke:var(--diagram-green);stroke-width:2}.plant-diagram .pump-face{fill:var(--diagram-body)}
+.plant-diagram .pump-rotor{fill:var(--diagram-green);animation:cwu-pump-turn 2.4s linear infinite;animation-play-state:paused}.plant-diagram .pump-led{fill:#b6c7c7}
+.pump-tap[data-state=on] .flow,.pump-tap[data-state=on] .pump-rotor{animation-play-state:running}.pump-tap[data-state=on] .pump-led{fill:#a1efbe}
+.pump-loop-legend{display:flex;justify-content:center;flex-wrap:wrap;gap:20px;color:#526a74;font-size:12px;padding:8px 0}
+.pump-loop-legend span{display:inline-flex;align-items:center;gap:8px}.pump-loop-legend i{width:18px;height:3px;border-radius:3px;display:inline-block}
+.pump-loop-legend .hot-dot{background:#d96c51}.pump-loop-legend .return-dot{background:#258bad}
+.plant-diagram .hopper-lid{fill:var(--diagram-ink)}.plant-diagram .hopper-pellet-bed{fill:var(--diagram-bed)}.plant-diagram .grain{fill:var(--diagram-grain)}
+.plant-diagram .shaft{fill:none;stroke:var(--diagram-edge);stroke-width:4}.plant-diagram .helix{fill:none;stroke:var(--diagram-edge);stroke-width:3;stroke-linecap:round}
+.plant-diagram .shaft-coupling{fill:none;stroke:var(--diagram-ink);stroke-width:9}.plant-diagram .motor-body{fill:var(--diagram-green)}.plant-diagram .motor-cap{fill:var(--diagram-ink)}
+.plant-diagram .motor-fins{fill:none;stroke:#6daba4;stroke-width:2}
+.plant-diagram .outlet-case{fill:none;stroke:var(--diagram-edge);stroke-width:17;stroke-linejoin:round}.plant-diagram .outlet{fill:none;stroke:var(--diagram-body);stroke-width:13;stroke-linejoin:round}
+.plant-diagram .burner-body{fill:var(--diagram-body);stroke:var(--diagram-edge);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.plant-diagram .burner-grate{fill:none;stroke:var(--diagram-edge);stroke-width:2}
+.auger-motion{animation-play-state:paused!important}.auger-spiral{animation:auger-turn 2.4s linear infinite}.auger-grains{animation:auger-feed 9.6s linear infinite}.auger-drop{animation:auger-fall 1.6s linear infinite}
+.auger-falling{display:none}#pellet-feed-animation[data-state=on] .auger-motion{animation-play-state:running!important}#pellet-feed-animation[data-state=on] .auger-falling{display:block}
+@keyframes cwu-water-flow{to{stroke-dashoffset:-52}}@keyframes cwu-pump-turn{to{transform:rotate(360deg)}}
+@keyframes auger-turn{to{transform:translateX(40px)}}@keyframes auger-feed{to{transform:translateX(var(--travel))}}@keyframes auger-fall{from{transform:translateY(0);opacity:1}to{transform:translateY(37px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.plant-diagram .flow,.plant-diagram .pump-rotor,.plant-diagram .auger-motion{animation:none!important}}
