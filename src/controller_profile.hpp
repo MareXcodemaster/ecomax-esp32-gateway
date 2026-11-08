@@ -57,6 +57,27 @@ inline bool same_metadata(const cJSON *a,const cJSON *b){
   if(number(get(cJSON_GetArrayItem(a,i),key))!=number(get(cJSON_GetArrayItem(b,i),key)))return false;
  return true;
 }
+// A menu tree contains categories, live readings and separators as well as
+// settings. Its node count is not the 8-bit parameter-index limit. The wire
+// decoder bounds the tree to 493 words; access inheritance has 256 sections.
+inline bool structure_valid(const cJSON *tree,const cJSON *names,unsigned parameters){
+ if(!cJSON_IsArray(tree)||!cJSON_IsArray(names)||!integer(parameters,1,255)||
+    cJSON_GetArraySize(tree)<1||cJSON_GetArraySize(tree)>493)return false;
+ unsigned sections=0,parent=0,position=0;const cJSON *row;
+ cJSON_ArrayForEach(row,tree){
+  double t=number(get(row,"type")),i=number(get(row,"index")),p=number(get(row,"pass_index"));
+  if(!integer(t,0,7)||t==6||!integer(i,0,255)||!integer(p,0,7)||!cJSON_IsBool(get(row,"lock")))return false;
+  unsigned kind=t,index=i;
+  if(kind==7){if(position>2)++parent;if(parent>sections)return false;}
+  else if(kind==0||kind==2||kind==4||kind==5){
+   if(index>=unsigned(cJSON_GetArraySize(names))||sections>=256)return false;
+   if(!sections){if(kind!=0||index!=0)return false;}else if(parent>=sections)return false;
+   ++sections;
+  }else if(!sections||parent>=sections||(kind==1&&index>=parameters))return false;
+  ++position;
+ }
+ return sections>0;
+}
 // START/STOP is the documented common 59 / 187 command, independent of the
 // remote-menu indices and manufacturer firmware version. Keep live safeguards.
 inline const char *control_guard(const cJSON *sensor,bool direct,bool identity,bool enabled,bool start){

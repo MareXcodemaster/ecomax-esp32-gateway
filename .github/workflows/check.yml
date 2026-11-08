@@ -79,6 +79,8 @@ jobs:
         run: node tests/analysis_export_browser.mjs
       - name: Read-only compatibility report browser tests
         run: node tests/compatibility_browser.mjs
+      - name: New-controller catalogue progress browser tests
+        run: node tests/catalog_progress_browser.mjs
       - name: Sampling configuration and manual OTA browser tests
         run: node tests/sampling_browser.mjs
       - name: Boiler clock settings browser tests

@@ -19,6 +19,7 @@
 #include "compatibility_report.hpp"
 #include "controller_profile.hpp"
 #include "remote_menu_language.hpp"
+#include "menu_catalog_reader.hpp"
 #include <cstdlib>
 #include "advanced_menu.hpp"
 #include "pellet_commands.hpp"
@@ -76,6 +77,11 @@ bool discovered_profile=false,discovered_profile_ready=false,reference_catalog_c
 uint64_t discovered_profile_next_attempt=0;
 unsigned discovered_count=0;
 J *discovered_versions=nullptr;
+menu_catalog::Reader catalog_reader;
+J *catalog_system=nullptr;
+std::string catalog_identity;
+uint64_t catalog_started=0;
+void clear_catalog_reader(){catalog_reader.reset();cJSON_Delete(catalog_system);catalog_system=nullptr;catalog_identity.clear();catalog_started=0;}
 unsigned menu_count(){return discovered_profile?discovered_count:168;}
 std::string native_menu_error;
 uint64_t health_ms=0, next_health=0;
@@ -266,22 +272,7 @@ int structure_version(const J *details) {
 bool menu_structure_valid(const J *structure,const J *names=nullptr,unsigned parameters=0) {
     if(!names)names=body("rmCatsNames");
     if(!parameters)parameters=menu_count();
-    if(!cJSON_IsArray(structure)||!cJSON_GetArraySize(structure)||cJSON_GetArraySize(structure)>256)return false;
-    unsigned sections=0,parent=0,position=0; J *row;
-    cJSON_ArrayForEach(row,structure) {
-        int kind=static_cast<int>(num(get(row,"type"),-1)),index=static_cast<int>(num(get(row,"index"),-1));
-        double pass=num(get(row,"pass_index"));
-        if(kind<0||kind>7||kind==6||index<0||index>255||!cJSON_IsBool(get(row,"lock"))||!std::isfinite(pass)||pass<0||pass>7||floor(pass)!=pass)return false;
-        if(kind==7) { if(position>2)++parent; if(parent>sections)return false; }
-        else if(kind==0||kind==2||kind==4||kind==5) {
-            if(index>=cJSON_GetArraySize(names))return false;
-            if(!sections) { if(kind!=0||index!=0)return false; }
-            else if(parent>=sections)return false;
-            ++sections;
-        } else if(!sections||parent>=sections||(kind==1&&index>=int(parameters)))return false;
-        ++position;
-    }
-    return sections>0;
+    return controller_profile::structure_valid(structure,names,parameters);
 }
 const char *room_wire_keys[]={"STER_MODE_1","STER_TEMP_SET_PARTY_1","STER_TEMP_SET_SUMMER_1","STER_CORRECTION_1","STER_TIMER_EXIT_1","STER_TIMER_VENT_1","STER_TIMER_PARTY_1","STER_TIMER_HOLIDAY_1","STER_HYSTEREZE_1","STER_TEMP_DAY_1","STER_TEMP_NIGHT_1","STER_TEMP_ANTIFREEZ_1"};
 int room_wire_index(const char *id) {
@@ -761,77 +752,56 @@ bool rs_identify() {
     text(get(raw,"sysParams"),"uid",uid);
     native_identity=true; native_identity_ms=now(); return true;
 }
-// A new profile must obtain its own language tables before any indexed write.
-// Everything is staged privately; incomplete or changing catalogues are discarded.
+// Large catalogues are downloaded in bounded batches, retaining validated pages
+// between worker polls. Partial tables never reach editable menu targets.
 bool rs_client_catalog() {
     if(!discovered_profile||!native_identity||!transport::enabled()||transport::conflict())return false;
     if(now()<discovered_profile_next_attempt)return false;
-    discovered_profile_next_attempt=now()+60000;
-    native_menu_ms=native_menu_config_ms=native_menu_versions_ms=native_structure_ms=0;
-    std::fill_n(native_menu_row_ms,256,0);
-    native_menu_error="Odczyt własnych nazw i opcji menu sterownika przez RS485";
-    const auto deadline=now()+55000;const std::string identity=uid;
-    Owned original_system{cJSON_Duplicate(get(raw,"sysParams"),true)};
-    unsigned requests=0;size_t bytes_read=0;
-    auto ask=[&](const uint8_t *q,size_t size,transport::Reply &reply){
-        return now()<deadline&&++requests<=160&&transport::enabled()&&!transport::conflict()&&
-            transport::request_readonly(86,q,size,214,reply);
+    auto abort=[&](const std::string &reason){
+        native_menu_error=reason;clear_catalog_reader();discovered_profile_next_attempt=now()+60000;
+        Lock lock;text(data,"profile_status",native_menu_error);return false;
     };
-    auto abort=[&](const char *reason){native_menu_error=reason;Lock lock;text(data,"profile_status",reason);return false;};
-    transport::Reply reply;const uint8_t version_query[]={0},metadata_query[]={3},language_query[]={1},structure_query[]={9};
-    if(!ask(version_query,1,reply))return abort("Brak wersji katalogu sterownika");
-    Owned versions{protocol::describe(reply.bytes,reply.length)};
-    if(!controller_profile::versions_valid(get(versions.p,"data")))return abort("Nieobslugiwany lub niepelny protokol katalogu menu RS485");
-    int structure=structure_version(get(versions.p,"data"));if(structure<0)return abort("Brak wersji struktury menu");
-    if(!ask(metadata_query,1,reply))return abort("Brak metadanych menu sterownika");
-    Owned metadata{protocol::describe(reply.bytes,reply.length)};auto *parameters=get(get(metadata.p,"data"),"parameters");
-    if(!controller_profile::metadata_valid(parameters))return abort("Niepoprawne metadane menu sterownika RS485");
-    const unsigned expected=cJSON_GetArraySize(parameters);
-    if(!ask(language_query,1,reply))return abort("Sterownik nie odpowiedzial na liste jezykow menu RS485");
-    const int lang=remote_menu_language::language(reply.bytes+8,reply.length-10);
-    if(lang<0)return abort("Niepoprawna lista jezykow menu RS485");
-    // Preserve language version bytes as well as command versions across the whole read.
-    std::string languages(reinterpret_cast<const char *>(reply.bytes+8),reply.length-10);
-    Owned staged{cJSON_CreateObject()};
-    for(auto pair:{std::pair<unsigned,const char *>{2,"rmParamsNames"},{6,"rmParamsUnitsNames"},{7,"rmParamsEnums"},{8,"rmCatsNames"}}){
-        auto *values=cJSON_CreateArray();put(staged.p,pair.second,values);bool finished=false;
-        for(unsigned page=0;page<64&&!finished;++page){
-            unsigned begin=cJSON_GetArraySize(values);if(begin>=255){finished=true;break;}
-            uint8_t query[]={uint8_t(pair.first),uint8_t(lang),uint8_t(pair.first==7?1:8),uint8_t(begin)};size_t size=pair.first==6?2:4;
-            if(!ask(query,size,reply))return abort("Brak odpowiedzi tabeli nazw RS485; ponowne pobranie za minute");
-            bytes_read+=reply.length;if(bytes_read>65536)return abort("Katalog nazw przekroczyl limit pamieci");
-            Owned page_data{remote_menu_language::page(query,size,reply.bytes+8,reply.length-10)};
-            if(!page_data.p)return abort("Niepoprawna lub przesunieta strona nazw RS485");
-            unsigned count=cJSON_GetArraySize(page_data.p);
-            if(begin+count>256)return abort("Niepoprawna liczba nazw RS485");
-            while(cJSON_GetArraySize(page_data.p))cJSON_AddItemToArray(values,cJSON_DetachItemFromArray(page_data.p,0));
-            finished=pair.first==6||!count;
+    if(catalog_reader.active()&&(catalog_identity!=uid||!cJSON_Compare(catalog_system,get(raw,"sysParams"),true)))
+        return abort("Zmiana modelu, wersji lub tozsamosci podczas odczytu katalogu");
+    if(!catalog_reader.active()){
+        native_menu_ms=native_menu_config_ms=native_menu_versions_ms=native_structure_ms=0;
+        std::fill_n(native_menu_row_ms,256,0);
+        catalog_reader.start();catalog_identity=uid;catalog_system=cJSON_Duplicate(get(raw,"sysParams"),true);catalog_started=now();
+        if(!catalog_system||catalog_reader.error())return abort("Brak pamieci katalogu RS485");
+    }
+    // Overall bound also releases a partial catalogue when a very slow link
+    // cannot finish. It no longer has to fit in one 55-second worker call.
+    if(now()-catalog_started>600000)return abort("Przekroczono czas pobierania katalogu RS485; ponowne pobranie za minute");
+    const auto batch_started=now();
+    for(unsigned batch=0;batch<4&&!catalog_reader.complete()&&now()-batch_started<2000;++batch){
+        uint8_t query[4]{};size_t size=catalog_reader.query(query);transport::Reply reply;
+        if(!size)return abort(catalog_reader.error()?catalog_reader.error():"Brak zapytania katalogu RS485");
+        if(!transport::enabled()||transport::conflict())return abort("Odczyt katalogu przerwany: polaczenie RS485 niedostepne");
+        if(!transport::request_readonly(86,query,size,214,reply)){
+            if(!catalog_reader.missed())return abort(catalog_reader.error());
+            native_menu_error="Oczekiwanie na odpowiedz katalogu RS485; pobrane strony zachowane";
+            Lock lock;text(data,"profile_status",native_menu_error);return false;
         }
-        if(!finished)return abort("Niepelna tabela nazw RS485");
+        if(!catalog_reader.accept(query,size,reply.bytes,reply.length))return abort(catalog_reader.error());
     }
-    auto *names=get(staged.p,"rmParamsNames"),*units=get(staged.p,"rmParamsUnitsNames"),*enums=get(staged.p,"rmParamsEnums");
-    if(cJSON_GetArraySize(names)!=expected)return abort("Liczba nazw nie odpowiada metadanym nastaw sterownika");
-    for(unsigned i=0;i<expected;++i){auto *m=item(parameters,i);int unit=num(get(m,"unit")),offset=num(get(m,"offset"));
-        if(unit==31){if(offset<0||!item(enums,offset))return abort("Brak opcji nastawy w katalogu kotla");}
-        else if(unit<0||!item(units,unit))return abort("Brak jednostki nastawy w katalogu kotla");
+    if(!catalog_reader.complete()){
+        native_menu_error="Pobieranie katalogu RS485: etap "+std::to_string(catalog_reader.stage()+1)+"/11, nazwy "+
+            std::to_string(catalog_reader.names_count())+"/"+std::to_string(cJSON_GetArraySize(catalog_reader.parameters()));
+        Lock lock;text(data,"profile_status",native_menu_error);return false;
     }
-    if(!ask(structure_query,1,reply))return abort("Brak struktury menu sterownika");
-    Owned layout{protocol::describe(reply.bytes,reply.length)};auto *tree=get(get(layout.p,"data"),"structure");
-    if(!menu_structure_valid(tree,get(staged.p,"rmCatsNames"),expected))return abort("Niepoprawna struktura lub uprawnienia menu sterownika");
-    if(!ask(version_query,1,reply))return abort("Brak koncowego potwierdzenia wersji menu");
-    Owned final_versions{protocol::describe(reply.bytes,reply.length)};
-    if(!controller_profile::same_versions(get(versions.p,"data"),get(final_versions.p,"data"))||structure_version(get(final_versions.p,"data"))!=structure)return abort("Katalog zmienil sie podczas pobierania");
-    if(!ask(language_query,1,reply)||languages!=std::string(reinterpret_cast<const char *>(reply.bytes+8),reply.length-10))return abort("Jezyk lub wersja tekstow menu zmienily sie podczas pobierania");
-    if(!rs_identify()||uid!=identity||!cJSON_Compare(original_system.p,get(raw,"sysParams"),true))return abort("Zmiana modelu, wersji lub tozsamosci podczas odczytu katalogu");
-    if(!ask(metadata_query,1,reply))return abort("Brak koncowego potwierdzenia metadanych menu");
-    Owned verified_metadata{protocol::describe(reply.bytes,reply.length)};
-    if(!controller_profile::same_metadata(parameters,get(get(verified_metadata.p,"data"),"parameters")))return abort("Metadane zmienily sie podczas odczytu katalogu");
-    for(auto key:{"rmParamsNames","rmParamsUnitsNames","rmParamsEnums","rmCatsNames"}){auto *wrapper=cJSON_CreateObject();copy(wrapper,"data",get(staged.p,key));put(raw,key,wrapper);}
+    if(!rs_identify()||uid!=catalog_identity||!cJSON_Compare(catalog_system,get(raw,"sysParams"),true))
+        return abort("Zmiana modelu, wersji lub tozsamosci podczas odczytu katalogu");
+    auto *parameters=catalog_reader.parameters();auto *tree=catalog_reader.structure();
+    for(auto key:{"rmParamsNames","rmParamsUnitsNames","rmParamsEnums","rmCatsNames"}){
+        auto *wrapper=cJSON_CreateObject();copy(wrapper,"data",catalog_reader.table(key));put(raw,key,wrapper);
+    }
     auto *wrapper=cJSON_CreateObject();copy(wrapper,"data",parameters);put(raw,"rmParamsData",wrapper);
     J *row;cJSON_ArrayForEach(row,body("rmParamsData")){flag(row,"edit",true);put(row,"value",nullptr);put(row,"minv",nullptr);put(row,"maxv",nullptr);}
     wrapper=cJSON_CreateObject();copy(wrapper,"data",tree);put(raw,"rmStructure",wrapper);
-    discovered_count=expected;cJSON_Delete(discovered_versions);discovered_versions=cJSON_Duplicate(get(final_versions.p,"data"),true);
-    native_structure_version=structure;native_menu_config_ms=native_menu_versions_ms=native_structure_ms=now();discovered_profile_ready=true;
+    discovered_count=cJSON_GetArraySize(parameters);cJSON_Delete(discovered_versions);discovered_versions=cJSON_Duplicate(catalog_reader.versions(),true);
+    native_structure_version=structure_version(catalog_reader.versions());
+    native_menu_config_ms=native_menu_versions_ms=native_structure_ms=now();discovered_profile_ready=true;
+    clear_catalog_reader();discovered_profile_next_attempt=0;
     {Lock lock;text(data,"profile_status","ecoMAX: własne nazwy, jednostki i opcje odczytane przez RS485");}
     native_menu_error.clear();return true;
 }
@@ -1103,7 +1073,7 @@ bool save_mode(const char *mode) {
     if(result!=ESP_OK) return fail("Nie zapisano wyboru polaczenia");
     selected_mode=mode; ++revision; cJSON_Delete(ticket); ticket=nullptr; native_identity=false; native_room_ms=0; native_room={}; native_mixer={};
     native_menu_ms=native_menu_config_ms=native_menu_versions_ms=next_menu_poll=native_room_config_ms=0; native_menu_error.clear();
-    discovered_profile_ready=false;discovered_profile_next_attempt=0;
+    discovered_profile_ready=false;discovered_profile_next_attempt=0;clear_catalog_reader();
     native_structure_ms=native_alarm_ms=next_alarm_poll=next_history_sample=0; native_structure_version=last_pending_alerts=-1; health_failures=alarm_failures=0;
     std::fill_n(native_menu_row_ms,256,0);
     // A new route must not inherit live settings or alarms from the previous one.
@@ -1640,7 +1610,7 @@ J *collect_compatibility(const J *payload){
     if(first_identity.empty()||last_identity.empty()||first_identity!=last_identity)warn("Nie potwierdzono tego samego sterownika na poczatku i koncu odczytu; nie lacz tych danych automatycznie w profil zapisu.");
     if(!cJSON_IsTrue(get(sensor.p,"fresh")))warn("Brak swiezej, rozpoznanej ramki czujnikow. Stan nie jest potwierdzeniem dzialania wszystkich pomiarow.");
     warn("Raport nie odblokowuje zapisu. Nazwy, jednostki, opcje i komendy nowego modelu wymagaja weryfikacji; nie uzyto nazw z profilu referencyjnego jako danych obcego kotla.");
-    if(discovered_profile){flag(report,"catalog_ready",discovered_profile_ready);text(report,"catalog_error",native_menu_error);text(report,"catalog_source","controller_rs485");number(report,"catalog_parameter_count",discovered_count);}
+    if(discovered_profile){flag(report,"catalog_ready",discovered_profile_ready);text(report,"catalog_error",native_menu_error);text(report,"catalog_source","controller_rs485");number(report,"catalog_parameter_count",discovered_count);number(report,"catalog_read_stage",catalog_reader.stage());number(report,"catalog_read_requests",catalog_reader.requests());number(report,"catalog_names_received",catalog_reader.names_count());}
     if(discovered_profile&&discovered_profile_ready){auto *catalog=cJSON_CreateObject();for(auto key:{"rmParamsNames","rmParamsUnitsNames","rmParamsEnums","rmCatsNames"})copy(catalog,key,body(key));text(catalog,"source","RS485 remote menu, observed on this controller");put(report,"observed_catalog",catalog);}
     number(report,"received_replies",replies);number(report,"failed_queries",failures);number(report,"duration_ms",now()-started);
     flag(report,"partial",!active||failures||replies<sizeof(compatibility_report::queries)/sizeof(compatibility_report::queries[0])+1||first_identity.empty()||first_identity!=last_identity);
@@ -1682,6 +1652,12 @@ void worker(void *) {
                 else { Lock lock; text(data,"error",error_text); }
                 next_poll=now()+(initial?7000:interval);
             }
+        }
+        if(catalog_reader.active()&&selected_mode!="rs485")clear_catalog_reader();
+        if(catalog_reader.active()&&now()-catalog_started>600000){
+            clear_catalog_reader();discovered_profile_next_attempt=now()+60000;
+            native_menu_error="Przekroczono czas pobierania katalogu RS485; ponowne pobranie za minute";
+            Lock lock;text(data,"profile_status",native_menu_error);
         }
         if(!busy&&selected_mode=="rs485")sample_rs_history();
         if(!busy)sample_settings_history();

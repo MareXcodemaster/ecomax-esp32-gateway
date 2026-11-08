@@ -34,6 +34,7 @@ def main():
                    str(ROOT / 'tests/host/compatibility.cpp'),
                    str(ROOT / 'tests/host/remote_menu_language.cpp'),
                    str(ROOT / 'tests/host/controller_profile.cpp'),
+                   str(ROOT / 'tests/host/menu_catalog.cpp'),
                    str(ROOT / 'tests/host/settings.cpp'),
                    str(ROOT / 'tests/host/circulation.cpp'),
                    str(ROOT / 'tests/host/tailnet.cpp'),

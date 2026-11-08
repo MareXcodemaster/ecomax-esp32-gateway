@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0-beta.59
+
+- Poprawka katalogu ecoMAX860P3-O (moduł A 16.33.91.P1, panel 16.11.10): drzewo z 274 elementami nie jest już odrzucane przez limit 256. Nadal obowiązują granice indeksów nastaw, kategorii, ramek i uprawnień.
+- Pobieranie własnych nazw i opcji sterownika w krótkich partiach. Brak odpowiedzi ponawia bieżącą stronę z zachowaniem postępu; katalog nie musi zmieścić się w jednym 55-sekundowym odczycie. Panel pokazuje postęp, a raport zgodności zawiera etap pobierania.
+- Sprawdzenie wersji, metadanych, języka i tożsamości przed udostępnieniem edycji. Niepełny lub zmieniony katalog pozostaje zablokowany. Tymczasowe dane są zwalniane po zakończeniu, przerwaniu lub zmianie połączenia.
+- Regresja oparta na metadanych i strukturze nowego modelu: 198 pozycji, 106 odwołań do nastaw; bez danych osobowych i rzeczywistych temperatur klienta w plikach testowych. Fizyczny zapis na jego kotle wymaga potwierdzenia u właściciela; osobny protokół ecoSTER 1.21.27 nie jest objęty tą poprawką.
+
 ## 0.7.0-beta.58
 
 - Spójne grafiki techniczne cyrkulacji CWU i podajnika pelletu. Czytelne rury z kierunkiem przepływu, zbiornik, pompa i kran oraz przekrój ślimaka z napędem i zasobnikiem.
