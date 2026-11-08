@@ -2,6 +2,7 @@ import base64
 import gzip
 import importlib.util
 import json
+import re
 from pathlib import Path
 import tempfile
 import unittest
@@ -15,6 +16,12 @@ def module(name):
     return result
 
 class PublicRelease(unittest.TestCase):
+    def test_release_versions_agree(self):
+        expected = re.search(r'set\(PROJECT_VER "([^"]+)"\)', (ROOT / 'CMakeLists.txt').read_text())[1]
+        panel = re.search(r'constexpr const char \*version = "([^"]+)";', (ROOT / 'src/board.hpp').read_text())[1]
+        self.assertEqual(panel, expected, 'OTA boot confirmation and GitHub comparisons use the panel API version')
+        self.assertEqual(json.loads((ROOT / 'package.json').read_text())["version"], expected)
+
     def test_wifi_validation(self):
         validate = module('setup').validate_wifi
         for ssid, password in [('Example', 'abcdefgh'), ('Open network', ''), ('x' * 32, 'y' * 63)]:

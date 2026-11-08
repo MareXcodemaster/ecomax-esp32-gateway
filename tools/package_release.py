@@ -37,6 +37,11 @@ def main():
     version = re.search(r'set\(PROJECT_VER "([^"]+)"\)', (ROOT / "CMakeLists.txt").read_text())[1]
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.]+)?", version):
         raise ValueError("Invalid release version")
+    board_version = re.search(r'constexpr const char \*version = "([^"]+)";',
+                              (ROOT / "src/board.hpp").read_text(encoding="utf-8"))[1]
+    installer_version = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))["version"]
+    if board_version != version or installer_version != version:
+        raise ValueError("Release version mismatch between firmware, panel API and installer")
     app = (build / "firmware.bin").read_bytes()
     if app[32:36] != bytes.fromhex("3254cdab") or app[48:80].split(b"\0", 1)[0].decode() != version:
         raise ValueError("Build version mismatch; do a clean build")
