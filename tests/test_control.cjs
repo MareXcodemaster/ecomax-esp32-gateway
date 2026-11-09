@@ -41,3 +41,18 @@ test('running boiler permits STOP and confirmation needs explicit checkbox',()=>
  context.state.write_transport='rs485';
  vm.runInNewContext('renderControl();',context);assert.equal(element('control-submit').disabled,true);
 });
+
+test('the existing START supports a scheduled pause; active one-shot shows deadline and remains cancellable when stopped',()=>{
+ const {element,context}=render('rs485',{start:true,stop:true,mode:5},5);
+ assert.equal(element('boiler-start').disabled,false);
+ context.state.schedule_run={active:true,until:'10.11.2026 01:30',message:'Praca według zegara kotła'};
+ context.state.curr.mode=0;context.state.controls.start=false;
+ vm.runInNewContext('renderControl();',context);
+ assert.equal(element('boiler-start').disabled,true);
+ assert.equal(element('boiler-stop').disabled,false);
+ assert.equal(element('control-schedule').hidden,false);
+ assert.match(element('control-schedule').textContent,/10\.11\.2026 01:30/);
+ context.state.schedule_run.active=false;
+ vm.runInNewContext('renderControl();',context);
+ assert.equal(element('control-schedule').hidden,true);
+});

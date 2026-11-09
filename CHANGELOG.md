@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0-beta.60
+
+- Dotychczasowy przycisk „Włącz kocioł” pozwala rozpocząć pracę przed najbliższym okresem harmonogramu. Okno potwierdzenia pokazuje jego datę i godzinę zakończenia według zegara kotła; etykieta przycisku pozostaje bez zmian.
+- Zapis rozszerza tylko bieżącą przerwę do początku następnego okresu pracy. Harmonogram pozostaje włączony, a jego granica zakończenia pozostaje w sterowniku. Termostat, nastawy i zabezpieczenia nadal obowiązują.
+- ESP przywraca pierwotny tydzień już na początku zaplanowanego okresu. Stan operacji jest utrwalany przed zapisem; po restarcie nie ponawia START. Ręczne STOP, utrata wiarygodnego czasu lub cofnięcie zegara powodują przywrócenie planu. Zewnętrzna zmiana tygodnia jest zachowywana.
+- Zakres: potwierdzony harmonogram RS485 ecoMAX860P-LZ TOUCH, moduł A 8.41.38.L0 / panel 8.30.28. Pozostałe modele i lokalny ecoNET zachowują zwykłe START/STOP. Bez zakończenia okresu pracy funkcja nie rozszerza całego tygodnia.
+- Testy planowania, rzeczywistego kodu obsługi na symulatorze kotła/NVS i potwierdzenia w przeglądarce. Nie wykonywano fizycznego rozpalania w ramach automatycznego testu.
+
 ## 0.7.0-beta.59
 
 - Poprawka katalogu ecoMAX860P3-O (moduł A 16.33.91.P1, panel 16.11.10): drzewo z 274 elementami nie jest już odrzucane przez limit 256. Nadal obowiązują granice indeksów nastaw, kategorii, ramek i uprawnień.

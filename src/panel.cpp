@@ -9,6 +9,9 @@
 #include "device_info.hpp"
 #include "transport.hpp"
 #include "boiler_clock.hpp"
+#include "boiler_clock_codec.hpp"
+#include "schedule_run.hpp"
+#include "updates.hpp"
 #include "sampling.hpp"
 #include "wifi.hpp"
 #include "protocol.hpp"
@@ -55,6 +58,9 @@ std::atomic<bool> busy{false};
 uint64_t live_ms = 0, target_ms = 0, system_ms = 0, ticket_deadline = 0;
 unsigned revision = 0, ticket_revision = 0;
 std::string selected_mode="rs485";
+schedule_run::Record schedule_run_record{};
+bool schedule_run_pending=false;
+bool run_reconcile(bool cancel);
 std::atomic<bool> native_identity{false};
 std::atomic<uint64_t> native_identity_ms{0};
 plum::ThermostatSettings native_room;
@@ -1068,6 +1074,7 @@ J *rs_probe(const J *payload) {
     return result;
 }
 bool save_mode(const char *mode) {
+    if(selected_mode!=mode&&schedule_run_pending&&!run_reconcile(true))return fail("Najpierw przywroc harmonogram przez RS485; oczekiwanie na polaczenie z kotlem");
     nvs_handle_t h; if(nvs_open("eco_panel",NVS_READWRITE,&h)!=ESP_OK) return fail("Nie zapisano wyboru polaczenia");
     auto result=nvs_set_str(h,"transport",mode); if(result==ESP_OK) result=nvs_commit(h); nvs_close(h);
     if(result!=ESP_OK) return fail("Nie zapisano wyboru polaczenia");
@@ -1426,10 +1433,13 @@ bool inspect_control(bool start, bool direct, int &mode) {
     if(guard) return fail(guard);
     mode=static_cast<int>(num(get(curr,"mode"))); return true;
 }
+#include "panel_schedule_run.inc"
 J *prepare_control(const J *payload, const std::string &owner) {
     bool start=!strcmp(str(get(payload,"action")),"start");
-    int before=0; if(!inspect_control(start,selected_mode=="rs485",before)) return nullptr;
-    auto *v=cJSON_CreateObject(); text(v,"kind","control"); text(v,"action",start?"start":"stop"); text(v,"name",start?"Wlaczenie kotla":"Wylaczenie kotla"); text(v,"transport",selected_mode);
+    Owned proposal{cJSON_CreateObject()};int before=0;
+    if(start&&selected_mode=="rs485"){if(!run_prepare(proposal.p,before))return nullptr;}
+    else if(!inspect_control(start,selected_mode=="rs485",before))return nullptr;
+    auto *v=proposal.p;proposal.p=nullptr;text(v,"kind","control"); text(v,"action",start?"start":"stop"); text(v,"name",start?"Wlaczenie kotla":"Wylaczenie kotla"); text(v,"transport",selected_mode);
     number(v,"before_mode",before); number(v,"value",start?1:0); number(v,"expires",epoch()+60); text(v,"token",random_token());
     cJSON_Delete(ticket); ticket=cJSON_Duplicate(v,true); ticket_owner=owner; ticket_deadline=now()+60000; ticket_revision=revision; return v;
 }
@@ -1439,15 +1449,24 @@ J *execute_control(const J *payload, const std::string &owner) {
     if(selected_mode!=str(get(held.p,"transport"))) { fail("Droga sterowania zmienila sie. Przygotuj polecenie ponownie"); return nullptr; }
     bool start=num(get(held.p,"value"))==1, direct=selected_mode=="rs485"; auto started=now();
     phase("Sprawdzanie stanu kotla przed poleceniem","preflight");
-    int before=0; if(!inspect_control(start,direct,before)) return nullptr;
+    bool early=start&&cJSON_IsObject(get(held.p,"schedule_run"));
+    int before=0;
+    if(early){if(!run_begin(held.p,before))return nullptr;}
+    else if(start&&direct){Owned current{cJSON_CreateObject()};if(!run_prepare(current.p,before))return nullptr;if(get(current.p,"schedule_run")){fail("Rozpoczela sie przerwa harmonogramu. Potwierdz wlaczenie ponownie z godzina zakonczenia");return nullptr;}}
+    else if(!inspect_control(start,direct,before))return nullptr;
     if(before!=num(get(held.p,"before_mode"))) { fail("Stan kotla zmienil sie. Przygotuj polecenie ponownie"); return nullptr; }
     auto *result=cJSON_CreateObject(); for(auto k:{"name","action","before_mode","transport"}) copy(result,k,get(held.p,k));
     text(result,"transport",direct?"rs485":"econet");
-    if(!start&&control_observed(false,before)) { text(result,"state","unchanged"); text(result,"message",before==0?"Kociol jest juz wylaczony. Nie wyslano polecenia":"Kociol juz wygasza. Nie wyslano polecenia"); flag(result,"sent",false); log_result("control","bez_zapisu",result); return result; }
+    if(early){
+        copy(result,"schedule_run",get(held.p,"schedule_run"));
+        if(before!=0){text(result,"state","verified");flag(result,"sent",true);text(result,"message","Potwierdzono wczesniejszy okres pracy do "+run_label(schedule_run_record.plan.end)+". Rozpalanie zalezy od zapotrzebowania na cieplo");log_result("control","verified",result);journal();return result;}
+        int current=0;if(!inspect_control(true,true,current)){auto reason=error_text;run_reconcile(true);error_text=reason;cJSON_Delete(result);return nullptr;}
+    }
+    if(!start&&control_observed(false,before)) { if(schedule_run_pending)run_reconcile(true);text(result,"state","unchanged"); text(result,"message",before==0?"Kociol jest juz wylaczony. Nie wyslano polecenia START/STOP":"Kociol juz wygasza. Nie wyslano polecenia START/STOP"); flag(result,"sent",false); log_result("control","bez_zapisu",result); return result; }
     number(result,"requested",start?1:0); text(result,"state","pending"); text(result,"message","Trwa pojedyncze polecenie START/STOP");
     { Lock lock; number(data,"write_count",num(get(data,"write_count"),0)+1); }
     log_result("control","pending",result);
-    if(!journal()) { Lock lock; number(data,"write_count",num(get(data,"write_count"))-1); cJSON_DeleteItemFromArray(get(data,"tests"),0); cJSON_Delete(result); return nullptr; }
+    if(!journal()) { {Lock lock; number(data,"write_count",num(get(data,"write_count"))-1); cJSON_DeleteItemFromArray(get(data,"tests"),0);} if(early)run_reconcile(true);cJSON_Delete(result); return nullptr; }
     phase(direct?"Wysylanie pojedynczego polecenia RS485":"Wysylanie pojedynczego polecenia do lokalnego ecoNET","dispatch");
     Owned baseline{boiler::snapshot()}; double frame_count=num(get(baseline.p,"accepted_frames"),0); auto sent=now();
     uint8_t value=start?1:0; transport::Reply reply;
@@ -1480,6 +1499,7 @@ J *execute_control(const J *payload, const std::string &owner) {
     auto *timing=cJSON_CreateObject(); number(timing,"preflight",(sent-started)/1000.0); number(timing,direct?"write_rs485":"write_http",(acknowledged-sent)/1000.0); number(timing,"readback",(now()-acknowledged)/1000.0); number(timing,"total",(now()-started)/1000.0); put(result,"timing_seconds",timing);
     { Lock lock; if(!dispatched) number(data,"write_count",num(get(data,"write_count"))-1); auto *record=item(get(data,"tests"),0); J *v; cJSON_ArrayForEach(v,result) copy(record,v->string,v); text(record,"result",status); }
     if(!journal()) text(result,"journal_warning","Nie utrwalono wyniku w NVS");
+    if(!start&&schedule_run_pending){if(!run_reconcile(true))text(result,"schedule_warning","Oczekiwanie na przywrocenie harmonogramu; stan widoczny pod sterowaniem kotla");}
     return result;
 }
 bool configure(const J *payload) {
@@ -1684,6 +1704,7 @@ void worker(void *) {
             { Lock lock; number(get(data,"econet_health"),"retry_epoch",epoch()+delay/1000.0); }
             error_text=saved_error;
         }
+        if(!busy)run_tick();
         if(!busy){
             auto *sys=get(raw,"sysParams");
             bool supported=controller_profile::reference(str(get(sys,"controllerID")),str(get(sys,"moduleASoftVer")),str(get(sys,"modulePanelSoftVer")));
@@ -1766,6 +1787,20 @@ cJSON *snapshot(bool compact,const char *catalog) {
     bool direct=!strcmp(str(get(out,"write_transport")),"rs485"), identity=native_identity&&now()-native_identity_ms.load()<60000;
     bool http_control_fresh=http_fresh&&num(get(out,"system_age_seconds"))<30;
     for(auto action:{"start","stop"}) { bool start=!strcmp(action,"start"); auto *guard=direct?control_guard(sensor.p,true,identity,transport::enabled(),start):http_control_guard(get(out,"system"),get(out,"curr"),get(out,"alarms"),http_control_fresh,start); if(!guard&&!direct) guard=control_consistency(sensor.p,http_mode,start); flag(controls,action,guard==nullptr); if(guard) text(controls,start?"start_error":"stop_error",guard); }
+    if(direct&&run_supported(get(out,"system"))){
+        const char *guard=nullptr;schedule_run::Week week;int64_t civil=0;schedule_run::Plan plan;
+        auto *actual=get(get(get(out,"schedules"),"ecomaxSchedules"),"boilerWorkTZ");
+        if(cJSON_IsTrue(get(get(out,"schedule_run"),"active")))guard="Wczesniejsze wlaczenie jest juz aktywne";
+        else if(!cJSON_IsTrue(get(schedule_status,"fresh"))||!run_week(actual,week))guard="Oczekiwanie na aktualny harmonogram pracy kotla";
+        else if(week.meta[0]){
+            if(!run_clock(civil))guard="Oczekiwanie na swiezy zegar kotla";
+            else {auto planned=schedule_run::plan(week,civil,plan);
+                if(planned==schedule_run::Result::ready){guard=run_guard(sensor.p,identity,transport::enabled());if(!guard){flag(controls,"start",true);text(controls,"start_error","");text(controls,"schedule_until",run_label(plan.end));}}
+                else if(planned!=schedule_run::Result::already_allowed)guard=run_reason(planned);
+            }
+        }
+        if(guard){flag(controls,"start",false);text(controls,"start_error",guard);}
+    }
     copy(controls,"mode",direct?get(get(sensor.p,"sensors"),"state"):get(get(out,"curr"),"mode")); text(controls,"transport",direct?"rs485":"econet"); put(out,"controls",controls); return out;
 }
 void activate(){boot_ready.store(true);}
@@ -2007,6 +2042,8 @@ void start() {
         char mode[12]{}; size_t mode_size=sizeof(mode); if(nvs_get_str(h,"transport",mode,&mode_size)==ESP_OK && (!strcmp(mode,"rs485")||!strcmp(mode,"hybrid")||!strcmp(mode,"econet"))) selected_mode=mode;
         char identity[161]{}; size_t identity_size=sizeof(identity); if(nvs_get_str(h,"identity",identity,&identity_size)==ESP_OK && identity_size>1) uid=identity;
         Config saved{}; size_t size=sizeof(saved); if(nvs_get_blob(h,"connection",&saved,&size)==ESP_OK && size==sizeof(saved)) { saved.host[15]=saved.user[63]=saved.password[95]=0; if(private_ip(saved.host)) config=saved; }
+        schedule_run::Record saved_run{};size=sizeof(saved_run);
+        if(nvs_get_blob(h,"schedule_run",&saved_run,&size)==ESP_OK&&size==sizeof(saved_run)&&schedule_run::valid(saved_run)){schedule_run_record=saved_run;schedule_run_pending=true;}
         size=0; if(nvs_get_blob(h,"journal",nullptr,&size)==ESP_OK && size>1 && size<6500) { std::string journal(size,'\0'); if(nvs_get_blob(h,"journal",journal.data(),&size)==ESP_OK) { Owned j{cJSON_Parse(journal.c_str())}; if(cJSON_IsArray(get(j.p,"tests"))) copy(data,"tests",get(j.p,"tests")); if(cJSON_IsNumber(get(j.p,"write_count"))) copy(data,"write_count",get(j.p,"write_count")); } }
         nvs_close(h);
     }
@@ -2022,7 +2059,7 @@ void start() {
     number(data,"last_read_epoch",0); number(data,"target_read_epoch",0); number(data,"system_read_epoch",0);
     copy(data,"system",get(raw,"sysParams")); copy(data,"tiles",get(get(raw,"sysParams"),"tiles")); build_menu();
     auto *allowed=cJSON_CreateArray(); for(auto &d:definitions) cJSON_AddItemToArray(allowed,cJSON_CreateString(d.id)); put(data,"write_allowlist",allowed);
-    configASSERT(self_test()); configASSERT(xTaskCreate(worker,"econet_panel",16384,nullptr,3,nullptr)==pdPASS);
+    configASSERT(self_test());run_publish(schedule_run_pending?"Odtwarzanie stanu po restarcie; bez ponawiania START":"");configASSERT(xTaskCreate(worker,"econet_panel",16384,nullptr,3,nullptr)==pdPASS);
     state::log("Autonomous panel ready; local ecoNET HTTP writes, RS485 TX remains locked");
 }
 }

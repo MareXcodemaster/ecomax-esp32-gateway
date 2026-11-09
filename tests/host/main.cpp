@@ -25,8 +25,10 @@ void settings_journal_tests();
 void circulation_tests();
 void tailnet_tests();
 void boiler_clock_tests();
+void schedule_run_tests();
 
 int main() {
+    schedule_run_tests();
     tailnet_tests();
     boiler_clock_tests();
     diagnostic_storage_tests();

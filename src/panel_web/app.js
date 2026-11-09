@@ -10,7 +10,10 @@ function renderControl(){
  text('control-mode',mode===null?'Brak aktualnego odczytu':modeLabel(mode));
  const headerMode=Number.isInteger(mode)?modeLabel(mode):'Brak odczytu';if($('header-boiler-mode').textContent!==headerMode)text('header-boiler-mode',headerMode);
  $('boiler-start').disabled=busy||!fresh()||!controls.start;
- $('boiler-stop').disabled=busy||!fresh()||!controls.stop||mode===0||mode===7;
+ $('boiler-stop').disabled=busy||!fresh()||!controls.stop||((mode===0||mode===7)&&!state.schedule_run?.active);
+ const scheduled=state.schedule_run;
+ $('control-schedule').hidden=!scheduled?.active;
+ text('control-schedule',scheduled?.active?'Wcześniejsze włączenie do '+scheduled.until+' · '+scheduled.message:'');
  $('boiler-start').title=controls.start_error||'';$('boiler-stop').title=controls.stop_error||'';
  text('control-access',!fresh()?'Brak aktualnego stanu kot\u0142a':!controls.start&&mode===0?controls.start_error||'Sterowanie niedost\u0119pne':!controls.stop&&mode!==0?controls.stop_error||'Sterowanie niedost\u0119pne':controls.transport==='rs485'?'RS485 bezpo\u015brednio':'ecoNET lokalnie');
  text('control-transport',controls.transport==='rs485'?'RS485 bezpo\u015brednio':'ecoNET lokalnie');
@@ -135,7 +138,7 @@ async function saveTemperature(id,value,beforeWrite=()=>{}){
 }
 for(const button of document.querySelectorAll('button[data-view]'))button.onclick=()=>selectView(button.dataset.view);
 async function chooseTransport(transport,confirm=false){ticket=null;const result=await run('/api/transport',{transport,confirm_econet_disconnected:confirm});notice(result.message);}
-async function prepareControl(action){controlTicket=null;try{controlTicket=await run('/api/control/prepare',{action});const start=action==='start';text('control-title',start?'W\u0142\u0105czy\u0107 kocio\u0142?':'Wy\u0142\u0105czy\u0107 kocio\u0142?');text('control-before','Obecny stan: '+modeLabel(controlTicket.before_mode));text('control-description',start?'Kocio\u0142 mo\u017ce rozpocz\u0105\u0107 rozpalanie. Potwierd\u017a, \u017ce instalacja jest gotowa do pracy.':'Sterownik przeprowadzi wygaszanie. To nie jest awaryjne odci\u0119cie zasilania.');text('control-confirm-label',start?'Potwierdzam gotowo\u015b\u0107 instalacji i uruchomienie kot\u0142a':'Potwierdzam polecenie wy\u0142\u0105czenia kot\u0142a');text('control-submit-label',start?'W\u0142\u0105cz kocio\u0142':'Wy\u0142\u0105cz kocio\u0142');$('control-checkbox').checked=false;$('control-dialog').showModal();render();}catch(error){controlTicket=null;notice(error.message,true);render();}}
+async function prepareControl(action){controlTicket=null;try{controlTicket=await run('/api/control/prepare',{action});const start=action==='start';text('control-title',start?'W\u0142\u0105czy\u0107 kocio\u0142?':'Wy\u0142\u0105czy\u0107 kocio\u0142?');text('control-before','Obecny stan: '+modeLabel(controlTicket.before_mode));text('control-description',start?'Kocio\u0142 mo\u017ce rozpocz\u0105\u0107 rozpalanie. Potwierd\u017a, \u017ce instalacja jest gotowa do pracy.':'Sterownik przeprowadzi wygaszanie. To nie jest awaryjne odci\u0119cie zasilania.');if(start&&controlTicket.schedule_run)text('control-description','Harmonogram zostanie rozszerzony od teraz do końca najbliższego okresu pracy: '+controlTicket.schedule_run.until+' (czas kotła). Potem wróci zwykły harmonogram. Termostat i zabezpieczenia nadal obowiązują.');text('control-confirm-label',start?'Potwierdzam gotowo\u015b\u0107 instalacji i uruchomienie kot\u0142a':'Potwierdzam polecenie wy\u0142\u0105czenia kot\u0142a');text('control-submit-label',start?'W\u0142\u0105cz kocio\u0142':'Wy\u0142\u0105cz kocio\u0142');$('control-checkbox').checked=false;$('control-dialog').showModal();render();}catch(error){controlTicket=null;notice(error.message,true);render();}}
 $('boiler-start').onclick=()=>prepareControl('start');$('boiler-stop').onclick=()=>prepareControl('stop');
 function cancelControl(){controlTicket=null;$('control-dialog').close();render();}
 for(const id of ['control-cancel','control-close'])$(id).onclick=cancelControl;

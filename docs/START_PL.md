@@ -4,7 +4,7 @@
 
 **Pierwszy raz z ESP? Zacznij od [prostej instrukcji w 7 krokach](SZYBKI_START.md).**
 
-**Oprogramowanie: 0.7.0-beta.59. Instrukcja: wydanie 38, 02.11.2026.**
+**Oprogramowanie: 0.7.0-beta.60. Instrukcja: wydanie 38, 02.11.2026.**
 
 Projekt pozwala obsługiwać zgodny regulator kotła z telefonu, tabletu lub
 komputera w domowej sieci. ESP32 odbiera dane i udostępnia własny panel.
@@ -228,7 +228,7 @@ Po zapisie ESP przełączy sieć. Połącz telefon z nową siecią i otwórz pon
 `piec.local` lub własną nazwę ESP. W razie błędnego hasła pozostaje sieć Piec-Setup.
 Zmiana nie wymaga diagnostyki ani kasowania pamięci.
 
-![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.59/11-zmiana-wifi.png)
+![Zmiana sieci bez wychodzenia z panelu: wyszukiwanie i wybór Wi-Fi](images/panel/0.7.0-beta.60/11-zmiana-wifi.png)
 
 **Montaż i zasięg:** moduł można umieścić na szynie DIN 35 mm w odpowiedniej
 szafce automatyki, a antenę wyprowadzić poza metalową obudowę. Wariant -U
@@ -371,6 +371,19 @@ tożsamości lub niezgodny model blokują zapis. Przeczytaj
 
 Temperatura **zmierzona** to odczyt czujnika. Temperatura **zadana** to cel.
 Harmonogram może zmieniać cel; nie zmienia w ten sposób odczytu czujnika.
+
+### Włączenie kotła przed godziną harmonogramu
+
+W „Danych bieżących” naciśnij zwykły przycisk **Włącz kocioł**. Jeżeli trwa przerwa harmonogramu pracy, okno potwierdzenia pokaże koniec najbliższego okresu pracy. Przykład: plan 15:00–22:00, włączenie o 13:00 → dozwolona praca od 13:00 do 22:00. Jeśli okres przechodzi przez północ, panel pokaże również datę. Nie trzeba ręcznie wyłączać harmonogramu ani pamiętać o ponownym włączeniu.
+
+To zezwolenie na pracę, nie wymuszenie ciągłego palenia. Rozpalanie nadal zależy od temperatur, termostatu, trybu pracy i zabezpieczeń. Funkcja nie zmienia nastaw spalania. **Wyłącz kocioł** przerywa wcześniejsze uruchomienie i przywraca zwykły harmonogram.
+
+ESP zapisuje w sterowniku tylko rozszerzenie bieżącej przerwy. Godzina zakończenia pozostaje zapisana w kotle także podczas utraty Wi-Fi lub zasilania ESP. Gdy rozpocznie się pierwotny okres pracy, ESP przywraca oryginalny tydzień, a sterownik dochodzi do jego zwykłego końca. Po restarcie ESP sprawdza zapamiętany stan bez ponawiania START. Jeśli inna osoba zmieniła harmonogram, ESP zachowuje nowy plan.
+
+ESP musi wrócić do pracy, żeby usunąć tymczasowe rozszerzenie z planu tygodniowego. Jeśli zostanie trwale odłączone przed przywróceniem planu, rozszerzone godziny mogą powtórzyć się za tydzień — w takim przypadku popraw harmonogram na ekranie kotła. Brak wiarygodnego czasu lub cofnięcie zegara kończy wcześniejsze uruchomienie przez przywrócenie pierwotnego planu, gdy RS485 odpowiada.
+
+W beta.60 funkcja dotyczy zweryfikowanego harmonogramu **ecoMAX860P-LZ TOUCH, moduł A 8.41.38.L0, panel 8.30.28, po RS485**. Pozostałe wersje zachowują dotychczasowe START/STOP. Jeśli w tygodniu nie ma najbliższego okresu pracy lub nie da się pozostawić niezależnej granicy jego końca, panel poprosi o sprawdzenie harmonogramu. Zwykłe START działa bez rozszerzenia, gdy harmonogram jest wyłączony albo pozwala już na pracę.
+
 Histereza to jeszcze inny parametr. Więcej: [instrukcja panelu](PANEL.md).
 
 ## 11. Aktualizacja bez komputera
